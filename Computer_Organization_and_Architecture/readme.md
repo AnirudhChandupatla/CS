@@ -6,7 +6,7 @@ YouTube Playlist: https://www.youtube.com/playlist?list=PL1iLu2CSC9EWAo0ysorNI_n
 
 Book: https://www.cse.iitd.ac.in/~srsarangi/archbook/archbook.pdf
 
-![](simple_risc_cpu_circuit_images/simple_risc_cpu.png)
+![](simple_risc_cpu_factorial_execution.gif)
 
 converting factorial of 10 program in simple risc assembly to binary and hex:
 
