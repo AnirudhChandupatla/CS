@@ -16,12 +16,8 @@ from program its visible that the final result is stored in register r1, here is
 
 ![](factorial_circuit_output.png)
 
-there is an hex value in r1, and that is equal to 
+there is an hex value in r1, and lets cross check if it is really factorial of 10 via python 
 
-<img src="hex_to_dec.png" alt="hex_to_dec" width="400"/>
-
-ok we got value of 3628800, lets cross check if it is really factorial of 10 via python 
-
-![](python_factorial_10_check.png)
+![](hexadecimal_factorial_check.png)
 
 great, our Simple RISC CPU circuit output matches the intended value.
