@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heaps — Deep Study Notes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0a0e1a;
+  --bg2: #111827;
+  --bg3: #1a2235;
+  --card: #141c2e;
+  --border: #1f2f4a;
+  --accent: #00e5ff;
+  --accent2: #ff6b35;
+  --accent3: #a78bfa;
+  --accent4: #34d399;
+  --accent5: #fbbf24;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --node-min: #00e5ff;
+  --node-max: #ff6b35;
+  --node-normal: #a78bfa;
+  --node-highlight: #fbbf24;
+  --node-swap: #f87171;
+  --node-leaf: #34d399;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,14,26,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  display: flex; align-items: center; gap: 0.25rem;
+  overflow-x: auto; white-space: nowrap;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display:none; }
+.nav-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 1.05rem;
+  color: var(--accent);
+  margin-right: 1.2rem;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.nav a {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.7rem 0.7rem;
+  border-bottom: 2px solid transparent;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.nav a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── MAIN ── */
+main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+
+/* ── SECTION CARDS ── */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+.section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+.section h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 1.2rem;
+  line-height: 1.2;
+}
+.section h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 1.4rem 0 0.6rem;
+}
+.section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent5);
+  margin: 1rem 0 0.4rem;
+}
+p { margin-bottom: 0.75rem; color: var(--text); }
+.dim { color: var(--text2); font-size: 0.92rem; }
+
+/* ── HIGHLIGHT BOXES ── */
+.box {
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  border-left: 3px solid;
+  font-size: 0.92rem;
+}
+.box.blue  { background: rgba(0,229,255,.07);  border-color: var(--accent);  }
+.box.orange{ background: rgba(255,107,53,.07); border-color: var(--accent2); }
+.box.purple{ background: rgba(167,139,250,.07);border-color: var(--accent3); }
+.box.green { background: rgba(52,211,153,.07); border-color: var(--accent4); }
+.box.yellow{ background: rgba(251,191,36,.07); border-color: var(--accent5); }
+.box.red   { background: rgba(248,113,113,.07);border-color: #f87171; }
+
+/* ── FORMULA ── */
+.formula {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.88rem;
+  color: var(--accent);
+  margin: 0.5rem 0;
+  border: 1px solid var(--border);
+  display: inline-block;
+}
+.formula.block { display: block; }
+
+/* ── INLINE CODE ── */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg3);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.85em;
+  color: var(--accent3);
+}
+
+/* ── TABLE ── */
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.88rem; margin: 1rem 0;
+}
+th {
+  background: var(--bg3);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+td {
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+tr:hover td { background: rgba(255,255,255,.03); }
+.good { color: var(--accent4); font-weight: 600; }
+.bad  { color: #f87171; font-weight: 600; }
+.ok   { color: var(--accent5); font-weight: 600; }
+
+/* ── SVG TREES ── */
+.tree-wrap {
+  background: var(--bg3);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+.tree-wrap svg { max-width: 100%; }
+
+/* Node styles */
+.node-circle { fill: var(--bg2); stroke-width: 2; }
+.node-text { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight:700; fill: white; text-anchor: middle; dominant-baseline: central; }
+.edge { stroke: #2d4060; stroke-width: 1.8; }
+.label-text { font-family: 'Inter', sans-serif; font-size: 11px; fill: var(--text3); text-anchor: middle; }
+
+/* ── STEP EXAMPLES ── */
+.step-box {
+  background: var(--bg3);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 1.2rem;
+  margin: 1rem 0;
+}
+.step-header {
+  display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem;
+}
+.step-num {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--accent);
+  color: var(--bg);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+}
+.step-label { font-weight: 600; font-size: 0.9rem; }
+.step-desc { font-size: 0.88rem; color: var(--text2); margin-left: 0; }
+
+/* ── INTERACTIVE EXAMPLE ── */
+.example-container {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 1.2rem 0;
+}
+.example-header {
+  background: var(--bg3);
+  padding: 0.75rem 1.2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.example-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 0.9rem;
+  color: var(--accent2);
+}
+.step-controls { display: flex; gap: 0.5rem; align-items: center; }
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg2);
+  color: var(--text);
+}
+.btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.step-counter { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text3); }
+.example-body { padding: 1.2rem; }
+.example-step { display:none; }
+.example-step.active { display:block; }
+.step-insight {
+  margin-top: 0.8rem;
+  padding: 0.65rem 0.9rem;
+  background: rgba(0,229,255,.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+  font-size: 0.85rem;
+  color: var(--text2);
+}
+.step-insight strong { color: var(--accent); }
+
+/* ── ARRAY VIZ ── */
+.array-viz {
+  display: flex; gap: 2px; margin: 0.7rem 0; flex-wrap: wrap;
+}
+.arr-cell {
+  min-width: 38px; height: 38px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+.arr-idx { font-size: 0.6rem; color: var(--text3); }
+.arr-val { font-weight: 700; }
+.arr-normal { background: var(--bg3); }
+.arr-hi { background: rgba(0,229,255,.15); border-color: var(--accent); color: var(--accent); }
+.arr-swap { background: rgba(248,113,113,.15); border-color: #f87171; color: #f87171; }
+.arr-done { background: rgba(52,211,153,.15); border-color: var(--accent4); color: var(--accent4); }
+
+/* ── OVERVIEW MAP ── */
+.overview-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 1.2rem 0;
+}
+.ov-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.ov-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.ov-card-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+.ov-card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--text); }
+.ov-card-desc { font-size: 0.75rem; color: var(--text3); margin-top: 0.25rem; }
+
+/* ── COMPARISON ── */
+.compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;
+}
+.compare-col { background: var(--bg3); border-radius: 10px; padding: 1rem; border: 1px solid var(--border); }
+.compare-head { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+
+/* ── QUICK REVISION ── */
+.qr-btn {
+  position: fixed; bottom: 2rem; right: 1.5rem; z-index: 200;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 0.85rem;
+  background: var(--accent2);
+  color: white;
+  border: none; border-radius: 50px;
+  padding: 0.75rem 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,107,53,.4);
+  transition: all .2s;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.qr-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,107,53,.5); }
+
+.qr-panel {
+  position: fixed; top:0; right:-420px; width:400px; height:100vh;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  z-index: 300;
+  overflow-y: auto;
+  transition: right .3s ease;
+  padding: 1.5rem;
+}
+.qr-panel.open { right:0; }
+.qr-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: none; border: none;
+  color: var(--text2); font-size: 1.3rem; cursor: pointer;
+}
+.qr-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem; font-weight: 800;
+  color: var(--accent2);
+  margin-bottom: 1.2rem;
+}
+.qr-item {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+  border-left: 3px solid var(--accent);
+}
+.qr-item strong { color: var(--accent); display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+.qr-section-head { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent5); font-size: 0.88rem; margin: 1rem 0 0.4rem; }
+
+/* misc */
+ul, ol { padding-left: 1.4rem; margin: 0.5rem 0; }
+li { margin-bottom: 0.3rem; font-size: 0.92rem; }
+.tag { display: inline-block; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; padding: 0.15em 0.5em; border-radius: 4px; font-weight: 700; margin: 0 2px; }
+.tag.o1 { background: rgba(52,211,153,.2); color: var(--accent4); }
+.tag.ologn { background: rgba(0,229,255,.2); color: var(--accent); }
+.tag.on { background: rgba(251,191,36,.2); color: var(--accent5); }
+.tag.onlogn { background: rgba(248,113,113,.2); color: #f87171; }
+
+@media(max-width:600px){
+  .compare-grid { grid-template-columns: 1fr; }
+  .qr-panel { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <span class="nav-title">⛁ HEAPS</span>
+  <a href="#overview">Overview</a>
+  <a href="#basics">Basics</a>
+  <a href="#array">Array Rep</a>
+  <a href="#minmax">Min/Max</a>
+  <a href="#kth">Kth Min</a>
+  <a href="#insert">Insertion</a>
+  <a href="#build">Build Heap</a>
+  <a href="#deletemin">DeleteMin</a>
+  <a href="#heapsort">HeapSort</a>
+  <a href="#complexity">Complexity</a>
+  <a href="#numheaps"># of Heaps</a>
+  <a href="#pq">Priority Queue</a>
+  <a href="#vs">Heap vs BST</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 0 — OVERVIEW
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="overview">
+  <div class="section-tag">10,000 feet view</div>
+  <h2>What is a Heap & Why Does It Exist?</h2>
+
+  <p><strong>The core problem:</strong> We often need to repeatedly find and remove the <em>minimum</em> (or maximum) element from a changing collection — e.g., job scheduling, Dijkstra's algorithm, priority-based systems. A sorted array is too slow to update; an unsorted array is too slow to search. We need something in between.</p>
+
+  <div class="box blue">
+    <strong>The ingenious idea:</strong> We don't need <em>full</em> sorted order. We only care about: "give me the min right now." A Heap gives us exactly that — partial ordering just good enough to always know the min in O(1), and to fix itself after each operation in O(log n).
+  </div>
+
+  <h3>The Big Picture — How Everything Connects</h3>
+  <div class="overview-map">
+    <div class="ov-card" onclick="document.getElementById('basics').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">🏗️</div>
+      <div class="ov-card-title">Structure (CBT)</div>
+      <div class="ov-card-desc">Complete Binary Tree — guarantees O(log n) height</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('basics').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">🔑</div>
+      <div class="ov-card-title">Heap Property</div>
+      <div class="ov-card-desc">Parent ≤ child (min) or Parent ≥ child (max)</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('array').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">📦</div>
+      <div class="ov-card-title">Array Storage</div>
+      <div class="ov-card-desc">No pointers needed! Simple index math</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('insert').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">⬆️</div>
+      <div class="ov-card-title">Insert → Bubble Up</div>
+      <div class="ov-card-desc">Add at end, percolate up</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('deletemin').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">⬇️</div>
+      <div class="ov-card-title">DeleteMin → Heapify</div>
+      <div class="ov-card-desc">Remove root, fix by percolating down</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">🏭</div>
+      <div class="ov-card-title">Build Heap</div>
+      <div class="ov-card-desc">O(n) bottom-up vs O(n log n) top-down</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('heapsort').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">🔃</div>
+      <div class="ov-card-title">Heap Sort</div>
+      <div class="ov-card-desc">Build heap + n deletions = O(n log n)</div>
+    </div>
+    <div class="ov-card" onclick="document.getElementById('pq').scrollIntoView({behavior:'smooth'})">
+      <div class="ov-card-icon">⚡</div>
+      <div class="ov-card-title">Priority Queue</div>
+      <div class="ov-card-desc">Heap is the best PQ implementation</div>
+    </div>
+  </div>
+
+  <div class="box green">
+    <strong>How concepts flow:</strong> CBT structure → enables array representation → insertion adds at end (keeps CBT) then bubbles up (restores heap property) → deletion removes root (breaks CBT structure temporarily) → replace with last element (restores CBT) then heapify down (restores heap property) → repeat deletions = heap sort.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 1 — BASICS
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="basics">
+  <div class="section-tag">Foundation</div>
+  <h2>Heap Basics — Two Properties You Must Know</h2>
+
+  <p>A heap is a <strong>Complete Binary Tree (CBT)</strong> that satisfies the <strong>heap property</strong>. Both must hold simultaneously.</p>
+
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent);">🏗 Property 1: Structure</div>
+      <p><strong>Complete Binary Tree:</strong></p>
+      <ul>
+        <li>All levels are completely filled <em>except possibly</em> the last</li>
+        <li>The last level is filled from <strong>left to right</strong></li>
+        <li>This gives height = ⌊log₂ n⌋ → operations are O(log n)</li>
+      </ul>
+    </div>
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent2);">🔑 Property 2: Order</div>
+      <p><strong>Heap Property:</strong></p>
+      <ul>
+        <li><strong>Min-heap:</strong> Parent ≤ both children (smallest on top)</li>
+        <li><strong>Max-heap:</strong> Parent ≥ both children (largest on top)</li>
+        <li>Note: no ordering between siblings or cousins!</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box yellow">
+    <strong>Key insight:</strong> A heap is NOT a sorted structure. Siblings can be in any order. It's a <em>partial order</em> — just enough to guarantee the root is always min (or max).
+  </div>
+
+  <h3>Min Heap Example</h3>
+  <div class="tree-wrap">
+    <svg width="380" height="180" viewBox="0 0 380 180">
+      <!-- edges -->
+      <line class="edge" x1="190" y1="35" x2="120" y2="80"/>
+      <line class="edge" x1="190" y1="35" x2="260" y2="80"/>
+      <line class="edge" x1="120" y1="80" x2="80"  y2="130"/>
+      <line class="edge" x1="120" y1="80" x2="160" y2="130"/>
+      <line class="edge" x1="260" y1="80" x2="220" y2="130"/>
+      <line class="edge" x1="260" y1="80" x2="300" y2="130"/>
+      <!-- nodes -->
+      <circle cx="190" cy="35"  r="22" class="node-circle" stroke="#00e5ff"/>
+      <circle cx="120" cy="80"  r="22" class="node-circle" stroke="#00e5ff"/>
+      <circle cx="260" cy="80"  r="22" class="node-circle" stroke="#00e5ff"/>
+      <circle cx="80"  cy="130" r="22" class="node-circle" stroke="#a78bfa"/>
+      <circle cx="160" cy="130" r="22" class="node-circle" stroke="#a78bfa"/>
+      <circle cx="220" cy="130" r="22" class="node-circle" stroke="#a78bfa"/>
+      <circle cx="300" cy="130" r="22" class="node-circle" stroke="#a78bfa"/>
+      <!-- values -->
+      <text class="node-text" x="190" y="35" fill="#00e5ff">1</text>
+      <text class="node-text" x="120" y="80" fill="#00e5ff">2</text>
+      <text class="node-text" x="260" y="80" fill="#00e5ff">3</text>
+      <text class="node-text" x="80"  y="130" fill="#a78bfa">4</text>
+      <text class="node-text" x="160" y="130" fill="#a78bfa">5</text>
+      <text class="node-text" x="220" y="130" fill="#a78bfa">6</text>
+      <text class="node-text" x="300" y="130" fill="#a78bfa">7</text>
+      <!-- labels -->
+      <text class="label-text" x="190" y="165">Min = 1 (always at root)</text>
+      <text class="label-text" x="190" y="178" fill="#a78bfa">Max = 7 (always at leaf)</text>
+    </svg>
+  </div>
+
+  <h3>Max Heap Example</h3>
+  <div class="tree-wrap">
+    <svg width="300" height="160" viewBox="0 0 300 160">
+      <line class="edge" x1="150" y1="35" x2="90"  y2="85"/>
+      <line class="edge" x1="150" y1="35" x2="210" y2="85"/>
+      <line class="edge" x1="90"  y1="85" x2="60"  y2="130"/>
+      <line class="edge" x1="90"  y1="85" x2="120" y2="130"/>
+      <circle cx="150" cy="35"  r="22" class="node-circle" stroke="#ff6b35"/>
+      <circle cx="90"  cy="85"  r="22" class="node-circle" stroke="#ff6b35"/>
+      <circle cx="210" cy="85"  r="22" class="node-circle" stroke="#ff6b35"/>
+      <circle cx="60"  cy="130" r="22" class="node-circle" stroke="#a78bfa"/>
+      <circle cx="120" cy="130" r="22" class="node-circle" stroke="#a78bfa"/>
+      <text class="node-text" x="150" y="35"  fill="#ff6b35">10</text>
+      <text class="node-text" x="90"  y="85"  fill="#ff6b35">8</text>
+      <text class="node-text" x="210" y="85"  fill="#ff6b35">9</text>
+      <text class="node-text" x="60"  y="130" fill="#a78bfa">1</text>
+      <text class="node-text" x="120" y="130" fill="#a78bfa">2</text>
+      <text class="label-text" x="150" y="155">Max = 10 at root | Min = 1 at leaf</text>
+    </svg>
+  </div>
+
+  <h3>Is This a Heap? (Practice)</h3>
+
+  <div class="example-container">
+    <div class="example-header">
+      <span class="example-title">💡 Identify if Valid Heap</span>
+      <div class="step-controls">
+        <button class="btn" onclick="prevStep('hq')">◀ Prev</button>
+        <span class="step-counter" id="hq-counter">1 / 4</span>
+        <button class="btn" onclick="nextStep('hq')">Next ▶</button>
+      </div>
+    </div>
+    <div class="example-body">
+
+      <!-- Step 1 -->
+      <div class="example-step active" data-step="1" data-example="hq">
+        <p><strong>Example 1:</strong> Tree with root=20, children=10,8, leaves=5,4,7,2</p>
+        <div class="tree-wrap">
+          <svg width="340" height="170" viewBox="0 0 340 170">
+            <line class="edge" x1="170" y1="35" x2="100" y2="85"/>
+            <line class="edge" x1="170" y1="35" x2="240" y2="85"/>
+            <line class="edge" x1="100" y1="85" x2="65"  y2="135"/>
+            <line class="edge" x1="100" y1="85" x2="135" y2="135"/>
+            <line class="edge" x1="240" y1="85" x2="205" y2="135"/>
+            <line class="edge" x1="240" y1="85" x2="275" y2="135"/>
+            <circle cx="170" cy="35"  r="22" class="node-circle" stroke="#ff6b35"/>
+            <circle cx="100" cy="85"  r="22" class="node-circle" stroke="#ff6b35"/>
+            <circle cx="240" cy="85"  r="22" class="node-circle" stroke="#ff6b35"/>
+            <circle cx="65"  cy="135" r="22" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="135" cy="135" r="22" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="205" cy="135" r="22" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="275" cy="135" r="22" class="node-circle" stroke="#a78bfa"/>
+            <text class="node-text" x="170" y="35"  fill="#ff6b35">20</text>
+            <text class="node-text" x="100" y="85"  fill="#ff6b35">10</text>
+            <text class="node-text" x="240" y="85"  fill="#ff6b35">8</text>
+            <text class="node-text" x="65"  y="135" fill="#a78bfa">5</text>
+            <text class="node-text" x="135" y="135" fill="#a78bfa">4</text>
+            <text class="node-text" x="205" y="135" fill="#a78bfa">7</text>
+            <text class="node-text" x="275" y="135" fill="#a78bfa">2</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>✅ Valid Max-Heap!</strong> Check: 20≥10, 20≥8, 10≥5, 10≥4, 8≥7, 8≥2. All parents ≥ children. Structure: all levels full except last which is left-filled. ✓</div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="example-step" data-step="2" data-example="hq">
+        <p><strong>Example 2:</strong> Same tree but last level has gap (right child missing before left)</p>
+        <div class="tree-wrap">
+          <svg width="300" height="170" viewBox="0 0 300 170">
+            <line class="edge" x1="150" y1="35" x2="90"  y2="85"/>
+            <line class="edge" x1="150" y1="35" x2="210" y2="85"/>
+            <line class="edge" x1="90"  y1="85" x2="60"  y2="135"/>
+            <line class="edge" x1="90"  y1="85" x2="120" y2="135"/>
+            <line class="edge" x1="210" y1="85" x2="240" y2="135"/>
+            <!-- missing left child of right node, only has right child → NOT CBT -->
+            <circle cx="150" cy="35"  r="22" class="node-circle" stroke="#ff6b35"/>
+            <circle cx="90"  cy="85"  r="22" class="node-circle" stroke="#ff6b35"/>
+            <circle cx="210" cy="85"  r="22" class="node-circle" stroke="#ff6b35"/>
+            <circle cx="60"  cy="135" r="22" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="120" cy="135" r="22" class="node-circle" stroke="#a78bfa"/>
+            <!-- right node only has right child (gap) - show dashed circle for missing -->
+            <circle cx="180" cy="135" r="22" fill="none" stroke="#f87171" stroke-dasharray="5,3"/>
+            <circle cx="240" cy="135" r="22" class="node-circle" stroke="#f87171"/>
+            <text class="node-text" x="150" y="35"  fill="#ff6b35">20</text>
+            <text class="node-text" x="90"  y="85"  fill="#ff6b35">10</text>
+            <text class="node-text" x="210" y="85"  fill="#ff6b35">8</text>
+            <text class="node-text" x="60"  y="135" fill="#a78bfa">5</text>
+            <text class="node-text" x="120" y="135" fill="#a78bfa">4</text>
+            <text class="node-text" x="180" y="135" fill="#f87171">?</text>
+            <text class="node-text" x="240" y="135" fill="#f87171">2</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>❌ NOT a Heap!</strong> Not even a CBT. The last level has a gap — element at position 6 (left child of right node) is missing but position 7 is filled. CBT requires left-to-right filling with no gaps.</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="example-step" data-step="3" data-example="hq">
+        <p><strong>Example 3:</strong> root=5, children=8,12, leaves=9,15</p>
+        <div class="tree-wrap">
+          <svg width="260" height="160" viewBox="0 0 260 160">
+            <line class="edge" x1="130" y1="35" x2="75"  y2="90"/>
+            <line class="edge" x1="130" y1="35" x2="185" y2="90"/>
+            <line class="edge" x1="75"  y1="90" x2="50"  y2="140"/>
+            <line class="edge" x1="75"  y1="90" x2="100" y2="140"/>
+            <circle cx="130" cy="35"  r="22" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="75"  cy="90"  r="22" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="185" cy="90"  r="22" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="50"  cy="140" r="22" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="100" cy="140" r="22" class="node-circle" stroke="#a78bfa"/>
+            <text class="node-text" x="130" y="35"  fill="#00e5ff">5</text>
+            <text class="node-text" x="75"  y="90"  fill="#00e5ff">8</text>
+            <text class="node-text" x="185" y="90"  fill="#00e5ff">12</text>
+            <text class="node-text" x="50"  y="140" fill="#a78bfa">9</text>
+            <text class="node-text" x="100" y="140" fill="#a78bfa">15</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>✅ Valid Min-Heap!</strong> 5≤8, 5≤12, 8≤9, 8≤15. All heap properties hold. Note: 12 has no children (still valid). Structure is CBT ✓</div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="example-step" data-step="4" data-example="hq">
+        <p><strong>Example 4:</strong> root=5, children=8,3, left-child-of-8 = 20</p>
+        <div class="tree-wrap">
+          <svg width="260" height="160" viewBox="0 0 260 160">
+            <line class="edge" x1="130" y1="35" x2="80"  y2="90"/>
+            <line class="edge" x1="130" y1="35" x2="180" y2="90"/>
+            <line class="edge" x1="80"  y1="90" x2="55"  y2="140"/>
+            <circle cx="130" cy="35"  r="22" class="node-circle" stroke="#f87171"/>
+            <circle cx="80"  cy="90"  r="22" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="180" cy="90"  r="22" class="node-circle" stroke="#f87171"/>
+            <circle cx="55"  cy="140" r="22" class="node-circle" stroke="#a78bfa"/>
+            <text class="node-text" x="130" y="35"  fill="#f87171">5</text>
+            <text class="node-text" x="80"  y="90"  fill="#a78bfa">8</text>
+            <text class="node-text" x="180" y="90"  fill="#f87171">3</text>
+            <text class="node-text" x="55"  y="140" fill="#a78bfa">20</text>
+            <text fill="#f87171" font-size="10" x="165" y="75" font-weight="bold">✗ 5 &gt; 3!</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>❌ NOT a Min-Heap!</strong> Parent 5 has child 3, but 5 &gt; 3, which violates min-heap property (parent must be ≤ children). Structure (CBT) is fine, but heap property fails.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 2 — ARRAY REPRESENTATION
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="array">
+  <div class="section-tag">Storage</div>
+  <h2>Array Representation — Magic Without Pointers</h2>
+
+  <p><strong>The problem with linked nodes:</strong> A binary tree with pointers needs extra memory and pointer navigation. But since a heap is a <em>complete</em> binary tree, there are no gaps — we can store it in a simple array using index math!</p>
+
+  <div class="box blue">
+    <strong>The magic formulas</strong> (1-indexed array):
+    <br><code>Parent(i) = ⌊i/2⌋</code> &nbsp;|&nbsp; <code>Left(i) = 2i</code> &nbsp;|&nbsp; <code>Right(i) = 2i+1</code>
+    <br><br>For 0-indexed: <code>Parent(i) = ⌊(i-1)/2⌋</code> &nbsp;|&nbsp; <code>Left(i) = 2i+1</code> &nbsp;|&nbsp; <code>Right(i) = 2i+2</code>
+  </div>
+
+  <h3>Worked Example</h3>
+  <p>Heap: <code>[11, 17, 13, 18, 21, 19, 17, 43, 23, 26]</code> (1-indexed)</p>
+
+  <div class="array-viz">
+    <div class="arr-cell arr-normal"><span class="arr-idx">—</span><span class="arr-val" style="color:#555">—</span></div>
+    <div class="arr-cell arr-hi"><span class="arr-idx">1</span><span class="arr-val">11</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">17</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">13</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">4</span><span class="arr-val">18</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">5</span><span class="arr-val">21</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">6</span><span class="arr-val">19</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">7</span><span class="arr-val">17</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">8</span><span class="arr-val">43</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">9</span><span class="arr-val">23</span></div>
+    <div class="arr-cell arr-normal"><span class="arr-idx">10</span><span class="arr-val">26</span></div>
+  </div>
+
+  <div class="tree-wrap">
+    <svg width="480" height="220" viewBox="0 0 480 220">
+      <!-- Level 0 -->
+      <line class="edge" x1="240" y1="35"  x2="140" y2="90"/>
+      <line class="edge" x1="240" y1="35"  x2="340" y2="90"/>
+      <!-- Level 1 -->
+      <line class="edge" x1="140" y1="90"  x2="90"  y2="150"/>
+      <line class="edge" x1="140" y1="90"  x2="190" y2="150"/>
+      <line class="edge" x1="340" y1="90"  x2="290" y2="150"/>
+      <line class="edge" x1="340" y1="90"  x2="390" y2="150"/>
+      <!-- Level 2 -->
+      <line class="edge" x1="90"  y1="150" x2="55"  y2="200"/>
+      <line class="edge" x1="90"  y1="150" x2="125" y2="200"/>
+      <line class="edge" x1="190" y1="150" x2="155" y2="200"/>
+
+      <!-- Nodes Level 0 -->
+      <circle cx="240" cy="35"  r="22" class="node-circle" stroke="#00e5ff"/>
+      <!-- Nodes Level 1 -->
+      <circle cx="140" cy="90"  r="22" class="node-circle" stroke="#a78bfa"/>
+      <circle cx="340" cy="90"  r="22" class="node-circle" stroke="#a78bfa"/>
+      <!-- Nodes Level 2 -->
+      <circle cx="90"  cy="150" r="22" class="node-circle" stroke="#34d399"/>
+      <circle cx="190" cy="150" r="22" class="node-circle" stroke="#34d399"/>
+      <circle cx="290" cy="150" r="22" class="node-circle" stroke="#34d399"/>
+      <circle cx="390" cy="150" r="22" class="node-circle" stroke="#34d399"/>
+      <!-- Nodes Level 3 -->
+      <circle cx="55"  cy="200" r="18" class="node-circle" stroke="#fbbf24"/>
+      <circle cx="125" cy="200" r="18" class="node-circle" stroke="#fbbf24"/>
+      <circle cx="155" cy="200" r="18" class="node-circle" stroke="#fbbf24"/>
+
+      <!-- Values -->
+      <text class="node-text" x="240" y="35"  fill="#00e5ff">11</text>
+      <text class="node-text" x="140" y="90"  fill="#a78bfa">17</text>
+      <text class="node-text" x="340" y="90"  fill="#a78bfa">13</text>
+      <text class="node-text" x="90"  y="150" fill="#34d399">18</text>
+      <text class="node-text" x="190" y="150" fill="#34d399">21</text>
+      <text class="node-text" x="290" y="150" fill="#34d399">19</text>
+      <text class="node-text" x="390" y="150" fill="#34d399">17</text>
+      <text class="node-text" x="55"  y="200" fill="#fbbf24">43</text>
+      <text class="node-text" x="125" y="200" fill="#fbbf24">23</text>
+      <text class="node-text" x="155" y="200" fill="#fbbf24">26</text>
+
+      <!-- Index labels -->
+      <text font-size="9" fill="#64748b" x="248" y="18">i=1</text>
+      <text font-size="9" fill="#64748b" x="148" y="73">i=2</text>
+      <text font-size="9" fill="#64748b" x="348" y="73">i=3</text>
+      <text font-size="9" fill="#64748b" x="98"  y="133">i=4</text>
+      <text font-size="9" fill="#64748b" x="198" y="133">i=5</text>
+      <text font-size="9" fill="#64748b" x="298" y="133">i=6</text>
+      <text font-size="9" fill="#64748b" x="398" y="133">i=7</text>
+    </svg>
+  </div>
+
+  <h4>Verify with a node — node at index 4 (value=18):</h4>
+  <ul>
+    <li>Parent = ⌊4/2⌋ = <strong>index 2</strong> → value 17 ✓ (17 ≤ 18)</li>
+    <li>Left child = 2×4 = <strong>index 8</strong> → value 43 ✓ (18 ≤ 43)</li>
+    <li>Right child = 2×4+1 = <strong>index 9</strong> → value 23 ✓ (18 ≤ 23)</li>
+  </ul>
+
+  <div class="box green">
+    <strong>Why this is genius:</strong> No left/right pointers needed. Index arithmetic replaces tree navigation. Cache-friendly (contiguous memory). Leaves are at indices ⌊n/2⌋+1 to n — they automatically satisfy heap property (no children to violate).
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 3 — MIN/MAX ELEMENTS
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="minmax">
+  <div class="section-tag">Element Location</div>
+  <h2>Where Are Min and Max? — The Important Facts</h2>
+
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent);">Min Heap</div>
+      <p><strong>Min element:</strong> <span style="color:var(--accent4)">ALWAYS at root</span> → O(1)</p>
+      <p><strong>Max element:</strong> <span style="color:var(--accent5)">ALWAYS at a leaf</span> → must scan ⌈n/2⌉ leaves → O(n)</p>
+    </div>
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent2);">Max Heap</div>
+      <p><strong>Max element:</strong> <span style="color:var(--accent4)">ALWAYS at root</span> → O(1)</p>
+      <p><strong>Min element:</strong> <span style="color:var(--accent5)">ALWAYS at a leaf</span> → must scan ⌈n/2⌉ leaves → O(n)</p>
+    </div>
+  </div>
+
+  <div class="box yellow">
+    <strong>Why is max at a leaf in min-heap?</strong> From root going downward, values are non-decreasing (each child ≥ its parent). The largest value must be somewhere where it has no children forcing it to be larger. That's a leaf. But we don't know <em>which</em> leaf — could be any of the ~n/2 leaves.
+  </div>
+
+  <div class="tree-wrap">
+    <svg width="420" height="200" viewBox="0 0 420 200">
+      <!-- Arrows showing increasing direction in min-heap -->
+      <line class="edge" x1="210" y1="40"  x2="120" y2="95"/>
+      <line class="edge" x1="210" y1="40"  x2="300" y2="95"/>
+      <line class="edge" x1="120" y1="95"  x2="70"  y2="152"/>
+      <line class="edge" x1="120" y1="95"  x2="170" y2="152"/>
+      <line class="edge" x1="300" y1="95"  x2="250" y2="152"/>
+      <line class="edge" x1="300" y1="95"  x2="350" y2="152"/>
+
+      <!-- Root (min) -->
+      <circle cx="210" cy="40"  r="24" fill="rgba(0,229,255,.2)"  stroke="#00e5ff" stroke-width="2.5"/>
+      <!-- Level 1 -->
+      <circle cx="120" cy="95"  r="22" class="node-circle" stroke="#a78bfa"/>
+      <circle cx="300" cy="95"  r="22" class="node-circle" stroke="#a78bfa"/>
+      <!-- Leaves (max candidates) -->
+      <circle cx="70"  cy="152" r="22" fill="rgba(251,191,36,.2)" stroke="#fbbf24" stroke-width="2.5"/>
+      <circle cx="170" cy="152" r="22" fill="rgba(251,191,36,.2)" stroke="#fbbf24" stroke-width="2.5"/>
+      <circle cx="250" cy="152" r="22" fill="rgba(251,191,36,.2)" stroke="#fbbf24" stroke-width="2.5"/>
+      <circle cx="350" cy="152" r="22" fill="rgba(251,191,36,.2)" stroke="#fbbf24" stroke-width="2.5"/>
+
+      <text class="node-text" x="210" y="40"  fill="#00e5ff">min</text>
+      <text class="node-text" x="120" y="95"  fill="#a78bfa">mid</text>
+      <text class="node-text" x="300" y="95"  fill="#a78bfa">mid</text>
+      <text class="node-text" x="70"  y="152" fill="#fbbf24">leaf</text>
+      <text class="node-text" x="170" y="152" fill="#fbbf24">leaf</text>
+      <text class="node-text" x="250" y="152" fill="#fbbf24">leaf</text>
+      <text class="node-text" x="350" y="152" fill="#fbbf24">max!</text>
+
+      <text font-size="10" fill="#00e5ff" x="200" y="12">MIN always here</text>
+      <text font-size="10" fill="#fbbf24" x="170" y="188">MAX is always at SOME leaf (not predictable which one)</text>
+    </svg>
+  </div>
+
+  <div class="box blue">
+    <strong>GATE 2020 question:</strong> Min-heap with 1023 elements. Minimum comparisons to find maximum?<br>
+    <em>Answer:</em> Max is in the leaves. A 1023-node complete binary tree has exactly 512 leaves (nodes from index 512 to 1023). We must compare all 512 leaves. So: <strong>511 comparisons</strong> (to find max among 512 leaves using a tournament).
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 4 — KTH MINIMUM
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="kth">
+  <div class="section-tag">Advanced Property</div>
+  <h2>Kth Minimum in a Min-Heap</h2>
+
+  <p><strong>Question:</strong> Where can the kth smallest element live in a min-heap?</p>
+
+  <div class="box blue">
+    <strong>Key Theorem:</strong> The kth minimum element in a min-heap is <em>always</em> located somewhere between level 0 (root) and level k−1 (inclusive).
+  </div>
+
+  <h3>Why? — The Logic</h3>
+  <p>In a min-heap, as you go from root down any path, values are non-decreasing. So the first k elements in sorted order (1st min, 2nd min, ..., kth min) must all appear in the first k-1 levels.</p>
+
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">1</span><span class="step-label">Root (Level 0) is always the 1st minimum.</span></div>
+    <div class="step-desc">By definition — root is ≤ all other elements in a min-heap.</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">2</span><span class="step-label">2nd min must be at level 0 or 1.</span></div>
+    <div class="step-desc">It must be smaller than all elements below it. Since all children of root could be candidates, 2nd min is among the root's children (level 1).</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">3</span><span class="step-label">kth min cannot be lower than level k-1.</span></div>
+    <div class="step-desc">If kth min were at level k, there would need to be at least k elements smaller than it above it — but there are at most 2⁰+2¹+...+2^(k-1) = 2^k - 1 nodes above level k, and we'd need exactly k of those to be smaller. This can happen, but the kth min itself could still be at level k-1 or higher.</div>
+  </div>
+
+  <div class="tree-wrap">
+    <svg width="440" height="210" viewBox="0 0 440 210">
+      <!-- Dashed level lines -->
+      <line x1="20" y1="45"  x2="420" y2="45"  stroke="#1f2f4a" stroke-dasharray="4,3"/>
+      <line x1="20" y1="100" x2="420" y2="100" stroke="#1f2f4a" stroke-dasharray="4,3"/>
+      <line x1="20" y1="155" x2="420" y2="155" stroke="#1f2f4a" stroke-dasharray="4,3"/>
+
+      <!-- Level labels -->
+      <text font-size="10" fill="#64748b" x="22" y="40">Level 0</text>
+      <text font-size="10" fill="#64748b" x="22" y="95">Level 1</text>
+      <text font-size="10" fill="#64748b" x="22" y="150">Level 2</text>
+      <text font-size="10" fill="#64748b" x="22" y="200">Level 3</text>
+
+      <!-- Tree edges -->
+      <line class="edge" x1="220" y1="45"  x2="150" y2="100"/>
+      <line class="edge" x1="220" y1="45"  x2="290" y2="100"/>
+      <line class="edge" x1="150" y1="100" x2="110" y2="155"/>
+      <line class="edge" x1="150" y1="100" x2="190" y2="155"/>
+      <line class="edge" x1="290" y1="100" x2="250" y2="155"/>
+      <line class="edge" x1="290" y1="100" x2="330" y2="155"/>
+      <line class="edge" x1="110" y1="155" x2="90"  y2="200"/>
+      <line class="edge" x1="110" y1="155" x2="130" y2="200"/>
+      <line class="edge" x1="190" y1="155" x2="170" y2="200"/>
+      <line class="edge" x1="190" y1="155" x2="210" y2="200"/>
+
+      <!-- Nodes with k-indication colors -->
+      <circle cx="220" cy="45"  r="20" fill="rgba(0,229,255,.25)"  stroke="#00e5ff" stroke-width="2"/>
+      <circle cx="150" cy="100" r="20" fill="rgba(167,139,250,.2)" stroke="#a78bfa" stroke-width="2"/>
+      <circle cx="290" cy="100" r="20" fill="rgba(167,139,250,.2)" stroke="#a78bfa" stroke-width="2"/>
+      <circle cx="110" cy="155" r="20" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <circle cx="190" cy="155" r="20" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <circle cx="250" cy="155" r="20" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <circle cx="330" cy="155" r="20" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <circle cx="90"  cy="200" r="16" class="node-circle" stroke="#64748b"/>
+      <circle cx="130" cy="200" r="16" class="node-circle" stroke="#64748b"/>
+      <circle cx="170" cy="200" r="16" class="node-circle" stroke="#64748b"/>
+      <circle cx="210" cy="200" r="16" class="node-circle" stroke="#64748b"/>
+
+      <text class="node-text" x="220" y="45"  fill="#00e5ff" font-size="11">1st</text>
+      <text class="node-text" x="150" y="100" fill="#a78bfa" font-size="11">2nd</text>
+      <text class="node-text" x="290" y="100" fill="#a78bfa" font-size="11">or</text>
+      <text class="node-text" x="110" y="155" fill="#fbbf24" font-size="9">3rd?</text>
+      <text class="node-text" x="190" y="155" fill="#fbbf24" font-size="9">3rd?</text>
+      <text class="node-text" x="250" y="155" fill="#fbbf24" font-size="9">3rd?</text>
+      <text class="node-text" x="330" y="155" fill="#fbbf24" font-size="9">3rd?</text>
+    </svg>
+  </div>
+
+  <div class="box purple">
+    <strong>Tricky fact from notes:</strong> When elements repeat, the definition of kth smallest uses: "kth smallest is the minimum n such that at least k elements are ≤ n." For array [1,2,3,4,...,100] stored as min-heap, A[k] = kth min. But for [1,1,1,1,1,...], 2nd min = 1 (still the same value).
+  </div>
+
+  <h3>GATE CSE 2003 — 7th Smallest</h3>
+  <div class="box green">
+    <em>In a min-heap with n elements, the 7th smallest element can be found in time:</em><br>
+    Answer: <strong>Θ(1)</strong> — The 7th smallest is within the first 7 levels (levels 0–6). A heap with n elements has at most 2⁷−1 = 127 nodes in the first 7 levels. This is a <em>constant</em> (doesn't depend on n). So scan these 127 nodes → Θ(1).
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 5 — INSERTION
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="insert">
+  <div class="section-tag">Operation</div>
+  <h2>Insertion — Percolate Up (Bubble Up)</h2>
+
+  <p><strong>Goal:</strong> Add new element while maintaining both CBT structure AND heap property.</p>
+
+  <div class="box blue">
+    <strong>Strategy:</strong> First maintain structure (add at end = next CBT position), then restore heap property (bubble up until parent is smaller).
+  </div>
+
+  <h3>Algorithm</h3>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">1</span><span class="step-label">Add new element at the next available position (end of array)</span></div>
+    <div class="step-desc">This preserves CBT structure. Array size increases by 1.</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">2</span><span class="step-label">Compare with parent, swap if new element is smaller (min-heap)</span></div>
+    <div class="step-desc">If A[i] &lt; A[i/2], swap them. Move up (i = i/2).</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">3</span><span class="step-label">Repeat until at root or parent is smaller</span></div>
+    <div class="step-desc">At most log n swaps (height of tree).</div>
+  </div>
+
+  <h3>Interactive Example — Insert 14 into Min-Heap</h3>
+  <div class="example-container">
+    <div class="example-header">
+      <span class="example-title">Insert 14</span>
+      <div class="step-controls">
+        <button class="btn" onclick="prevStep('ins')">◀ Prev</button>
+        <span class="step-counter" id="ins-counter">1 / 4</span>
+        <button class="btn" onclick="nextStep('ins')">Next ▶</button>
+      </div>
+    </div>
+    <div class="example-body">
+
+      <div class="example-step active" data-step="1" data-example="ins">
+        <p><strong>Starting heap:</strong> [13, 21, 16, 24, 31, 19, 68, 65, 26, 32]</p>
+        <div class="tree-wrap">
+          <svg width="420" height="195" viewBox="0 0 420 195">
+            <line class="edge" x1="210" y1="35"  x2="130" y2="85"/>
+            <line class="edge" x1="210" y1="35"  x2="290" y2="85"/>
+            <line class="edge" x1="130" y1="85"  x2="90"  y2="140"/>
+            <line class="edge" x1="130" y1="85"  x2="170" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="250" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="330" y2="140"/>
+            <line class="edge" x1="90"  y1="140" x2="60"  y2="185"/>
+            <line class="edge" x1="90"  y1="140" x2="90"  y2="185"/>
+            <line class="edge" x1="170" y1="140" x2="150" y2="185"/>
+            <circle cx="210" cy="35"  r="20" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="130" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="290" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="90"  cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="170" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="250" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="330" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="60"  cy="185" r="18" class="node-circle" stroke="#64748b"/>
+            <circle cx="90"  cy="185" r="18" class="node-circle" stroke="#64748b"/>
+            <circle cx="150" cy="185" r="18" class="node-circle" stroke="#64748b"/>
+            <text class="node-text" x="210" y="35"  fill="#00e5ff" font-size="12">13</text>
+            <text class="node-text" x="130" y="85"  fill="#a78bfa" font-size="12">21</text>
+            <text class="node-text" x="290" y="85"  fill="#a78bfa" font-size="12">16</text>
+            <text class="node-text" x="90"  y="140" fill="#34d399" font-size="12">24</text>
+            <text class="node-text" x="170" y="140" fill="#34d399" font-size="12">31</text>
+            <text class="node-text" x="250" y="140" fill="#34d399" font-size="12">19</text>
+            <text class="node-text" x="330" y="140" fill="#34d399" font-size="12">68</text>
+            <text class="node-text" x="60"  y="185" fill="#94a3b8" font-size="11">65</text>
+            <text class="node-text" x="90"  y="185" fill="#94a3b8" font-size="11">26</text>
+            <text class="node-text" x="150" y="185" fill="#94a3b8" font-size="11">32</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>Initial state.</strong> Valid min-heap. We want to insert 14. Next CBT position = rightmost spot at level 3 (after 32).</div>
+      </div>
+
+      <div class="example-step" data-step="2" data-example="ins">
+        <p><strong>Step 1:</strong> Place 14 at next CBT position (right child of 31, index 11)</p>
+        <div class="tree-wrap">
+          <svg width="420" height="200" viewBox="0 0 420 200">
+            <line class="edge" x1="210" y1="35"  x2="130" y2="85"/>
+            <line class="edge" x1="210" y1="35"  x2="290" y2="85"/>
+            <line class="edge" x1="130" y1="85"  x2="90"  y2="140"/>
+            <line class="edge" x1="130" y1="85"  x2="170" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="250" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="330" y2="140"/>
+            <line class="edge" x1="90"  y1="140" x2="60"  y2="190"/>
+            <line class="edge" x1="90"  y1="140" x2="90"  y2="190"/>
+            <line class="edge" x1="170" y1="140" x2="150" y2="190"/>
+            <line class="edge" x1="170" y1="140" x2="190" y2="190" stroke="#fbbf24"/>
+            <circle cx="210" cy="35"  r="20" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="130" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="290" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="90"  cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="170" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="250" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="330" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="60"  cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="90"  cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="150" cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="190" cy="190" r="18" fill="rgba(251,191,36,.3)" stroke="#fbbf24" stroke-width="2.5"/>
+            <text class="node-text" x="210" y="35"  fill="#00e5ff" font-size="12">13</text>
+            <text class="node-text" x="130" y="85"  fill="#a78bfa" font-size="12">21</text>
+            <text class="node-text" x="290" y="85"  fill="#a78bfa" font-size="12">16</text>
+            <text class="node-text" x="90"  y="140" fill="#34d399" font-size="12">24</text>
+            <text class="node-text" x="170" y="140" fill="#34d399" font-size="12">31</text>
+            <text class="node-text" x="250" y="140" fill="#34d399" font-size="12">19</text>
+            <text class="node-text" x="330" y="140" fill="#34d399" font-size="12">68</text>
+            <text class="node-text" x="60"  y="190" fill="#94a3b8" font-size="10">65</text>
+            <text class="node-text" x="90"  y="190" fill="#94a3b8" font-size="10">26</text>
+            <text class="node-text" x="150" y="190" fill="#94a3b8" font-size="10">32</text>
+            <text class="node-text" x="190" y="190" fill="#fbbf24" font-size="12">14</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>14 placed at end.</strong> CBT structure maintained. Now check heap property: 14 vs parent 31. Is 14 &lt; 31? YES → need to swap!</div>
+      </div>
+
+      <div class="example-step" data-step="3" data-example="ins">
+        <p><strong>Step 2:</strong> 14 &lt; 31 (parent). Swap them! 14 moves up.</p>
+        <div class="tree-wrap">
+          <svg width="420" height="200" viewBox="0 0 420 200">
+            <line class="edge" x1="210" y1="35"  x2="130" y2="85"/>
+            <line class="edge" x1="210" y1="35"  x2="290" y2="85"/>
+            <line class="edge" x1="130" y1="85"  x2="90"  y2="140"/>
+            <line class="edge" x1="130" y1="85"  x2="170" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="250" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="330" y2="140"/>
+            <line class="edge" x1="90"  y1="140" x2="60"  y2="190"/>
+            <line class="edge" x1="90"  y1="140" x2="90"  y2="190"/>
+            <line class="edge" x1="170" y1="140" x2="150" y2="190"/>
+            <line class="edge" x1="170" y1="140" x2="190" y2="190"/>
+            <circle cx="210" cy="35"  r="20" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="130" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="290" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="90"  cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="170" cy="140" r="20" fill="rgba(251,191,36,.3)" stroke="#fbbf24" stroke-width="2.5"/>
+            <circle cx="250" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="330" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="60"  cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="90"  cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="150" cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="190" cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <text class="node-text" x="210" y="35"  fill="#00e5ff" font-size="12">13</text>
+            <text class="node-text" x="130" y="85"  fill="#a78bfa" font-size="12">21</text>
+            <text class="node-text" x="290" y="85"  fill="#a78bfa" font-size="12">16</text>
+            <text class="node-text" x="90"  y="140" fill="#34d399" font-size="12">24</text>
+            <text class="node-text" x="170" y="140" fill="#fbbf24" font-size="12">14</text>
+            <text class="node-text" x="250" y="140" fill="#34d399" font-size="12">19</text>
+            <text class="node-text" x="330" y="140" fill="#34d399" font-size="12">68</text>
+            <text class="node-text" x="60"  y="190" fill="#94a3b8" font-size="10">65</text>
+            <text class="node-text" x="90"  y="190" fill="#94a3b8" font-size="10">26</text>
+            <text class="node-text" x="150" y="190" fill="#94a3b8" font-size="10">32</text>
+            <text class="node-text" x="190" y="190" fill="#94a3b8" font-size="10">31</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>14 moved up, 31 moved down.</strong> Now compare 14 with parent 21. Is 14 &lt; 21? YES → swap again!</div>
+      </div>
+
+      <div class="example-step" data-step="4" data-example="ins">
+        <p><strong>Step 3:</strong> 14 &lt; 21. Swap. Now 14 at level 1. Compare with root 13. 14 &gt; 13 → STOP!</p>
+        <div class="tree-wrap">
+          <svg width="420" height="200" viewBox="0 0 420 200">
+            <line class="edge" x1="210" y1="35"  x2="130" y2="85"/>
+            <line class="edge" x1="210" y1="35"  x2="290" y2="85"/>
+            <line class="edge" x1="130" y1="85"  x2="90"  y2="140"/>
+            <line class="edge" x1="130" y1="85"  x2="170" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="250" y2="140"/>
+            <line class="edge" x1="290" y1="85"  x2="330" y2="140"/>
+            <line class="edge" x1="90"  y1="140" x2="60"  y2="190"/>
+            <line class="edge" x1="90"  y1="140" x2="90"  y2="190"/>
+            <line class="edge" x1="170" y1="140" x2="150" y2="190"/>
+            <line class="edge" x1="170" y1="140" x2="190" y2="190"/>
+            <circle cx="210" cy="35"  r="20" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="130" cy="85"  r="20" fill="rgba(251,191,36,.3)" stroke="#fbbf24" stroke-width="2.5"/>
+            <circle cx="290" cy="85"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="90"  cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="170" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="250" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="330" cy="140" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="60"  cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="90"  cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="150" cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="190" cy="190" r="16" class="node-circle" stroke="#64748b"/>
+            <text class="node-text" x="210" y="35"  fill="#00e5ff" font-size="12">13</text>
+            <text class="node-text" x="130" y="85"  fill="#fbbf24" font-size="12">14</text>
+            <text class="node-text" x="290" y="85"  fill="#a78bfa" font-size="12">16</text>
+            <text class="node-text" x="90"  y="140" fill="#34d399" font-size="12">24</text>
+            <text class="node-text" x="170" y="140" fill="#34d399" font-size="12">21</text>
+            <text class="node-text" x="250" y="140" fill="#34d399" font-size="12">19</text>
+            <text class="node-text" x="330" y="140" fill="#34d399" font-size="12">68</text>
+            <text class="node-text" x="60"  y="190" fill="#94a3b8" font-size="10">65</text>
+            <text class="node-text" x="90"  y="190" fill="#94a3b8" font-size="10">26</text>
+            <text class="node-text" x="150" y="190" fill="#94a3b8" font-size="10">32</text>
+            <text class="node-text" x="190" y="190" fill="#94a3b8" font-size="10">31</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>✅ Insertion complete!</strong> 14 traveled from leaf to level 1 (2 swaps). 13 at root is still ≤ 14 ✓. Heap property restored. Time: O(log n) worst case, O(1) average case (most inserted elements stay near leaves).</div>
+      </div>
+
+    </div>
+  </div>
+
+  <h3>Complexity</h3>
+  <table>
+    <tr><th>Case</th><th>Time</th><th>When?</th></tr>
+    <tr><td>Best</td><td class="good">O(1)</td><td>New element is ≥ its parent — no swaps needed</td></tr>
+    <tr><td>Worst</td><td class="bad">O(log n)</td><td>New element bubbles all the way to root</td></tr>
+    <tr><td>Average</td><td class="good">O(1)</td><td>Half the nodes are leaves; most insertions stay near bottom</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 6 — BUILD HEAP
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="build">
+  <div class="section-tag">Construction</div>
+  <h2>Build Heap — Two Approaches</h2>
+
+  <p>Given an arbitrary array, how do we turn it into a valid heap?</p>
+
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent5);">Method 1: Top-Down (Repeated Insertion)</div>
+      <ul>
+        <li>Insert elements one by one into empty heap</li>
+        <li>Each insertion: O(log n) worst case</li>
+        <li>n insertions → <strong>O(n log n)</strong></li>
+        <li>Spends most time on leaves (log n per leaf)</li>
+      </ul>
+    </div>
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent4);">Method 2: Bottom-Up (Heapify) ⭐</div>
+      <ul>
+        <li>All leaves are already valid heaps!</li>
+        <li>Start from last non-leaf (⌊n/2⌋), heapify downward</li>
+        <li>Spends 0 time on leaves</li>
+        <li>Total: <strong>O(n)</strong> — much better!</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>The Genius of Bottom-Up: Why O(n)?</h3>
+  <div class="box blue">
+    Heapify at each node costs O(height of that node). In a complete binary tree:
+    <ul style="margin-top:0.5rem">
+      <li>~n/2 nodes at height 0 (leaves) → cost 0 each → total: 0</li>
+      <li>~n/4 nodes at height 1 → cost 1 each → total: n/4</li>
+      <li>~n/8 nodes at height 2 → cost 2 each → total: n/4</li>
+      <li>~n/16 at height 3 → total: 3n/16 ...</li>
+    </ul>
+    Grand total = n/2 × [1/2 + 2/2² + 3/2³ + ...] = n/2 × 2 = <strong>O(n)</strong>
+    <br>The series 1/2 + 2/4 + 3/8 + ... = 2 (converges!)
+  </div>
+
+  <h3>Heapify Algorithm (Percolate Down)</h3>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">★</span><span class="step-label">Precondition: Both left and right subtrees of i are already valid heaps</span></div>
+    <div class="step-desc">We just need to fix node i by pushing it down to its correct position.</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">1</span><span class="step-label">Find the smallest among: node i, left child, right child</span></div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">2</span><span class="step-label">If smallest is not node i, swap with the smallest child</span></div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">3</span><span class="step-label">Recurse on the subtree where we swapped</span></div>
+    <div class="step-desc">Repeat until no swap needed or we reach a leaf. Cost: O(log n) worst case.</div>
+  </div>
+
+  <h3>Interactive Example — Build Min-Heap from [4,1,3,2,16,9,10,14,8,7]</h3>
+  <div class="example-container">
+    <div class="example-header">
+      <span class="example-title">Bottom-Up Build Heap</span>
+      <div class="step-controls">
+        <button class="btn" onclick="prevStep('bh')">◀ Prev</button>
+        <span class="step-counter" id="bh-counter">1 / 5</span>
+        <button class="btn" onclick="nextStep('bh')">Next ▶</button>
+      </div>
+    </div>
+    <div class="example-body">
+
+      <div class="example-step active" data-step="1" data-example="bh">
+        <p><strong>Input array:</strong> [_, 4, 1, 3, 2, 16, 9, 10, 14, 8, 7] (1-indexed)</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">—</span><span class="arr-val">—</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">1</span><span class="arr-val">4</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">4</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">5</span><span class="arr-val">16</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">6</span><span class="arr-val">9</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">7</span><span class="arr-val">10</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">8</span><span class="arr-val">14</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">9</span><span class="arr-val">8</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">10</span><span class="arr-val">7</span></div>
+        </div>
+        <div class="step-insight"><strong>Start:</strong> n=10, so ⌊n/2⌋=5. We'll heapify from index 5 down to index 1. Indices 6-10 are leaves (already valid heaps). Start at i=5.</div>
+      </div>
+
+      <div class="example-step" data-step="2" data-example="bh">
+        <p><strong>Heapify(5):</strong> Node 5 = value 16. Children: L=10 (index 10, val 7). No right child (index 11 doesn't exist). 16 &gt; 7 → swap!</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">—</span><span class="arr-val">—</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">1</span><span class="arr-val">4</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">4</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">6</span><span class="arr-val">9</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">7</span><span class="arr-val">10</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">8</span><span class="arr-val">14</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">9</span><span class="arr-val">8</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">10</span><span class="arr-val">16</span></div>
+        </div>
+        <div class="step-insight"><strong>Swapped 16 and 7.</strong> Index 5 now has 7. Now heapify(4): Node 4 = 2. Children: L=8 (val 14), R=9 (val 8). 2 is smallest → no swap needed. ✓</div>
+      </div>
+
+      <div class="example-step" data-step="3" data-example="bh">
+        <p><strong>Heapify(3):</strong> Node 3 = 3. Children: L=6 (val 9), R=7 (val 10). 3 &lt; 9, 3 &lt; 10 → no swap. Move to i=2.</p>
+        <p><strong>Heapify(2):</strong> Node 2 = 1. Children: L=4 (val 2), R=5 (val 7). 1 &lt; 2, 1 &lt; 7 → no swap. Move to i=1.</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">—</span><span class="arr-val">—</span></div>
+          <div class="arr-cell arr-hi"><span class="arr-idx">1</span><span class="arr-val">4</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">2</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">4</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">6</span><span class="arr-val">9</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">7</span><span class="arr-val">10</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">8</span><span class="arr-val">14</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">9</span><span class="arr-val">8</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">10</span><span class="arr-val">16</span></div>
+        </div>
+        <div class="step-insight"><strong>Now heapify root (index 1):</strong> value 4. Children: L=2 (val 1), R=3 (val 3). Min child = 1. 4 &gt; 1 → SWAP!</div>
+      </div>
+
+      <div class="example-step" data-step="4" data-example="bh">
+        <p><strong>Heapify(1): Step 1</strong> — Swap 4 and 1. Now root=1. But 4 is now at index 2, need to continue heapify down from index 2.</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">—</span><span class="arr-val">—</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">1</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-swap"><span class="arr-idx">2</span><span class="arr-val">4</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">4</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">6</span><span class="arr-val">9</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">7</span><span class="arr-val">10</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">8</span><span class="arr-val">14</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">9</span><span class="arr-val">8</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">10</span><span class="arr-val">16</span></div>
+        </div>
+        <div class="step-insight"><strong>4 at index 2.</strong> Children: L=4 (val 2), R=5 (val 7). Min = 2 at index 4. 4 &gt; 2 → swap 4 and 2. 4 moves to index 4. Children of index 4: L=8 (val 14), R=9 (val 8). 4 &lt; 8, 4 &lt; 14 → done!</div>
+      </div>
+
+      <div class="example-step" data-step="5" data-example="bh">
+        <p><strong>✅ Final Min-Heap:</strong> [_, 1, 2, 3, 4, 7, 9, 10, 14, 8, 16]</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">—</span><span class="arr-val">—</span></div>
+          <div class="arr-cell arr-hi"><span class="arr-idx">1</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">2</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">4</span><span class="arr-val">4</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">6</span><span class="arr-val">9</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">7</span><span class="arr-val">10</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">8</span><span class="arr-val">14</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">9</span><span class="arr-val">8</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">10</span><span class="arr-val">16</span></div>
+        </div>
+        <div class="step-insight"><strong>Done in O(n)!</strong> Used bottom-up heapify. Contrast: top-down repeated insertion would take O(n log n). The big win is that leaves (~n/2 nodes) required 0 work. This is why O(n) build heap is such an elegant result.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="formula block">Build-Heap: for i = ⌊n/2⌋ downto 1: Heapify(A, i)</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 7 — DELETEMIN
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="deletemin">
+  <div class="section-tag">Operation</div>
+  <h2>FindMin and DeleteMin</h2>
+
+  <h3>FindMin — O(1)</h3>
+  <div class="box green">
+    Simply return A[1] (root). The minimum is always at the root in a min-heap. This is the whole point of the heap! Constant time, no work needed.
+  </div>
+
+  <h3>DeleteMin — O(log n)</h3>
+  <p>We must remove the root but maintain both properties:</p>
+
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">1</span><span class="step-label">Save the root value (this is the min we're returning)</span></div>
+    <div class="step-desc">min = A[1]</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">2</span><span class="step-label">Move last element to root: A[1] = A[n], n--</span></div>
+    <div class="step-desc">This maintains CBT structure (removes last position = keeps it complete). But now heap property at root is broken.</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">3</span><span class="step-label">Heapify(A, 1) — percolate the root element down</span></div>
+    <div class="step-desc">Since both subtrees were already valid heaps (we only changed root), heapify fixes it by pushing root element down to correct position.</div>
+  </div>
+
+  <div class="example-container">
+    <div class="example-header">
+      <span class="example-title">DeleteMin — Heap [2, 4, 3, 7, 5, 8, 10, 11, 9, 6, 14]</span>
+      <div class="step-controls">
+        <button class="btn" onclick="prevStep('dm')">◀ Prev</button>
+        <span class="step-counter" id="dm-counter">1 / 4</span>
+        <button class="btn" onclick="nextStep('dm')">Next ▶</button>
+      </div>
+    </div>
+    <div class="example-body">
+
+      <div class="example-step active" data-step="1" data-example="dm">
+        <p><strong>Initial heap. Root = 2 (min).</strong></p>
+        <div class="tree-wrap">
+          <svg width="380" height="200" viewBox="0 0 380 200">
+            <line class="edge" x1="190" y1="35"  x2="115" y2="90"/>
+            <line class="edge" x1="190" y1="35"  x2="265" y2="90"/>
+            <line class="edge" x1="115" y1="90"  x2="75"  y2="150"/>
+            <line class="edge" x1="115" y1="90"  x2="155" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="225" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="305" y2="150"/>
+            <line class="edge" x1="75"  y1="150" x2="50"  y2="195"/>
+            <line class="edge" x1="75"  y1="150" x2="100" y2="195"/>
+            <line class="edge" x1="155" y1="150" x2="130" y2="195"/>
+            <circle cx="190" cy="35"  r="22" fill="rgba(0,229,255,.3)" stroke="#00e5ff" stroke-width="3"/>
+            <circle cx="115" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="265" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="75"  cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="155" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="225" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="305" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="50"  cy="195" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="100" cy="195" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="130" cy="195" r="16" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="2"/>
+            <text class="node-text" x="190" y="35"  fill="#00e5ff">2</text>
+            <text class="node-text" x="115" y="90"  fill="#a78bfa">4</text>
+            <text class="node-text" x="265" y="90"  fill="#a78bfa">3</text>
+            <text class="node-text" x="75"  y="150" fill="#34d399">7</text>
+            <text class="node-text" x="155" y="150" fill="#34d399">5</text>
+            <text class="node-text" x="225" y="150" fill="#34d399">8</text>
+            <text class="node-text" x="305" y="150" fill="#34d399">10</text>
+            <text class="node-text" x="50"  y="195" fill="#94a3b8" font-size="11">11</text>
+            <text class="node-text" x="100" y="195" fill="#94a3b8" font-size="11">9</text>
+            <text class="node-text" x="130" y="195" fill="#f87171" font-size="11">6</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>DeleteMin returns 2.</strong> Last element = 6 (at rightmost leaf). We'll move 6 to root, remove last position.</div>
+      </div>
+
+      <div class="example-step" data-step="2" data-example="dm">
+        <p><strong>Step 1:</strong> Move last element (6) to root. Heap size n decreases by 1.</p>
+        <div class="tree-wrap">
+          <svg width="380" height="200" viewBox="0 0 380 200">
+            <line class="edge" x1="190" y1="35"  x2="115" y2="90"/>
+            <line class="edge" x1="190" y1="35"  x2="265" y2="90"/>
+            <line class="edge" x1="115" y1="90"  x2="75"  y2="150"/>
+            <line class="edge" x1="115" y1="90"  x2="155" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="225" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="305" y2="150"/>
+            <line class="edge" x1="75"  y1="150" x2="50"  y2="195"/>
+            <line class="edge" x1="75"  y1="150" x2="100" y2="195"/>
+            <circle cx="190" cy="35"  r="22" fill="rgba(248,113,113,.25)" stroke="#f87171" stroke-width="2.5"/>
+            <circle cx="115" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="265" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="75"  cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="155" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="225" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="305" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="50"  cy="195" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="100" cy="195" r="16" class="node-circle" stroke="#64748b"/>
+            <text class="node-text" x="190" y="35"  fill="#f87171">6</text>
+            <text class="node-text" x="115" y="90"  fill="#a78bfa">4</text>
+            <text class="node-text" x="265" y="90"  fill="#a78bfa">3</text>
+            <text class="node-text" x="75"  y="150" fill="#34d399">7</text>
+            <text class="node-text" x="155" y="150" fill="#34d399">5</text>
+            <text class="node-text" x="225" y="150" fill="#34d399">8</text>
+            <text class="node-text" x="305" y="150" fill="#34d399">10</text>
+            <text class="node-text" x="50"  y="195" fill="#94a3b8" font-size="11">11</text>
+            <text class="node-text" x="100" y="195" fill="#94a3b8" font-size="11">9</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>6 now at root.</strong> CBT structure OK. But 6 &gt; children (4 and 3) → heap property violated. Start heapify: min child = 3 (right child). Swap 6 and 3.</div>
+      </div>
+
+      <div class="example-step" data-step="3" data-example="dm">
+        <p><strong>Step 2:</strong> 6 &gt; min(4,3)=3. Swap 6 with 3. 6 goes to right subtree.</p>
+        <div class="tree-wrap">
+          <svg width="380" height="200" viewBox="0 0 380 200">
+            <line class="edge" x1="190" y1="35"  x2="115" y2="90"/>
+            <line class="edge" x1="190" y1="35"  x2="265" y2="90"/>
+            <line class="edge" x1="115" y1="90"  x2="75"  y2="150"/>
+            <line class="edge" x1="115" y1="90"  x2="155" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="225" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="305" y2="150"/>
+            <line class="edge" x1="75"  y1="150" x2="50"  y2="195"/>
+            <line class="edge" x1="75"  y1="150" x2="100" y2="195"/>
+            <circle cx="190" cy="35"  r="22" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="115" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="265" cy="90"  r="20" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="2"/>
+            <circle cx="75"  cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="155" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="225" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="305" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="50"  cy="195" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="100" cy="195" r="16" class="node-circle" stroke="#64748b"/>
+            <text class="node-text" x="190" y="35"  fill="#00e5ff">3</text>
+            <text class="node-text" x="115" y="90"  fill="#a78bfa">4</text>
+            <text class="node-text" x="265" y="90"  fill="#f87171">6</text>
+            <text class="node-text" x="75"  y="150" fill="#34d399">7</text>
+            <text class="node-text" x="155" y="150" fill="#34d399">5</text>
+            <text class="node-text" x="225" y="150" fill="#34d399">8</text>
+            <text class="node-text" x="305" y="150" fill="#34d399">10</text>
+            <text class="node-text" x="50"  y="195" fill="#94a3b8" font-size="11">11</text>
+            <text class="node-text" x="100" y="195" fill="#94a3b8" font-size="11">9</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>6 at position 3 now.</strong> Children of position 3: 8 and 10. 6 &lt; 8, 6 &lt; 10 → no swap needed! Heapify done. Final min-heap is valid!</div>
+      </div>
+
+      <div class="example-step" data-step="4" data-example="dm">
+        <p><strong>✅ Final Result.</strong> Min (2) returned. New root = 3. Valid min-heap.</p>
+        <div class="tree-wrap">
+          <svg width="380" height="185" viewBox="0 0 380 185">
+            <line class="edge" x1="190" y1="35"  x2="115" y2="90"/>
+            <line class="edge" x1="190" y1="35"  x2="265" y2="90"/>
+            <line class="edge" x1="115" y1="90"  x2="75"  y2="150"/>
+            <line class="edge" x1="115" y1="90"  x2="155" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="225" y2="150"/>
+            <line class="edge" x1="265" y1="90"  x2="305" y2="150"/>
+            <line class="edge" x1="75"  y1="150" x2="50"  y2="185"/>
+            <line class="edge" x1="75"  y1="150" x2="100" y2="185"/>
+            <circle cx="190" cy="35"  r="22" class="node-circle" stroke="#00e5ff"/>
+            <circle cx="115" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="265" cy="90"  r="20" class="node-circle" stroke="#a78bfa"/>
+            <circle cx="75"  cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="155" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="225" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="305" cy="150" r="20" class="node-circle" stroke="#34d399"/>
+            <circle cx="50"  cy="185" r="16" class="node-circle" stroke="#64748b"/>
+            <circle cx="100" cy="185" r="16" class="node-circle" stroke="#64748b"/>
+            <text class="node-text" x="190" y="35"  fill="#00e5ff">3</text>
+            <text class="node-text" x="115" y="90"  fill="#a78bfa">4</text>
+            <text class="node-text" x="265" y="90"  fill="#a78bfa">6</text>
+            <text class="node-text" x="75"  y="150" fill="#34d399">7</text>
+            <text class="node-text" x="155" y="150" fill="#34d399">5</text>
+            <text class="node-text" x="225" y="150" fill="#34d399">8</text>
+            <text class="node-text" x="305" y="150" fill="#34d399">10</text>
+            <text class="node-text" x="50"  y="185" fill="#94a3b8" font-size="10">11</text>
+            <text class="node-text" x="100" y="185" fill="#94a3b8" font-size="10">9</text>
+          </svg>
+        </div>
+        <div class="step-insight"><strong>Summary:</strong> DeleteMin = 1 swap to root + at most log n heapify swaps = <strong>O(log n)</strong>. Notice: avg case is also O(log n) for deletion (different from insertion where avg is O(1)).</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 8 — HEAP SORT
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="heapsort">
+  <div class="section-tag">Algorithm</div>
+  <h2>Heap Sort — O(n log n), In-Place</h2>
+
+  <p>Heap sort elegantly combines the two heap operations:</p>
+
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">1</span><span class="step-label">Build a Max-Heap from the input array — O(n)</span></div>
+    <div class="step-desc">Use bottom-up heapify. We use max-heap (not min) so we can sort in ascending order in-place.</div>
+  </div>
+  <div class="step-box">
+    <div class="step-header"><span class="step-num">2</span><span class="step-label">Repeatedly delete max: swap root with last, heapify root — O(n log n)</span></div>
+    <div class="step-desc">Each deletion: A[1] ↔ A[n], shrink heap, heapify(1). This places largest at end, 2nd largest at n-1, etc.</div>
+  </div>
+
+  <div class="box blue">
+    <strong>Why max-heap for ascending sort?</strong> When we delete max and put it at the end of the array, the sorted portion grows from right. The deleted elements (in sorted order) live in the "used" portion of the same array — <strong>in-place, no extra space!</strong>
+  </div>
+
+  <div class="example-container">
+    <div class="example-header">
+      <span class="example-title">Heap Sort — [2, 5, 1, 7, 3]</span>
+      <div class="step-controls">
+        <button class="btn" onclick="prevStep('hs')">◀ Prev</button>
+        <span class="step-counter" id="hs-counter">1 / 6</span>
+        <button class="btn" onclick="nextStep('hs')">Next ▶</button>
+      </div>
+    </div>
+    <div class="example-body">
+
+      <div class="example-step active" data-step="1" data-example="hs">
+        <p><strong>Input:</strong> [2, 5, 1, 7, 3]. Build max-heap first.</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">1</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">5</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">4</span><span class="arr-val">7</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">5</span><span class="arr-val">3</span></div>
+        </div>
+        <div class="step-insight">Start heapify from index ⌊5/2⌋=2 downto 1. Index 2 = value 5, children: 7(idx 4), 3(idx 5). 5 &lt; 7 → swap 5 and 7.</div>
+      </div>
+
+      <div class="example-step" data-step="2" data-example="hs">
+        <p><strong>After heapify(2):</strong> 7 goes up. Then heapify(1): value 2 vs children 7 and 1. Swap 2 and 7. Continue down: 2 vs 5 and 3. Swap 2 and 5. Result:</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-hi"><span class="arr-idx">1</span><span class="arr-val">7</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">5</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">4</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">5</span><span class="arr-val">3</span></div>
+        </div>
+        <div class="step-insight"><strong>Max-heap built: [7,5,1,2,3].</strong> Root=7 is max. Now sort: swap A[1] and A[5]. 7 goes to end (sorted!). Heap size becomes 4.</div>
+      </div>
+
+      <div class="example-step" data-step="3" data-example="hs">
+        <p><strong>Pass 1:</strong> Swap root(7) with last(3). Heapify remaining [3,5,1,2].</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">1</span><span class="arr-val">5</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">4</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+        </div>
+        <div class="step-insight">Heapify root: 3 vs children 5 and 1. 5 is max → swap 3 and 5. New heap root: 5. Next: swap 5 with A[4]=2. 5 to sorted portion.</div>
+      </div>
+
+      <div class="example-step" data-step="4" data-example="hs">
+        <p><strong>Pass 2:</strong> Swap root(5) with A[4]=2. Heapify [2,3,1].</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">1</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">3</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">4</span><span class="arr-val">5</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+        </div>
+        <div class="step-insight">Heapify [2,3,1]: root 2, swap with 3. Get [3,2,1]. Swap root(3) with A[3]=1. → [1,2 | 3,5,7]</div>
+      </div>
+
+      <div class="example-step" data-step="5" data-example="hs">
+        <p><strong>Pass 3 & 4:</strong> Heapify and swap 2 and 1.</p>
+        <div class="array-viz">
+          <div class="arr-cell arr-normal"><span class="arr-idx">1</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-normal"><span class="arr-idx">2</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">4</span><span class="arr-val">5</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+        </div>
+        <div class="step-insight">Swap root(2) with A[2]=1. Done!</div>
+      </div>
+
+      <div class="example-step" data-step="6" data-example="hs">
+        <p><strong>✅ Sorted!</strong></p>
+        <div class="array-viz">
+          <div class="arr-cell arr-done"><span class="arr-idx">1</span><span class="arr-val">1</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">2</span><span class="arr-val">2</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">3</span><span class="arr-val">3</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">4</span><span class="arr-val">5</span></div>
+          <div class="arr-cell arr-done"><span class="arr-idx">5</span><span class="arr-val">7</span></div>
+        </div>
+        <div class="step-insight"><strong>HeapSort Summary:</strong> Build max-heap O(n) + n × (swap + heapify) = O(n log n). In-place (no extra array). Not stable. Same complexity as mergesort but cache-unfriendly in practice due to random access patterns → quicksort often faster in practice.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 9 — COMPLEXITY TABLE
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="complexity">
+  <div class="section-tag">Reference</div>
+  <h2>Heap Time Complexities</h2>
+
+  <table>
+    <tr>
+      <th>Operation</th>
+      <th>Best Case</th>
+      <th>Worst Case</th>
+      <th>Average Case</th>
+      <th>Notes</th>
+    </tr>
+    <tr>
+      <td><strong>FindMin</strong></td>
+      <td class="good">O(1)</td>
+      <td class="good">O(1)</td>
+      <td class="good">O(1)</td>
+      <td>Just return A[1]</td>
+    </tr>
+    <tr>
+      <td><strong>Insertion</strong></td>
+      <td class="good">O(1)</td>
+      <td class="ok">O(log n)</td>
+      <td class="good">O(1)</td>
+      <td>Add at end, bubble up; avg O(1) since half nodes are leaves</td>
+    </tr>
+    <tr>
+      <td><strong>DeleteMin</strong></td>
+      <td class="ok">O(1)</td>
+      <td class="ok">O(log n)</td>
+      <td class="ok">O(log n)</td>
+      <td>Avg case also O(log n) — percolate down typically goes to leaf</td>
+    </tr>
+    <tr>
+      <td><strong>Heapify (at node)</strong></td>
+      <td class="good">O(1)</td>
+      <td class="ok">O(log n)</td>
+      <td class="ok">O(log n)</td>
+      <td>Percolate down from one node</td>
+    </tr>
+    <tr>
+      <td><strong>Build Heap</strong></td>
+      <td class="good">O(n)</td>
+      <td class="good">O(n)</td>
+      <td class="good">O(n)</td>
+      <td>Bottom-up heapify; top-down (repeated insert) is O(n log n)</td>
+    </tr>
+    <tr>
+      <td><strong>Heap Sort</strong></td>
+      <td class="ok">O(n log n)</td>
+      <td class="ok">O(n log n)</td>
+      <td class="ok">O(n log n)</td>
+      <td>Build O(n) + n × DeleteMax O(log n)</td>
+    </tr>
+    <tr>
+      <td><strong>Find Max (in min-heap)</strong></td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td>Must scan all ~n/2 leaves</td>
+    </tr>
+    <tr>
+      <td><strong>Merge Two Heaps</strong></td>
+      <td class="ok">O(n+m)</td>
+      <td class="ok">O(n+m)</td>
+      <td class="ok">O(n+m)</td>
+      <td>Combine arrays + build heap</td>
+    </tr>
+  </table>
+
+  <div class="box orange">
+    <strong>Key insight on avg case insertion:</strong> Half the heap is leaves. A new element has 50% chance of being at a leaf after insertion (requiring 0 further swaps). 25% chance it goes up 1 level, etc. Expected cost = 0 × 1/2 + 1 × 1/4 + 2 × 1/8 + ... = 1 = <strong>O(1)</strong>.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 10 — NUMBER OF HEAPS
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="numheaps">
+  <div class="section-tag">Counting</div>
+  <h2>Number of Min-Heaps with n Distinct Elements</h2>
+
+  <p>Given distinct values {1, 2, ..., n}, how many different valid min-heaps can be formed?</p>
+
+  <div class="box blue">
+    <strong>Key insight:</strong> The minimum (1) must always be at the root. Then we choose which elements go to the left subtree and which to the right. Recurse.
+  </div>
+
+  <h3>Formula</h3>
+  <p>Let T(n) = number of min-heaps with n elements. The CBT shape is <em>fixed</em> for a given n (only one possible CBT shape). Let L = size of left subtree, R = size of right subtree.</p>
+  <ul>
+    <li>Root is always the minimum (1 choice)</li>
+    <li>Choose L elements from remaining n-1 for left subtree: <code>C(n-1, L)</code></li>
+    <li>Remaining R elements go right</li>
+    <li>Recursively arrange left: <code>T(L)</code>, right: <code>T(R)</code></li>
+  </ul>
+  <div class="formula block">T(n) = C(n-1, L) × T(L) × T(R)</div>
+  <div class="formula block">Shortcut: T(n) = (n-1)! / (product of subtree sizes)</div>
+
+  <h3>Examples</h3>
+  <table>
+    <tr><th>n</th><th>Heaps</th><th>How?</th></tr>
+    <tr><td>1</td><td class="good">1</td><td>Only one element</td></tr>
+    <tr><td>2</td><td class="good">1</td><td>Root=1, child=2. Only one arrangement</td></tr>
+    <tr><td>3</td><td class="good">2</td><td>Root=1. Left or right child can be 2 or 3</td></tr>
+    <tr><td>4</td><td class="good">3</td><td>Root=1; L subtree size=2 or 1</td></tr>
+    <tr><td>7</td><td class="ok">80</td><td>Perfect BT: C(6,3)×T(3)×T(3) = 20×2×2 = 80</td></tr>
+  </table>
+
+  <div class="box purple">
+    <strong>GATE CSE 2018:</strong> Min-heaps with {1,2,3,4,5,6,7}: <br>
+    Shape: perfect BT with L=3 nodes, R=3 nodes.<br>
+    T(7) = C(6,3) × T(3) × T(3) = 20 × 2 × 2 = <strong>80</strong>
+  </div>
+
+  <h3>Probability a Random Permutation is a Min-Heap</h3>
+  <div class="box green">
+    P(random permutation = min-heap) = T(n) / n! = (n-1)! / (n! × product_correction) = 1 / product_of_sizes
+    <br><br>For n=5 CBT shape: P = 1/(5×3) = 1/15. This is equal to (1/root_size) × P(left subtree) × P(right subtree).
+    <br><br><strong>Quick method:</strong> For each node, probability that this node is minimum of its subtree = 1/(subtree size). Multiply for all nodes.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 11 — PRIORITY QUEUE
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="pq">
+  <div class="section-tag">Application</div>
+  <h2>Priority Queue — Heap is the Best Implementation</h2>
+
+  <p>A Priority Queue (PQ) is an abstract data type that supports: insert, delete-min (or max), and sometimes decrease-key.</p>
+
+  <div class="box orange">
+    <strong>Real-world need:</strong> OS task scheduling (urgent tasks first), Dijkstra's shortest path (always expand lowest-cost node), Huffman encoding, merge k sorted lists.
+  </div>
+
+  <h3>Implementations Compared</h3>
+  <table>
+    <tr>
+      <th>Structure</th>
+      <th>Insert</th>
+      <th>DeleteMin</th>
+      <th>DecreaseKey</th>
+    </tr>
+    <tr><td>Unsorted Linked List</td><td class="good">O(1)</td><td class="bad">O(n)</td><td class="bad">O(n)</td></tr>
+    <tr><td>Sorted Linked List</td><td class="bad">O(n)</td><td class="good">O(1)</td><td class="bad">O(n)</td></tr>
+    <tr><td>Unsorted Array</td><td class="good">O(1)</td><td class="bad">O(n)</td><td class="bad">O(n)</td></tr>
+    <tr><td>Sorted Array</td><td class="bad">O(n)</td><td class="good">O(1)</td><td class="bad">O(n)</td></tr>
+    <tr><td>Balanced BST</td><td class="ok">O(log n)</td><td class="ok">O(log n)</td><td class="ok">O(log n)</td></tr>
+    <tr style="background: rgba(0,229,255,.05)"><td><strong>Heap ⭐</strong></td><td class="good"><strong>O(1) avg</strong></td><td class="ok"><strong>O(log n)</strong></td><td class="ok"><strong>O(log n)</strong></td></tr>
+  </table>
+
+  <h3>DecreaseKey in Heap</h3>
+  <ul>
+    <li><strong>Decrease a key (make value smaller):</strong> Bubble the node UP (percolate up)</li>
+    <li><strong>Increase a key (make value larger):</strong> Push the node DOWN (heapify)</li>
+  </ul>
+
+  <div class="box green">
+    <strong>Why heap wins:</strong> Average O(1) insertion is a huge advantage. For algorithms that insert many elements and only occasionally extract min (like Dijkstra with lazy deletion), heap is ideal.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 12 — HEAP VS BST
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="vs">
+  <div class="section-tag">Comparison</div>
+  <h2>Heap vs Balanced BST</h2>
+
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent);">Heap Advantages</div>
+      <ul>
+        <li>FindMin/FindMax: <strong>O(1)</strong> vs BST O(log n)</li>
+        <li>Average insertion: <strong>O(1)</strong> vs BST O(log n)</li>
+        <li>Build from array: <strong>O(n)</strong> vs BST O(n log n)</li>
+        <li>Cache-friendly (array storage)</li>
+        <li>Simpler to implement</li>
+      </ul>
+    </div>
+    <div class="compare-col">
+      <div class="compare-head" style="color: var(--accent2);">BST Advantages</div>
+      <ul>
+        <li>Search any element: <strong>O(log n)</strong> vs Heap O(n)</li>
+        <li>In-order traversal gives sorted order</li>
+        <li>Predecessor/successor queries</li>
+        <li>Range queries</li>
+        <li>Can find kth element more efficiently</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box yellow">
+    <strong>Proof: Heap → BST cannot be done in O(n).</strong><br>
+    Assume it can. Then: Build heap O(n) + Convert to BST O(n) + In-order traversal O(n) = O(n) total. But this would sort in O(n), contradicting the Ω(n log n) comparison sort lower bound. Contradiction! So heap→BST must take at least Ω(n log n).
+  </div>
+
+  <h3>Merge Two Heaps</h3>
+  <p>Combine arrays (size n and m), then build heap: <strong>O(n+m)</strong>. This is much better than merging two BSTs.</p>
+  <p>Special case: if both heaps are perfect binary trees of same height → can merge in <strong>O(log n)</strong>.</p>
+</section>
+
+</main>
+
+<!-- QUICK REVISION BUTTON -->
+<button class="qr-btn" onclick="toggleQR()">
+  ⚡ Quick Revision
+</button>
+
+<!-- QUICK REVISION PANEL -->
+<div class="qr-panel" id="qrPanel">
+  <button class="qr-close" onclick="toggleQR()">✕</button>
+  <div class="qr-title">⚡ Quick Revision — Heaps</div>
+
+  <div class="qr-section-head">📋 Structure</div>
+  <div class="qr-item"><strong>HEAP = CBT + Heap Property</strong> CBT: all levels full except last; last level left-filled. Min-heap: parent ≤ children. Max-heap: parent ≥ children.</div>
+  <div class="qr-item"><strong>Array formulas (1-indexed)</strong> Parent(i) = i/2 | Left = 2i | Right = 2i+1. Leaves: indices ⌊n/2⌋+1 to n.</div>
+
+  <div class="qr-section-head">📍 Element Locations</div>
+  <div class="qr-item"><strong>Min-heap:</strong> Min = root O(1) | Max = some leaf O(n to find) | kth min = between level 0 and k-1</div>
+  <div class="qr-item"><strong>Max-heap:</strong> Max = root O(1) | Min = some leaf O(n to find)</div>
+
+  <div class="qr-section-head">⬆️ Insertion (Percolate Up)</div>
+  <div class="qr-item"><strong>Steps:</strong> Add at end → compare with parent → swap if smaller → repeat. Best O(1), Worst O(log n), Avg O(1).</div>
+
+  <div class="qr-section-head">🏭 Build Heap</div>
+  <div class="qr-item"><strong>Top-down:</strong> Repeated insertion. O(n log n). Wastes time on leaves.</div>
+  <div class="qr-item"><strong>Bottom-up (Heapify):</strong> for i=⌊n/2⌋ downto 1: heapify(i). O(n). Leaves are free! Math: Σ nodes_at_height×h = O(n) via series convergence.</div>
+
+  <div class="qr-section-head">⬇️ DeleteMin (Percolate Down)</div>
+  <div class="qr-item"><strong>Steps:</strong> Save root → move last to root → n-- → heapify(root). O(log n) worst and avg.</div>
+  <div class="qr-item"><strong>Heapify logic:</strong> Compare with smaller child. Swap if needed. Recurse down. O(log n).</div>
+
+  <div class="qr-section-head">🔃 Heap Sort</div>
+  <div class="qr-item"><strong>Step 1:</strong> Build max-heap from array: O(n)</div>
+  <div class="qr-item"><strong>Step 2:</strong> n times: swap A[1]↔A[n], shrink, heapify(1): O(n log n)</div>
+  <div class="qr-item"><strong>Total:</strong> O(n log n), in-place, not stable. Use max-heap for ascending sort.</div>
+
+  <div class="qr-section-head">⏱️ All Complexities</div>
+  <div class="qr-item"><strong>FindMin:</strong> O(1) | <strong>Insert:</strong> O(1) avg, O(log n) worst | <strong>DeleteMin:</strong> O(log n) | <strong>Build:</strong> O(n) bottom-up</div>
+
+  <div class="qr-section-head">🔢 Number of Min-Heaps</div>
+  <div class="qr-item"><strong>T(n) = C(n-1,L) × T(L) × T(R)</strong> where L,R = left,right subtree sizes. T(7) = C(6,3)×T(3)×T(3) = 20×2×2 = 80.</div>
+  <div class="qr-item"><strong>Probability shortcut:</strong> Multiply 1/(size of each node's subtree) for all nodes except root.</div>
+
+  <div class="qr-section-head">⚡ Heap vs BST</div>
+  <div class="qr-item"><strong>Heap wins:</strong> FindMin O(1), avg insert O(1), build O(n)</div>
+  <div class="qr-item"><strong>BST wins:</strong> Search any element O(log n), sorted traversal, range queries</div>
+  <div class="qr-item"><strong>Merge heaps:</strong> Combine arrays + build = O(n+m)</div>
+
+  <div class="qr-section-head">⚠️ Tricky Facts</div>
+  <div class="qr-item"><strong>Heap is NOT sorted.</strong> No ordering between siblings. Only root is guaranteed min/max.</div>
+  <div class="qr-item"><strong>kth min in min-heap</strong> is between levels 0 to k-1. GATE 2003: 7th min findable in O(1) (constant number of nodes in first 7 levels).</div>
+  <div class="qr-item"><strong>GATE 2020:</strong> 1023-node min-heap → find max needs 511 comparisons (512 leaves, compare all).</div>
+  <div class="qr-item"><strong>Heap→BST</strong> cannot be O(n) (would break Ω(n log n) sorting lower bound).</div>
+</div>
+
+<script>
+// ─── STEP NAVIGATION ───
+const examples = {};
+
+function initExample(id, total) {
+  examples[id] = { current: 1, total };
+}
+
+function getSteps(id) {
+  return document.querySelectorAll(`[data-example="${id}"]`);
+}
+
+function updateCounter(id) {
+  const e = examples[id];
+  const el = document.getElementById(`${id}-counter`);
+  if (el) el.textContent = `${e.current} / ${e.total}`;
+}
+
+function goToStep(id, n) {
+  const e = examples[id];
+  const steps = getSteps(id);
+  steps.forEach(s => s.classList.remove('active'));
+  const target = document.querySelector(`[data-example="${id}"][data-step="${n}"]`);
+  if (target) target.classList.add('active');
+  e.current = n;
+  updateCounter(id);
+}
+
+function nextStep(id) {
+  const e = examples[id];
+  if (e.current < e.total) goToStep(id, e.current + 1);
+}
+
+function prevStep(id) {
+  const e = examples[id];
+  if (e.current > 1) goToStep(id, e.current - 1);
+}
+
+// Initialize all examples
+initExample('hq', 4);
+initExample('ins', 4);
+initExample('bh', 5);
+initExample('dm', 4);
+initExample('hs', 6);
+
+// ─── QUICK REVISION ───
+function toggleQR() {
+  const panel = document.getElementById('qrPanel');
+  panel.classList.toggle('open');
+}
+
+// ─── SMOOTH SCROLL ACTIVE NAV ───
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.style.borderBottomColor = 'transparent');
+      const link = document.querySelector(`.nav a[href="#${e.target.id}"]`);
+      if (link) { link.style.color = 'var(--accent)'; link.style.borderBottomColor = 'var(--accent)'; }
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

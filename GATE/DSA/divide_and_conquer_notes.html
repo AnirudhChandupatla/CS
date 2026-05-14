@@ -1,0 +1,3094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divide &amp; Conquer — Complete Study Notes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
+:root {
+  --bg: #0a0d12;
+  --bg2: #111520;
+  --bg3: #161b27;
+  --card: #1a2035;
+  --card2: #1f2640;
+  --border: #2a3452;
+  --accent: #4f9eff;
+  --accent2: #ff6b6b;
+  --accent3: #56d9a0;
+  --accent4: #ffd166;
+  --accent5: #c77dff;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --glow: rgba(79,158,255,0.15);
+  --glow2: rgba(255,107,107,0.12);
+  --glow3: rgba(86,217,160,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+  overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  pointer-events:none;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+/* ── SIDEBAR NAV ── */
+.sidebar {
+  position: fixed; left:0; top:0; bottom:0; width:220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  display: flex; flex-direction:column;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+.sidebar-brand {
+  padding: 0 16px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.sidebar-brand h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight:800;
+  letter-spacing:2px; text-transform:uppercase;
+  color: var(--accent);
+  line-height:1.3;
+}
+.sidebar-brand p {
+  font-size:10px; color:var(--text3);
+  margin-top:4px; letter-spacing:1px;
+}
+.nav-section {
+  padding: 0 8px;
+  margin-bottom: 4px;
+}
+.nav-section-title {
+  font-size:9px; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase; color:var(--text3);
+  padding: 8px 8px 4px;
+}
+.nav-link {
+  display:block; padding: 7px 8px;
+  color: var(--text2); text-decoration:none;
+  font-size:12px; border-radius:6px;
+  transition: all 0.2s;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--glow);
+  color: var(--accent);
+}
+.nav-link .num {
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; color:var(--text3);
+  margin-right:6px;
+}
+.phase-badge {
+  display:inline-block; font-size:9px; padding:2px 6px;
+  border-radius:10px; background:rgba(79,158,255,0.15);
+  color:var(--accent); font-weight:700; letter-spacing:1px;
+  margin: 0 16px 12px; text-transform:uppercase;
+}
+
+/* ── MAIN CONTENT ── */
+main {
+  margin-left: 220px;
+  padding: 0 40px 80px;
+  position:relative; z-index:1;
+  max-width: 1100px;
+}
+
+/* ── HERO ── */
+.hero {
+  padding: 60px 0 40px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 60px;
+}
+.hero-tag {
+  font-size:11px; font-weight:700; letter-spacing:3px;
+  text-transform:uppercase; color:var(--accent);
+  margin-bottom:12px;
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 48px; font-weight:800; line-height:1.1;
+  background: linear-gradient(135deg, #4f9eff 0%, #c77dff 50%, #56d9a0 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:16px;
+}
+.hero p {
+  color:var(--text2); font-size:16px; max-width:600px;
+  line-height:1.8;
+}
+.hero-meta {
+  display:flex; gap:24px; margin-top:24px; flex-wrap:wrap;
+}
+.hero-meta-item {
+  display:flex; align-items:center; gap:8px;
+  font-size:12px; color:var(--text3);
+}
+.hero-meta-item span:first-child {
+  width:8px; height:8px; border-radius:50%;
+  background: var(--accent3); display:block;
+}
+
+/* ── SECTION ── */
+section {
+  margin-bottom: 80px;
+  scroll-margin-top: 30px;
+}
+.section-header {
+  display:flex; align-items:flex-start; gap:16px;
+  margin-bottom: 32px;
+}
+.section-num {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; color:var(--text3);
+  padding: 6px 10px; background:var(--bg3);
+  border-radius:4px; border:1px solid var(--border);
+  white-space:nowrap; margin-top:4px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px; font-weight:700;
+  line-height:1.2;
+}
+.section-subtitle {
+  color:var(--text2); font-size:14px; margin-top:4px;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  position:relative; overflow:hidden;
+}
+.card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent5));
+  opacity:0.7;
+}
+.card.green::before { background: linear-gradient(90deg, var(--accent3), var(--accent)); }
+.card.red::before { background: linear-gradient(90deg, var(--accent2), var(--accent4)); }
+.card.gold::before { background: linear-gradient(90deg, var(--accent4), var(--accent2)); }
+.card.purple::before { background: linear-gradient(90deg, var(--accent5), var(--accent)); }
+
+.card h3 {
+  font-family:'Syne', sans-serif;
+  font-size:16px; font-weight:700; margin-bottom:12px;
+  display:flex; align-items:center; gap:10px;
+}
+.card h4 {
+  font-size:14px; font-weight:600; color:var(--accent3);
+  margin: 16px 0 8px;
+}
+
+/* ── TAGS / BADGES ── */
+.badge {
+  display:inline-block; font-size:10px; font-weight:700;
+  padding:3px 8px; border-radius:4px; letter-spacing:1px;
+  text-transform:uppercase; margin:0 4px 4px 0;
+}
+.badge-blue { background:rgba(79,158,255,0.15); color:var(--accent); border:1px solid rgba(79,158,255,0.25); }
+.badge-green { background:rgba(86,217,160,0.15); color:var(--accent3); border:1px solid rgba(86,217,160,0.25); }
+.badge-red { background:rgba(255,107,107,0.15); color:var(--accent2); border:1px solid rgba(255,107,107,0.25); }
+.badge-gold { background:rgba(255,209,102,0.15); color:var(--accent4); border:1px solid rgba(255,209,102,0.25); }
+.badge-purple { background:rgba(199,125,255,0.15); color:var(--accent5); border:1px solid rgba(199,125,255,0.25); }
+
+/* ── CODE BLOCKS ── */
+.code {
+  font-family:'JetBrains Mono', monospace;
+  font-size:13px; line-height:1.8;
+  background: var(--bg); color: #a9b7d0;
+  border: 1px solid var(--border);
+  border-radius:8px; padding:20px;
+  margin:12px 0; overflow-x:auto;
+  white-space:pre;
+}
+.code .kw { color:#c77dff; }
+.code .fn { color:#4f9eff; }
+.code .cm { color:#4a5568; font-style:italic; }
+.code .num { color:#ffd166; }
+.code .str { color:#56d9a0; }
+.code .op { color:#ff6b6b; }
+
+/* ── INLINE CODE ── */
+code {
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px; color:var(--accent4);
+  background:rgba(255,209,102,0.08);
+  padding:2px 6px; border-radius:4px;
+  border: 1px solid rgba(255,209,102,0.2);
+}
+
+/* ── MATH ── */
+.math {
+  font-family:'JetBrains Mono', monospace;
+  font-size:14px; font-weight:600;
+  color: var(--accent3);
+  padding: 3px 0;
+  display:inline-block;
+}
+.math-block {
+  text-align:center;
+  padding: 20px; margin:16px 0;
+  background:rgba(86,217,160,0.05);
+  border:1px solid rgba(86,217,160,0.2);
+  border-radius:8px;
+}
+.math-block .math { font-size:18px; }
+
+/* ── TABLES ── */
+table {
+  width:100%; border-collapse:collapse;
+  margin:16px 0; font-size:13px;
+}
+th {
+  background:var(--bg3); color:var(--text2);
+  padding:10px 14px; text-align:left;
+  font-weight:600; font-size:11px;
+  letter-spacing:0.5px; text-transform:uppercase;
+  border-bottom:2px solid var(--border);
+}
+td {
+  padding:10px 14px;
+  border-bottom:1px solid rgba(42,52,82,0.5);
+  vertical-align:middle;
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(79,158,255,0.05); }
+.tc { text-align:center; }
+.yes { color:var(--accent3); font-weight:600; }
+.no { color:var(--accent2); font-weight:600; }
+
+/* ── VISUALIZATION / ASCII ── */
+.viz {
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px; line-height:1.9;
+  background:var(--bg); color:var(--text2);
+  border:1px solid var(--border);
+  border-radius:8px; padding:20px;
+  margin:12px 0; overflow-x:auto;
+  white-space:pre;
+}
+.viz .hl { color:var(--accent4); font-weight:600; }
+.viz .green { color:var(--accent3); }
+.viz .blue { color:var(--accent); }
+.viz .red { color:var(--accent2); }
+.viz .purple { color:var(--accent5); }
+
+/* ── STEP BOXES ── */
+.steps { display:flex; flex-direction:column; gap:12px; margin:16px 0; }
+.step {
+  display:flex; gap:16px; align-items:flex-start;
+  padding:16px; background:var(--bg3);
+  border:1px solid var(--border); border-radius:8px;
+}
+.step-num {
+  min-width:28px; height:28px; border-radius:50%;
+  background:var(--accent); color:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:12px; font-family:'Syne',sans-serif;
+  flex-shrink:0;
+}
+.step-num.green { background:var(--accent3); }
+.step-num.red { background:var(--accent2); }
+.step-content h4 { font-size:13px; font-weight:600; margin-bottom:4px; }
+.step-content p { font-size:13px; color:var(--text2); }
+
+/* ── CALLOUTS ── */
+.callout {
+  display:flex; gap:14px; padding:16px;
+  border-radius:8px; margin:16px 0;
+  align-items:flex-start;
+}
+.callout.insight { background:rgba(79,158,255,0.08); border:1px solid rgba(79,158,255,0.2); }
+.callout.warning { background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.2); }
+.callout.magic { background:rgba(199,125,255,0.08); border:1px solid rgba(199,125,255,0.2); }
+.callout.success { background:rgba(86,217,160,0.08); border:1px solid rgba(86,217,160,0.2); }
+.callout.info { background:rgba(255,209,102,0.08); border:1px solid rgba(255,209,102,0.2); }
+.callout-icon { font-size:20px; flex-shrink:0; margin-top:2px; }
+.callout-body h4 { font-size:13px; font-weight:700; margin-bottom:4px; }
+.callout-body p { font-size:13px; color:var(--text2); }
+
+/* ── GRID LAYOUTS ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+/* ── COMPLEXITY PILL ── */
+.complexity {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 12px; border-radius:20px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; font-weight:600;
+  margin:2px;
+}
+.complexity.best { background:rgba(86,217,160,0.15); color:var(--accent3); border:1px solid rgba(86,217,160,0.3); }
+.complexity.avg { background:rgba(255,209,102,0.15); color:var(--accent4); border:1px solid rgba(255,209,102,0.3); }
+.complexity.worst { background:rgba(255,107,107,0.15); color:var(--accent2); border:1px solid rgba(255,107,107,0.3); }
+.complexity.space { background:rgba(199,125,255,0.15); color:var(--accent5); border:1px solid rgba(199,125,255,0.3); }
+.complexity::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+/* ── ACCORDION ── */
+.accordion { margin:12px 0; }
+.acc-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px; background:var(--bg3);
+  border:1px solid var(--border); border-radius:8px;
+  cursor:pointer; user-select:none;
+  font-weight:600; font-size:14px;
+  transition:all 0.2s;
+}
+.acc-head:hover { border-color:var(--accent); color:var(--accent); }
+.acc-head.open { border-bottom-left-radius:0; border-bottom-right-radius:0; border-color:var(--accent); color:var(--accent); }
+.acc-arrow { transition:transform 0.3s; font-size:12px; color:var(--text3); }
+.acc-head.open .acc-arrow { transform:rotate(180deg); }
+.acc-body {
+  padding:16px; background:var(--card);
+  border:1px solid var(--accent); border-top:none;
+  border-bottom-left-radius:8px; border-bottom-right-radius:8px;
+  display:none;
+}
+.acc-body.open { display:block; }
+
+/* ── TABS ── */
+.tabs { margin:20px 0; }
+.tab-bar {
+  display:flex; gap:4px; padding:4px;
+  background:var(--bg3); border-radius:8px;
+  border:1px solid var(--border);
+  margin-bottom:0; flex-wrap:wrap;
+}
+.tab-btn {
+  padding:8px 16px; border:none; border-radius:6px;
+  background:transparent; color:var(--text2);
+  cursor:pointer; font-size:12px; font-weight:600;
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.2s; white-space:nowrap;
+}
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active {
+  background:var(--accent); color:var(--bg);
+}
+.tab-panel { display:none; padding:20px 0; }
+.tab-panel.active { display:block; }
+
+/* ── QUICK REVISION ── */
+#revision-btn {
+  position:fixed; right:24px; bottom:24px; z-index:200;
+  padding:14px 20px; border:none; border-radius:50px;
+  background:linear-gradient(135deg, var(--accent), var(--accent5));
+  color:white; font-weight:700; font-size:13px;
+  cursor:pointer; font-family:'Syne',sans-serif;
+  box-shadow:0 8px 32px rgba(79,158,255,0.4);
+  transition:all 0.3s; display:flex; align-items:center; gap:8px;
+  letter-spacing:0.5px;
+}
+#revision-btn:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(79,158,255,0.5); }
+#revision-panel {
+  display:none; position:fixed; right:24px; bottom:80px; z-index:199;
+  width:380px; max-height:70vh; overflow-y:auto;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+#revision-panel.open { display:block; }
+#revision-panel h2 {
+  font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+  margin-bottom:16px; color:var(--accent);
+}
+.revision-item {
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:12px; line-height:1.6;
+}
+.revision-item:last-child { border-bottom:none; }
+.revision-item .ri-head {
+  font-weight:700; color:var(--accent4); margin-bottom:4px;
+  font-size:11px; text-transform:uppercase; letter-spacing:1px;
+}
+
+/* ── HIGHLIGHT ── */
+.hl-y { background:rgba(255,209,102,0.15); color:var(--accent4); padding:1px 4px; border-radius:3px; }
+.hl-g { background:rgba(86,217,160,0.12); color:var(--accent3); padding:1px 4px; border-radius:3px; }
+.hl-b { background:rgba(79,158,255,0.12); color:var(--accent); padding:1px 4px; border-radius:3px; }
+.hl-r { background:rgba(255,107,107,0.12); color:var(--accent2); padding:1px 4px; border-radius:3px; }
+
+/* ── PROGRESS / OVERVIEW ── */
+.topic-flow {
+  display:flex; gap:0; align-items:stretch; overflow-x:auto;
+  margin:20px 0; padding-bottom:4px;
+}
+.topic-node {
+  min-width:120px; padding:12px 14px;
+  background:var(--bg3); border:1px solid var(--border);
+  border-right:none; font-size:11px; text-align:center;
+  position:relative; cursor:default;
+}
+.topic-node:first-child { border-radius:8px 0 0 8px; }
+.topic-node:last-child { border-radius:0 8px 8px 0; border-right:1px solid var(--border); }
+.topic-node .tn-num { font-size:9px; color:var(--text3); margin-bottom:4px; }
+.topic-node .tn-label { font-weight:600; font-size:11px; line-height:1.3; }
+.topic-node .tn-complexity { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--accent3); margin-top:4px; }
+.topic-node::after {
+  content:'→'; position:absolute; right:-14px; top:50%; transform:translateY(-50%);
+  color:var(--text3); font-size:16px; z-index:1; width:14px; text-align:center;
+}
+.topic-node:last-child::after { display:none; }
+.topic-node:hover { background:var(--glow); border-color:var(--accent); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px) {
+  .sidebar { display:none; }
+  main { margin-left:0; padding:0 20px 80px; }
+  .grid-2 { grid-template-columns:1fr; }
+  .grid-3 { grid-template-columns:1fr; }
+  #revision-panel { width:calc(100vw - 48px); }
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+section { animation: fadeUp 0.5s ease forwards; }
+
+/* ── SEPARATOR ── */
+.sep { border:none; border-top:1px solid var(--border); margin:32px 0; }
+hr { border:none; border-top:1px solid var(--border); margin:20px 0; }
+p { margin-bottom:10px; }
+ul, ol { padding-left:20px; margin:8px 0; }
+li { margin-bottom:6px; font-size:14px; color:var(--text2); }
+li strong { color:var(--text); }
+
+/* ── PHASE BANNER ── */
+.phase-banner {
+  background:linear-gradient(135deg, rgba(79,158,255,0.1), rgba(199,125,255,0.1));
+  border:1px solid rgba(79,158,255,0.3);
+  border-radius:12px; padding:16px 24px;
+  margin-bottom:40px; display:flex; align-items:center; gap:16px;
+}
+.phase-banner .pb-icon { font-size:24px; }
+.phase-banner h3 { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
+.phase-banner p { font-size:12px; color:var(--text2); margin:0; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <h1>Divide &amp;<br>Conquer</h1>
+    <p>COMPLETE STUDY NOTES</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Overview</div>
+    <a class="nav-link active" href="#overview"><span class="num">00</span>10K View</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Finding Extremes</div>
+    <a class="nav-link" href="#max-min"><span class="num">01</span>Max &amp; Min</a>
+    <a class="nav-link" href="#second-max"><span class="num">02</span>Second Maximum</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Analysis</div>
+    <a class="nav-link" href="#analysis"><span class="num">03</span>Complexity Analysis</a>
+    <a class="nav-link" href="#notations"><span class="num">04</span>Notations</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Sorting</div>
+    <a class="nav-link" href="#bubble"><span class="num">05</span>Bubble Sort</a>
+    <a class="nav-link" href="#insertion"><span class="num">06</span>Insertion Sort</a>
+    <a class="nav-link" href="#selection"><span class="num">07</span>Selection Sort</a>
+    <a class="nav-link" href="#heap"><span class="num">08</span>Heap Sort</a>
+    <a class="nav-link" href="#merge-sort"><span class="num">09</span>Merge Sort</a>
+    <a class="nav-link" href="#comparison-bound"><span class="num">10</span>Lower Bound</a>
+    <a class="nav-link" href="#linear-sort"><span class="num">11</span>Linear Sorting</a>
+    <a class="nav-link" href="#sorting-summary"><span class="num">12</span>Summary Table</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Divide &amp; Conquer</div>
+    <a class="nav-link" href="#dc-intro"><span class="num">13</span>D&amp;C Intro</a>
+    <a class="nav-link" href="#quicksort"><span class="num">14</span>Quick Sort</a>
+    <a class="nav-link" href="#inversions"><span class="num">15</span>Count Inversions</a>
+    <a class="nav-link" href="#binary-search"><span class="num">16</span>Binary Search</a>
+    <a class="nav-link" href="#merge-k"><span class="num">17</span>Merge k Arrays</a>
+    <a class="nav-link" href="#exponentiation"><span class="num">18</span>Fast Exponent</a>
+    <a class="nav-link" href="#matrix-mult"><span class="num">19</span>Matrix Multiply</a>
+    <a class="nav-link" href="#select"><span class="num">20</span>Select (k-th)</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">📐 Algorithms · Complete Study Notes</div>
+  <h1>Divide &amp;<br>Conquer</h1>
+  <p>From finding maximums to Quick Sort, Counting Inversions, Binary Search, and Matrix Multiplication — the complete guide to the most elegant algorithm design strategy in CS.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span></span>20 Topics Covered</div>
+    <div class="hero-meta-item" style="--color:var(--accent4)"><span style="background:var(--accent4)"></span>Sorting + D&amp;C + Advanced</div>
+    <div class="hero-meta-item" style="--color:var(--accent2)"><span style="background:var(--accent2)"></span>GATE + Interview Level</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 00 — OVERVIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="overview">
+  <div class="section-header">
+    <div class="section-num">00</div>
+    <div>
+      <div class="section-title">10,000 Feet Overview</div>
+      <div class="section-subtitle">How every topic connects</div>
+    </div>
+  </div>
+
+  <div class="phase-banner">
+    <div class="pb-icon">🗺️</div>
+    <div>
+      <h3>The Big Picture</h3>
+      <p>Divide & Conquer = Break the problem into smaller sub-problems → Solve each recursively → Combine results. The "magic" lies in how you split and how you combine.</p>
+    </div>
+  </div>
+
+  <div class="topic-flow">
+    <div class="topic-node"><div class="tn-num">01</div><div class="tn-label">Find Max/Min</div><div class="tn-complexity">Θ(n)</div></div>
+    <div class="topic-node"><div class="tn-num">02</div><div class="tn-label">2nd Max</div><div class="tn-complexity">n+logn−2</div></div>
+    <div class="topic-node"><div class="tn-num">03</div><div class="tn-label">Analysis<br>Cases+Notation</div><div class="tn-complexity">O Θ Ω</div></div>
+    <div class="topic-node"><div class="tn-num">04</div><div class="tn-label">Simple Sorts</div><div class="tn-complexity">Θ(n²)</div></div>
+    <div class="topic-node"><div class="tn-num">05</div><div class="tn-label">Merge Sort</div><div class="tn-complexity">Θ(n log n)</div></div>
+    <div class="topic-node"><div class="tn-num">06</div><div class="tn-label">Lower Bound</div><div class="tn-complexity">Ω(n log n)</div></div>
+    <div class="topic-node"><div class="tn-num">07</div><div class="tn-label">Linear Sort</div><div class="tn-complexity">Θ(n+k)</div></div>
+    <div class="topic-node"><div class="tn-num">08</div><div class="tn-label">D&amp;C Intro</div><div class="tn-complexity">Recursion</div></div>
+    <div class="topic-node"><div class="tn-num">09</div><div class="tn-label">Quick Sort</div><div class="tn-complexity">Θ(n log n)</div></div>
+    <div class="topic-node"><div class="tn-num">10</div><div class="tn-label">Inversions</div><div class="tn-complexity">Θ(n log n)</div></div>
+    <div class="topic-node"><div class="tn-num">11</div><div class="tn-label">Binary Search</div><div class="tn-complexity">Θ(log n)</div></div>
+    <div class="topic-node"><div class="tn-num">12</div><div class="tn-label">Merge k Arrays</div><div class="tn-complexity">n log k</div></div>
+    <div class="topic-node"><div class="tn-num">13</div><div class="tn-label">Fast Exponent</div><div class="tn-complexity">Θ(log n)</div></div>
+    <div class="topic-node"><div class="tn-num">14</div><div class="tn-label">Matrix Mult.</div><div class="tn-complexity">Θ(n^2.81)</div></div>
+    <div class="topic-node"><div class="tn-num">15</div><div class="tn-label">kth Smallest</div><div class="tn-complexity">Θ(n)</div></div>
+  </div>
+
+  <div class="callout magic">
+    <div class="callout-icon">✨</div>
+    <div class="callout-body">
+      <h4>The Key Insight of D&C</h4>
+      <p>When you solve sub-problems recursively, <strong>always assume the recursive call works</strong>. Only worry about one level: how to divide, and how to combine. The rest happens by induction.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card green">
+      <h3>🎯 Three D&C Steps</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num green">1</div>
+          <div class="step-content"><h4>Divide</h4><p>Split the problem into smaller sub-problems (often 2 halves)</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num green">2</div>
+          <div class="step-content"><h4>Conquer (Solve)</h4><p>Solve each sub-problem recursively. Assume it works!</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num green">3</div>
+          <div class="step-content"><h4>Combine</h4><p>Merge/combine sub-problem answers to get the final answer</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="card purple">
+      <h3>📐 Cost Formula</h3>
+      <div class="math-block">
+        <div class="math">T(n) = [Divide Cost]</div><br>
+        <div class="math" style="font-size:14px">+ T(sub₁) + T(sub₂) + …</div><br>
+        <div class="math" style="font-size:14px">+ [Combine Cost]</div>
+      </div>
+      <p style="font-size:13px; color:var(--text2)">In some algos, divide cost dominates (Quick Sort). In others, combine cost dominates (Merge Sort). Base case: small enough problem solved directly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 01 — MAX AND MIN -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="max-min">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div>
+      <div class="section-title">Finding Max &amp; Min</div>
+      <div class="section-subtitle">From Θ(2n) down to 3n/2 − 2 comparisons</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🎯</div>
+    <div class="callout-body">
+      <h4>The Goal</h4>
+      <p>Given an unsorted array of n elements, find both maximum AND minimum simultaneously in as few comparisons as possible. (Finding just max or min takes n−1 comparisons.)</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab(this,'mm1')">Method 1: Naive (2n−2)</button>
+      <button class="tab-btn" onclick="showTab(this,'mm2')">Method 2: else-branch (1.5n)</button>
+      <button class="tab-btn" onclick="showTab(this,'mm3')">Method 3: CLRS Pairwise ★</button>
+      <button class="tab-btn" onclick="showTab(this,'mm4')">Method 4: D&C</button>
+    </div>
+
+    <!-- TAB 1 -->
+    <div id="mm1" class="tab-panel active">
+      <div class="card red">
+        <h3>❌ Method 1 — Two separate passes</h3>
+        <p>Just run a for-loop for max, then another for min. OR do both in one loop with two separate if-conditions.</p>
+        <div class="code"><span class="cm">// Find max and min separately</span>
+<span class="kw">max</span> = A[0], <span class="kw">min</span> = A[0]
+<span class="kw">for</span> i = <span class="num">1</span> to n−<span class="num">1</span>:
+  <span class="kw">if</span> A[i] > max: max = A[i]  <span class="cm">// comparison 1</span>
+  <span class="kw">if</span> A[i] < min: min = A[i]  <span class="cm">// comparison 2</span></div>
+        <div class="callout warning" style="margin-top:12px">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <h4>Problem</h4>
+            <p>Every element does TWO comparisons → <strong>2(n−1) = 2n−2 comparisons</strong> in ALL cases (best/worst/average). We're wasting comparisons!</p>
+          </div>
+        </div>
+        <div class="math-block"><div class="math">Comparisons = 2n − 2 &nbsp;(every case)</div></div>
+      </div>
+    </div>
+
+    <!-- TAB 2 -->
+    <div id="mm2" class="tab-panel">
+      <div class="card gold">
+        <h3>⚡ Method 2 — else branch trick</h3>
+        <p>Key insight: if A[i] &gt; max, it <em>cannot</em> be less than min! So skip the min comparison in that case.</p>
+        <div class="code"><span class="kw">for</span> i = <span class="num">1</span> to n−<span class="num">1</span>:
+  <span class="kw">if</span> A[i] > max:    <span class="cm">// 1 comparison always</span>
+    max = A[i]
+  <span class="kw">else if</span> A[i] < min:  <span class="cm">// 2nd comparison only in else</span>
+    min = A[i]</div>
+        <div class="grid-2" style="margin-top:12px">
+          <div style="padding:12px; background:var(--bg3); border-radius:8px; font-size:13px;">
+            <strong style="color:var(--accent3)">Best case:</strong><br>
+            If always the if-branch runs (every element is new max) → only n−1 comparisons
+          </div>
+          <div style="padding:12px; background:var(--bg3); border-radius:8px; font-size:13px;">
+            <strong style="color:var(--accent2)">Worst case:</strong><br>
+            Always goes to else-branch → 2(n−1) comparisons (no improvement!)
+          </div>
+        </div>
+        <div class="math-block">
+          <div class="math">Average: 3n/2 − 1 &nbsp;(better, but worst case same)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3 -->
+    <div id="mm3" class="tab-panel">
+      <div class="card green">
+        <h3>🏆 Method 3 — CLRS Pairwise (OPTIMAL!)</h3>
+        <div class="callout magic">
+          <div class="callout-icon">✨</div>
+          <div class="callout-body">
+            <h4>The Key Insight (feels like magic!)</h4>
+            <p>Process elements <strong>in pairs</strong>. Compare the pair's elements with each other FIRST (1 comparison). Then compare only the <strong>LARGER</strong> with max, and <strong>SMALLER</strong> with min. This gives 3 comparisons per 2 elements!</p>
+          </div>
+        </div>
+        <div class="code"><span class="cm">// Initialize max, min from first pair</span>
+<span class="kw">if</span> A[<span class="num">0</span>] > A[<span class="num">1</span>]: max=A[<span class="num">0</span>], min=A[<span class="num">1</span>]  <span class="cm">// 1 comparison</span>
+<span class="kw">else</span>:        max=A[<span class="num">1</span>], min=A[<span class="num">0</span>]
+
+<span class="cm">// Process remaining n−2 elements in pairs</span>
+<span class="kw">for</span> i = <span class="num">2</span> to n−<span class="num">1</span> <span class="kw">step</span> <span class="num">2</span>:
+  <span class="kw">if</span> A[i] > A[i+<span class="num">1</span>]:       <span class="cm">// compare within pair</span>
+    bigger  = A[i]
+    smaller = A[i+<span class="num">1</span>]
+  <span class="kw">else</span>:
+    bigger  = A[i+<span class="num">1</span>]
+    smaller = A[i]
+  <span class="kw">if</span> bigger  > max: max = bigger   <span class="cm">// compare big with max</span>
+  <span class="kw">if</span> smaller < min: min = smaller  <span class="cm">// compare small with min</span></div>
+
+        <div class="grid-3" style="margin-top:16px">
+          <div style="padding:12px; background:var(--bg3); border-radius:8px; text-align:center; font-size:12px;">
+            <div style="color:var(--text3); margin-bottom:4px">Per pair</div>
+            <div style="color:var(--accent4); font-family:JetBrains Mono,monospace; font-size:16px; font-weight:700">3</div>
+            <div style="color:var(--text3)">comparisons</div>
+          </div>
+          <div style="padding:12px; background:var(--bg3); border-radius:8px; text-align:center; font-size:12px;">
+            <div style="color:var(--text3); margin-bottom:4px">Pairs count</div>
+            <div style="color:var(--accent4); font-family:JetBrains Mono,monospace; font-size:16px; font-weight:700">(n−2)/2</div>
+            <div style="color:var(--text3)">pairs after init</div>
+          </div>
+          <div style="padding:12px; background:var(--bg3); border-radius:8px; text-align:center; font-size:12px;">
+            <div style="color:var(--text3); margin-bottom:4px">Total</div>
+            <div style="color:var(--accent3); font-family:JetBrains Mono,monospace; font-size:16px; font-weight:700">⌈3n/2⌉−2</div>
+            <div style="color:var(--text3)">ALL cases</div>
+          </div>
+        </div>
+        <div class="math-block" style="margin-top:16px">
+          <div class="math">For even n: 3n/2 − 2 &nbsp;&nbsp; For odd n: 3⌊n/2⌋ − 1</div><br>
+          <div class="math" style="font-size:14px">Combined formula: ⌈3n/2⌉ − 2 &nbsp;(ALL cases, not just worst!)</div>
+        </div>
+        <div class="callout success" style="margin-top:12px">
+          <div class="callout-icon">✅</div>
+          <div class="callout-body">
+            <h4>Why is this optimal?</h4>
+            <p>This is provably the minimum! You <strong>need at least ⌈3n/2⌉ − 2</strong> comparisons to find both max and min. CLRS achieves this bound exactly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4 -->
+    <div id="mm4" class="tab-panel">
+      <div class="card">
+        <h3>🔄 Method 4 — Divide & Conquer</h3>
+        <p>Split array in half. Recursively find (max, min) of each half. Then combine: overall max = max(max1, max2), overall min = min(min1, min2).</p>
+        <div class="code">T(n) = 2T(n/2) + <span class="num">2</span>  <span class="cm">// 2 comparisons to combine</span>
+T(<span class="num">2</span>) = <span class="num">1</span>              <span class="cm">// base case: 1 comparison for 2 elements</span>
+
+<span class="cm">// Solving: also gives ⌈3n/2⌉ − 2 comparisons</span></div>
+        <div class="callout insight" style="margin-top:12px">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <h4>All three methods give the same answer!</h4>
+            <p>CLRS pairwise, Tournament method, and D&C all give <strong>⌈3n/2⌉ − 2</strong> — the optimal. Different approaches, same result.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKED EXAMPLE -->
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Worked Example — CLRS method on [10, 2, 8, 5, 14, 1, 6]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">Array: [10, 2, 8, 5, 14, 1, 6]</span>  n = 7 (odd)
+
+<span class="green">INIT (1 comparison):</span>
+  Compare A[0]=10 vs A[1]=2 → 10>2, so max=10, min=2
+
+<span class="blue">PAIR 1: A[2]=8, A[3]=5 (3 comparisons)</span>
+  8 > 5 → bigger=8, smaller=5
+  bigger(8) > max(10)? No.   → max stays 10
+  smaller(5) < min(2)? No.   → min stays 2
+
+<span class="blue">PAIR 2: A[4]=14, A[5]=1 (3 comparisons)</span>
+  14 > 1 → bigger=14, smaller=1
+  bigger(14) > max(10)? YES → max = 14
+  smaller(1) < min(2)? YES  → min = 1
+
+<span class="red">LEFTOVER: A[6]=6 (2 comparisons)</span>
+  6 > max(14)? No.
+  6 < min(1)? No.
+
+<span class="green">RESULT: max=14, min=1</span>
+Total comparisons = 1 + 3 + 3 + 2 = 9
+Formula: ⌈3×7/2⌉ − 2 = ⌈10.5⌉ − 2 = 11−2 = <span class="hl">9 ✓</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 02 — SECOND MAXIMUM -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="second-max">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div>
+      <div class="section-title">Finding Second Maximum</div>
+      <div class="section-subtitle">The Tournament Method — key insight of 2nd max</div>
+    </div>
+  </div>
+
+  <div class="callout magic">
+    <div class="callout-icon">💎</div>
+    <div class="callout-body">
+      <h4>Key Observation (Almost Magic!)</h4>
+      <p>The <strong>second largest element can ONLY be defeated by the largest element</strong>. If the second largest is 20, then in any tournament, it keeps winning until it meets the maximum (25). This means second max must be among the elements that the maximum directly beat (the siblings of max in the tournament tree).</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card red">
+      <h3>❌ Naive Method</h3>
+      <p>Find max (n−1 comparisons). Then find max of remaining n−1 elements (n−2 more comparisons).</p>
+      <div class="math-block"><div class="math">Total = (n−1) + (n−2) = 2n−3</div></div>
+    </div>
+    <div class="card green">
+      <h3>🏆 Tournament Method (Optimal)</h3>
+      <p>Use a balanced tournament tree (like merge sort's tree). The max only has log n "siblings" — elements it directly beat. Second max is among these!</p>
+      <div class="math-block"><div class="math">n−1 + (log n − 1) = n + log n − 2</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🌳 How the Tournament Tree Works</h3>
+    <div class="viz"><span class="green">BALANCED TOURNAMENT (n=8 elements):</span>
+
+Level 3:  [<span class="hl">10</span>] [25] [20] [15] [5] [8] [2] [12]
+           ↘↙      ↘↙    ↘↙      ↘↙
+Level 2:  [<span class="blue">25</span>]    [<span class="blue">20</span>]  [<span class="blue">8</span>]    [<span class="blue">12</span>]
+              ↘↙          ↘↙
+Level 1:   [<span class="purple">25</span>]        [<span class="purple">12</span>]
+                 ↘↙
+Level 0:      [<span class="hl">25</span>] ← MAX
+
+<span class="green">Siblings of 25 (what it directly beat):</span>
+  Level 3: 10  (25 beat 10)
+  Level 2: 20  (25 beat 20)
+  Level 1: 12  (25 beat 12)
+
+Total siblings = log₂(8) = 3 = log n
+
+<span class="accent">Second max MUST be among {10, 20, 12}!</span>
+Find max of these 3 → 20 = 2nd maximum ✓</div>
+
+    <div class="callout insight" style="margin-top:12px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>Why exactly log n siblings?</h4>
+        <p>In a balanced binary tree of n elements, the maximum appears exactly once at each level. The tree has log n levels. So the maximum faces exactly log n opponents (one per level) = log n siblings.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>📊 Method Comparison</h3>
+    <table>
+      <tr><th>Method</th><th>Comparisons</th><th>Notes</th></tr>
+      <tr><td>Naive (2-pass)</td><td class="no">2n − 3</td><td>Simple but wasteful</td></tr>
+      <tr><td>Tournament (skewed)</td><td class="no">≤ 2n − 3</td><td>Still bad — up to n−1 siblings!</td></tr>
+      <tr><td><strong>Tournament (balanced)</strong></td><td class="yes">n + log n − 2</td><td>OPTIMAL — always log n siblings</td></tr>
+    </table>
+    <div class="callout warning" style="margin-top:12px">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <h4>Skewed vs. Balanced Tournament</h4>
+        <p>For finding max alone: both take n−1. For finding 2nd max: skewed is bad (up to n−1 siblings in worst case), balanced is optimal (always exactly log n siblings).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 03 — ANALYSIS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="analysis">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div>
+      <div class="section-title">Algorithm Analysis</div>
+      <div class="section-subtitle">Best, Worst, Average — what do they actually mean?</div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">🚨</div>
+    <div class="callout-body">
+      <h4>MAJOR MISCONCEPTION (Don't fall for this!)</h4>
+      <p>Many people think: <em>"Big-O is for worst case, Big-Ω is for best case"</em>. This is <strong>WRONG</strong>. Any notation (O, Ω, Θ) can be used with any case (best/worst/average). These are independent concepts!</p>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3>🏅 Best Case</h3>
+      <p style="font-size:13px; color:var(--text2)">The <em>input</em> that causes the algorithm to run fastest. Even ONE input achieving minimum time is enough to define best case.</p>
+      <div class="callout insight" style="margin-top:12px">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body"><p style="font-size:12px"><strong>Usually misleading!</strong> Best case inputs are often very rare. Don't rely on them for practical analysis.</p></div>
+      </div>
+    </div>
+    <div class="card red">
+      <h3>📉 Worst Case</h3>
+      <p style="font-size:13px; color:var(--text2)">The input that causes the algorithm to run slowest. Even ONE such input defines worst case.</p>
+      <div class="callout success" style="margin-top:12px">
+        <div class="callout-icon">✅</div>
+        <div class="callout-body"><p style="font-size:12px"><strong>Most useful!</strong> Gives a <em>guarantee</em>: "My algorithm will NEVER be slower than this." That's why we focus on worst case in GATE.</p></div>
+      </div>
+    </div>
+    <div class="card gold">
+      <h3>📊 Average Case</h3>
+      <p style="font-size:13px; color:var(--text2)">Expected running time over all possible inputs (weighted by probability). Usually hardest to compute — requires probability theory.</p>
+      <div class="callout info" style="margin-top:12px">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body"><p style="font-size:12px">Usually <strong>beyond GATE scope</strong>. When asked, remember: best ≤ average ≤ worst always holds.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧩 The Relationship Between Cases and Bounds</h3>
+    <table>
+      <tr><th>Statement</th><th>Meaning</th><th>Useful?</th></tr>
+      <tr>
+        <td><code>Worst case = O(n²)</code></td>
+        <td>In worst case, always ≤ n². This <strong>implies</strong> algorithm has O(n²) overall (all cases ≤ n²).</td>
+        <td class="yes">Very useful ✓</td>
+      </tr>
+      <tr>
+        <td><code>Best case = O(n²)</code></td>
+        <td>Even in best case, ≤ n². This doesn't say much about worst case.</td>
+        <td class="no">Less useful</td>
+      </tr>
+      <tr>
+        <td><code>Best case = Ω(n²)</code></td>
+        <td>Even best case takes at least n². So ALL cases take Ω(n²)!</td>
+        <td class="yes">Very useful ✓</td>
+      </tr>
+      <tr>
+        <td><code>Worst case = Ω(n²)</code></td>
+        <td>Worst case takes at least n². Doesn't say best case can't be better.</td>
+        <td class="no">Limited info</td>
+      </tr>
+    </table>
+    <div class="callout magic" style="margin-top:12px">
+      <div class="callout-icon">🔑</div>
+      <div class="callout-body">
+        <h4>Key Rule</h4>
+        <p>If <strong>worst case = O(something)</strong> → algorithm is O(that) overall (all cases bounded). If <strong>best case = Ω(something)</strong> → algorithm is Ω(that) overall (all cases lower bounded).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Average case calc example -->
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Average Case Calculation — Max &amp; Min Naive Method
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <p style="font-size:13px; margin-bottom:12px">For the naive max/min method (with else branch), each element either hits the if or the else with equal probability (½ each).</p>
+      <div class="viz"><span class="green">For a single element A[i]:</span>
+
+With prob ½: if-branch → 1 comparison (only vs max)
+With prob ½: else-branch → 2 comparisons (vs max AND vs min)
+
+E[comparisons per element] = ½ × 1 + ½ × 2 = 1.5 = 3/2
+
+<span class="blue">For (n−2) elements in the loop:</span>
+  Average comparisons = (n−2) × 3/2
+
+<span class="green">Total (including 1 comparison for initialization):</span>
+  = 1 + (n−2) × 3/2
+  = 1 + 3n/2 − 3
+  = 3n/2 − 2
+
+This matches worst case of CLRS! But CLRS achieves this on EVERY case,
+while Method 2 achieves it only ON AVERAGE.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 04 — NOTATIONS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="notations">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div>
+      <div class="section-title">Asymptotic Notations</div>
+      <div class="section-subtitle">O, Ω, Θ — what each really means</div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3 style="color:var(--accent2)">O — Big-Oh</h3>
+      <div class="math-block"><div class="math" style="color:var(--accent2)">f(n) ≤ c·g(n)</div></div>
+      <p style="font-size:13px; color:var(--text2)">Upper bound. f grows <em>at most</em> as fast as g. Think: "I won't be slower than this."</p>
+      <p style="font-size:13px">Memory trick: Big-O → you can put <em>bigger</em> numbers inside. So it's a ≤ bound.</p>
+    </div>
+    <div class="card green">
+      <h3 style="color:var(--accent3)">Ω — Big-Omega</h3>
+      <div class="math-block"><div class="math" style="color:var(--accent3)">f(n) ≥ c·g(n)</div></div>
+      <p style="font-size:13px; color:var(--text2)">Lower bound. f grows <em>at least</em> as fast as g. Think: "I'll be at least this slow."</p>
+      <p style="font-size:13px">Memory: Every algorithm is Ω(1) since every algo takes at least constant time.</p>
+    </div>
+    <div class="card purple">
+      <h3 style="color:var(--accent5)">Θ — Theta</h3>
+      <div class="math-block"><div class="math" style="color:var(--accent5)">c₁·g(n) ≤ f(n) ≤ c₂·g(n)</div></div>
+      <p style="font-size:13px; color:var(--text2)">Tight bound. f and g grow at the same rate. Both upper AND lower bounded.</p>
+      <p style="font-size:13px">Most informative when available. "I'll be exactly this fast (asymptotically)."</p>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>🎓 GATE Tricky Questions Pattern</h3>
+    <table>
+      <tr><th>Given</th><th>Can we conclude?</th><th>Reason</th></tr>
+      <tr>
+        <td>Worst case T(n) = O(n²)</td>
+        <td class="yes">→ T(n) = O(n²) overall</td>
+        <td>If even worst is ≤ n², all cases are ≤ n²</td>
+      </tr>
+      <tr>
+        <td>Worst case T(n) = Ω(n²)</td>
+        <td class="no">→ T(n) = Ω(n²) overall? <strong>NO</strong></td>
+        <td>Best case might be much better!</td>
+      </tr>
+      <tr>
+        <td>Best case T(n) = Ω(n²)</td>
+        <td class="yes">→ T(n) = Ω(n²) overall</td>
+        <td>If even best case is ≥ n², ALL are ≥ n²</td>
+      </tr>
+      <tr>
+        <td>Best case T(n) = O(n²)</td>
+        <td class="no">→ T(n) = O(n²) overall? <strong>NO</strong></td>
+        <td>Worst case might be much worse!</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      🧩 Tricky example: Algorithm A (best=n, worst=n²). Which of these are true?
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">Algorithm A: Best case = Θ(n), Worst case = Θ(n²)</span>
+
+(A) T(n) = O(n²)?
+    YES ✓ — worst case is n², so all cases ≤ n².
+    Since worst is bounded by n², the algorithm NEVER exceeds n².
+
+(B) T(n) = Ω(n)?
+    YES ✓ — best case is Θ(n), so all cases ≥ n.
+    Since best case takes at least n time, ALL cases take at least n.
+
+(C) T(n) = O(n)?
+    NO ✗ — worst case is n², which is > n. Can't claim O(n) overall.
+
+(D) T(n) = Ω(n²)?
+    NO ✗ — best case is just n, which is < n². Can't claim Ω(n²) overall.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 05 — BUBBLE SORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="bubble">
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <div>
+      <div class="section-title">Bubble Sort</div>
+      <div class="section-subtitle">Adjacent swaps — the simplest idea</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>💡 The Idea</h3>
+      <p>Compare adjacent pairs. Swap them if out of order. After one full pass, the largest element "bubbles up" to its correct position at the end. Repeat for remaining elements.</p>
+      <div class="code"><span class="kw">for</span> pass = <span class="num">1</span> to n−<span class="num">1</span>:
+  swapped = <span class="kw">false</span>
+  <span class="kw">for</span> j = <span class="num">0</span> to n−pass−<span class="num">1</span>:
+    <span class="kw">if</span> A[j] > A[j+<span class="num">1</span>]:
+      swap(A[j], A[j+<span class="num">1</span>])
+      swapped = <span class="kw">true</span>
+  <span class="kw">if not</span> swapped: <span class="kw">break</span>  <span class="cm">// early termination</span></code></div>
+    </div>
+    <div class="card">
+      <h3>📊 Complexities</h3>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px; color:var(--text3); margin-bottom:8px">Without early termination:</div>
+        <span class="complexity worst">Worst: Θ(n²)</span>
+        <span class="complexity avg">Average: Θ(n²)</span>
+        <span class="complexity best">Best: Θ(n²)</span>
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text3); margin-bottom:8px">With early termination (swapped flag):</div>
+        <span class="complexity worst">Worst: Θ(n²)</span>
+        <span class="complexity avg">Average: Θ(n²)</span>
+        <span class="complexity best">Best: Θ(n) ★</span>
+      </div>
+      <hr>
+      <div style="margin-top:12px; font-size:13px">
+        <span class="badge badge-green">✓ In-place</span>
+        <span class="badge badge-green">✓ Stable</span><br>
+        <div style="font-size:12px; color:var(--text3); margin-top:8px">Space: O(1)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Worked Example — Bubble sort on [6, 2, 4, 9, 3, 7]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">Initial: [6, 2, 4, 9, 3, 7]</span>
+
+<span class="green">Pass 1:</span> Compare adjacent, bubble max to end
+  [6,2] → swap → [2, 6, 4, 9, 3, 7]
+  [6,4] → swap → [2, 4, 6, 9, 3, 7]
+  [6,9] → OK   → [2, 4, 6, 9, 3, 7]
+  [9,3] → swap → [2, 4, 6, 3, 9, 7]
+  [9,7] → swap → [2, 4, 6, 3, 7, <span class="red">9</span>]  ← 9 in place!
+
+<span class="blue">Pass 2:</span> Work on [2, 4, 6, 3, 7]
+  [2,4]→OK [4,6]→OK [6,3]→swap [3,7]→OK
+  Result: [2, 4, 3, 6, <span class="red">7</span>]   ← 7 in place!
+
+<span class="purple">Pass 3:</span> [2, 4, 3, 6] → [2, 3, 4, <span class="red">6</span>]
+<span class="purple">Pass 4:</span> [2, 3, 4] → No swaps → <span class="green">DONE!</span>
+
+<span class="hl">Final: [2, 3, 4, 6, 7, 9]</span>
+
+Note: With early termination, Pass 4 detects no swaps and stops immediately.</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <h4>Why is bubble sort stable?</h4>
+      <p>We only swap when <strong>strictly greater</strong> (A[j] > A[j+1]), not ≥. So equal elements are never swapped, preserving their original relative order.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 06 — INSERTION SORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="insertion">
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <div>
+      <div class="section-title">Insertion Sort</div>
+      <div class="section-subtitle">Card game analogy — insert each card in its right place</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🃏</div>
+    <div class="callout-body">
+      <h4>The Idea</h4>
+      <p>Maintain a sorted left portion. Take the next element (key) and insert it at its correct position in the sorted portion by shifting larger elements right.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>💻 The Algorithm</h3>
+      <div class="code"><span class="kw">for</span> i = <span class="num">1</span> to n−<span class="num">1</span>:
+  key = A[i]
+  j = i − <span class="num">1</span>
+  <span class="cm">// Shift elements right until correct position</span>
+  <span class="kw">while</span> j >= <span class="num">0</span> <span class="kw">and</span> A[j] > key:
+    A[j+<span class="num">1</span>] = A[j]
+    j = j − <span class="num">1</span>
+  A[j+<span class="num">1</span>] = key  <span class="cm">// insert at correct pos</span></div>
+    </div>
+    <div class="card">
+      <h3>📊 Complexities</h3>
+      <span class="complexity worst">Worst: Θ(n²) — reversed array</span><br><br>
+      <span class="complexity avg">Average: Θ(n²)</span><br><br>
+      <span class="complexity best">Best: Θ(n) — already sorted ★</span>
+      <hr style="margin:12px 0">
+      <span class="badge badge-green">✓ In-place</span>
+      <span class="badge badge-green">✓ Stable</span>
+      <div style="margin-top:12px; font-size:13px; color:var(--text2)">Best case requires NO extra mechanism (unlike bubble sort which needs swap flag).</div>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>🔗 Inversions Connection</h3>
+    <p style="font-size:13px; color:var(--text2)">An <strong>inversion</strong> is a pair (i, j) where i &lt; j but A[i] &gt; A[j]. The number of swaps/shifts in insertion sort equals the number of inversions!</p>
+    <div class="math-block">
+      <div class="math">T(insertion sort) = Θ(n + number of inversions)</div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div style="padding:12px; background:var(--bg3); border-radius:8px; font-size:13px;">
+        <strong>0 inversions</strong> = sorted → Θ(n) shifts
+      </div>
+      <div style="padding:12px; background:var(--bg3); border-radius:8px; font-size:13px;">
+        <strong>n(n−1)/2 inversions</strong> = reversed → Θ(n²) shifts
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Worked Example — [4, 3, 2, 10, 12, 1, 5, 6]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">Initial: [4, 3, 2, 10, 12, 1, 5, 6]</span>
+<span class="green">Invariant: Left of index i is always sorted</span>
+
+i=1: key=3, shift 4 right → [3, 4, 2, 10, 12, 1, 5, 6]
+i=2: key=2, shift 4,3 right → [2, 3, 4, 10, 12, 1, 5, 6]
+i=3: key=10, 4&lt;10 → no shift → [2, 3, 4, <span class="blue">10</span>, 12, 1, 5, 6]
+i=4: key=12, 10&lt;12 → no shift → [2, 3, 4, 10, <span class="blue">12</span>, 1, 5, 6]
+i=5: key=1, shift ALL left elements → [<span class="red">1</span>, 2, 3, 4, 10, 12, 5, 6]
+i=6: key=5, shift 10,12 right → [1, 2, 3, 4, <span class="blue">5</span>, 10, 12, 6]
+i=7: key=6, shift 10,12 right → [1, 2, 3, 4, 5, <span class="blue">6</span>, 10, 12]
+
+<span class="green">Final: [1, 2, 3, 4, 5, 6, 10, 12] ✓</span></div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      🤔 Binary Insertion Sort — Does binary search help?
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="callout insight">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <h4>Idea: Find correct position using Binary Search</h4>
+          <p>The left portion is sorted. Use binary search to find where to insert → O(log n) per element instead of O(n) comparisons. But you still need to SHIFT elements! Shifting is O(n). So total time stays Θ(n²) in worst case. Number of comparisons improves to O(n log n) though!</p>
+        </div>
+      </div>
+      <table>
+        <tr><th>Approach</th><th>Comparisons</th><th>Shifts</th><th>Total</th></tr>
+        <tr><td>Regular Insertion</td><td>O(n²)</td><td>O(n²)</td><td>Θ(n²)</td></tr>
+        <tr><td>Binary Insertion</td><td>O(n log n)</td><td>O(n²)</td><td class="no">Still Θ(n²)</td></tr>
+      </table>
+      <p style="font-size:13px; color:var(--text2); margin-top:8px">With linked list: comparisons stay O(n) (can't do binary search), shifts become O(1). Still Θ(n²) total because comparisons dominate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 07 — SELECTION SORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="selection">
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <div>
+      <div class="section-title">Selection Sort</div>
+      <div class="section-subtitle">The most natural algorithm — pick the max, put it at end</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>💡 The Idea</h3>
+      <p>Find the maximum element. Put it at the end. Now ignore the last element and repeat for the rest. Very natural — it's what most people would do manually!</p>
+      <div class="code"><span class="kw">for</span> pass = <span class="num">1</span> to n−<span class="num">1</span>:
+  maxIdx = <span class="fn">findMaxIndex</span>(A, <span class="num">0</span>, n−pass)
+  swap(A[maxIdx], A[n−pass])</div>
+    </div>
+    <div class="card">
+      <h3>📊 Properties</h3>
+      <span class="complexity worst">All cases: Θ(n²) ★</span>
+      <div style="margin-top:12px; font-size:13px; color:var(--text2)">
+        <strong style="color:var(--accent2)">No best/worst case distinction!</strong><br>
+        Even if array is sorted, we still scan for max every pass (don't know it's sorted).
+      </div>
+      <hr style="margin:12px 0">
+      <span class="badge badge-green">✓ In-place</span>
+      <span class="badge badge-red">✗ NOT Stable</span>
+    </div>
+  </div>
+
+  <div class="card red">
+    <h3>❌ Why is Selection Sort NOT stable?</h3>
+    <p style="font-size:13px">Consider: <code>[3a, 3b, 2, 1]</code>. Selection sort finds max=3a, swaps with last → <code>[1, 3b, 2, 3a]</code>. Now 3b comes before 3a! Relative order changed → <strong>unstable</strong>.</p>
+    <div class="callout warning" style="margin-top:8px">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <p style="font-size:13px">This swap of 3a with the last element is done blindly — without knowing/caring about equal elements' relative order.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 08 — HEAP SORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="heap">
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <div>
+      <div class="section-title">Heap Sort</div>
+      <div class="section-subtitle">Using a max-heap to sort in-place in O(n log n)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🏗️ How it works</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Build Max-Heap</h4>
+          <p>Convert array into a valid max-heap in <strong>Θ(n)</strong> time using heapify from last non-leaf upward.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Extract Max repeatedly</h4>
+          <p>Delete max (root) → place at end → heapify remaining. Each extract takes <strong>O(log n)</strong>. Do this n times.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num green">3</div>
+        <div class="step-content">
+          <h4>Result</h4>
+          <p>Array is sorted in ascending order (smallest to largest). The max is placed at end first, working backwards.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📊 Complexities</h3>
+      <div class="math-block">
+        <div class="math">Build heap: Θ(n)</div><br>
+        <div class="math">n × Extract-Max: Θ(n log n)</div><br>
+        <div class="math" style="color:var(--accent4)">Total: Θ(n log n) ALL cases</div>
+      </div>
+      <hr style="margin:12px 0">
+      <span class="badge badge-green">✓ In-place</span>
+      <span class="badge badge-red">✗ NOT Stable</span>
+    </div>
+    <div class="card red">
+      <h3>❌ Why NOT stable?</h3>
+      <p style="font-size:13px">Consider <code>[3a, 3b, 2, 1]</code>. Build heap → 3a might end up at root. Delete 3a → placed at position 3. During heapify, 3b might end up before 3a in the end array. No guarantee of original order.</p>
+      <div class="callout warning" style="margin-top:12px">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body">
+          <p style="font-size:12px">Heapify doesn't preserve relative order of equal elements.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      🧮 Proof: log(n!) = Θ(n log n)
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <p style="font-size:13px; margin-bottom:12px">Heap sort does log n + log(n−1) + … + log 1 = log(n!) comparisons for extractions.</p>
+      <div class="viz"><span class="green">Upper Bound:</span>
+log(n!) = log n + log(n−1) + ... + log 1
+        ≤ n · log n  (replace each term with log n)
+∴ log(n!) = O(n log n)
+
+<span class="blue">Lower Bound (take only last n/2 terms):</span>
+log(n!) ≥ log n + log(n−1) + ... + log(n/2+1) + log(n/2)
+        ≥ (n/2) · log(n/2)    (each term ≥ log(n/2))
+        = (n/2)(log n - 1)
+        = (n log n)/2 - n/2
+        = Ω(n log n)
+
+<span class="hl">Therefore: log(n!) = Θ(n log n)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 09 — MERGE SORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="merge-sort">
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <div>
+      <div class="section-title">Merge Sort</div>
+      <div class="section-subtitle">The heart of Divide &amp; Conquer — optimal comparison-based sort</div>
+    </div>
+  </div>
+
+  <div class="callout magic">
+    <div class="callout-icon">✨</div>
+    <div class="callout-body">
+      <h4>The Three Steps</h4>
+      <p><strong>1. Divide</strong> array into two halves (free — just compute mid). <strong>2. Conquer</strong> — recursively sort each half (assume it works!). <strong>3. Combine</strong> — merge two sorted halves into one sorted array (THE hard part — takes Θ(n)).</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>💻 Merge Sort Code</h3>
+      <div class="code"><span class="fn">mergeSort</span>(A, i, j):
+  <span class="kw">if</span> i == j: <span class="kw">return</span>   <span class="cm">// base: 1 element</span>
+  mid = (i+j)//<span class="num">2</span>
+  <span class="fn">mergeSort</span>(A, i, mid)      <span class="cm">// sort left</span>
+  <span class="fn">mergeSort</span>(A, mid+<span class="num">1</span>, j)   <span class="cm">// sort right</span>
+  <span class="fn">merge</span>(A, i, mid, j)      <span class="cm">// combine</span></div>
+    </div>
+    <div class="card green">
+      <h3>💻 Merge Subroutine (The Heart!)</h3>
+      <div class="code"><span class="fn">merge</span>(A, i, mid, j):
+  <span class="cm">// Two "pointers" p=i, q=mid+1</span>
+  <span class="cm">// Compare A[p] and A[q]</span>
+  <span class="cm">// Pick smaller → write to B[]</span>
+  <span class="cm">// Advance that pointer</span>
+  <span class="cm">// When one array exhausted,</span>
+  <span class="cm">// copy remaining directly</span>
+  <span class="cm">// Copy B back to A</span>
+  <span class="cm">Time: Θ(n), Space: Θ(n)</span></div>
+    </div>
+  </div>
+
+  <!-- Merge subroutine detail -->
+  <div class="card">
+    <h3>🔍 How Merge Works — Step by Step</h3>
+    <div class="viz"><span class="hl">Merge [1, 4, 7] and [2, 5, 6]</span>
+<span class="green">Pointers:</span> p→1    q→2    output:[]
+
+Step 1: min(1,2)=1, write 1, advance p
+        p→4    q→2    output:[1]
+Step 2: min(4,2)=2, write 2, advance q
+        p→4    q→5    output:[1,2]
+Step 3: min(4,5)=4, write 4, advance p
+        p→7    q→5    output:[1,2,4]
+Step 4: min(7,5)=5, write 5, advance q
+        p→7    q→6    output:[1,2,4,5]
+Step 5: min(7,6)=6, write 6, advance q
+        p→7    q=done output:[1,2,4,5,6]
+Step 6: q exhausted, copy remaining (7)
+        output:[<span class="green">1,2,4,5,6,7</span>] ✓
+
+<span class="blue">Number of comparisons:</span>
+  Worst case: m+n−1 (every element compared)
+  Best case:  min(m,n) (one array exhausted immediately)</div>
+  </div>
+
+  <!-- Recurrence and time -->
+  <div class="card purple">
+    <h3>📐 Recurrence &amp; Time Complexity</h3>
+    <div class="math-block">
+      <div class="math">T(n) = 2T(n/2) + Θ(n)</div><br>
+      <div class="math">T(1) = Θ(1)</div><br>
+      <div class="math" style="color:var(--accent4); font-size:20px">⟹ T(n) = Θ(n log n)</div>
+    </div>
+    <div class="callout insight" style="margin-top:16px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>Recursion Tree Intuition</h4>
+        <p>Level 0: n work. Level 1: n/2 + n/2 = n work. Level 2: 4×(n/4) = n work. ... There are log n levels, each doing n work → n·log n total!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Merge Sort visualization -->
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Complete Worked Example — [8, 3, 1, 5, 2, 7, 4, 6]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">Array: [8, 3, 1, 5, 2, 7, 4, 6]</span>
+
+<span class="blue">DIVIDE phase (top-down):</span>
+[8, 3, 1, 5, 2, 7, 4, 6]
+    ↙                ↘
+[8, 3, 1, 5]      [2, 7, 4, 6]
+  ↙      ↘          ↙      ↘
+[8, 3]  [1, 5]  [2, 7]  [4, 6]
+ ↙  ↘    ↙  ↘    ↙  ↘    ↙  ↘
+[8][3]  [1][5]  [2][7]  [4][6]
+
+<span class="green">MERGE phase (bottom-up):</span>
+[8][3] → [3, 8]    [1][5] → [1, 5]
+[2][7] → [2, 7]    [4][6] → [4, 6]
+
+[3,8] + [1,5] → [1, 3, 5, 8]
+[2,7] + [4,6] → [2, 4, 6, 7]
+
+[1,3,5,8] + [2,4,6,7] → [<span class="hl">1, 2, 3, 4, 5, 6, 7, 8</span>] ✓
+
+<span class="purple">Merge count for final step:</span>
+  1 vs 2 → 1, then 2 vs 3 → 2... 7 comparisons total (n−1=7)</div>
+    </div>
+  </div>
+
+  <!-- Iterative Merge Sort -->
+  <div class="card gold">
+    <h3>🔄 Iterative (Bottom-Up) Merge Sort</h3>
+    <p>Also called "Straight Two-Way Merge Sort" (Knuth). Same idea but no recursion — start from pairs and work up.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num green">1</div>
+        <div class="step-content"><h4>Pass 1</h4><p>Merge adjacent pairs: [a₁,a₂], [a₃,a₄], ... Each pair becomes sorted.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num green">2</div>
+        <div class="step-content"><h4>Pass 2</h4><p>Merge adjacent groups of 4: [a₁..a₄], [a₅..a₈], ...</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num green">3</div>
+        <div class="step-content"><h4>Continue</h4><p>Until only one group (the full sorted array) remains. log n passes total.</p></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div style="padding:12px; background:var(--bg3); border-radius:8px; font-size:13px;">
+        <strong style="color:var(--accent)">Same time complexity</strong>: Θ(n log n)
+      </div>
+      <div style="padding:12px; background:var(--bg3); border-radius:8px; font-size:13px;">
+        <strong style="color:var(--accent3)">Advantage</strong>: No recursion stack overhead (no split phase)
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>✅ Merge Sort Properties</h3>
+    <table>
+      <tr><th>Property</th><th>Value</th><th>Why</th></tr>
+      <tr><td>Time (all cases)</td><td class="yes">Θ(n log n)</td><td>Same divide/merge regardless of input</td></tr>
+      <tr><td>Space</td><td class="no">Θ(n)</td><td>Needs aux array B[] for merge</td></tr>
+      <tr><td>Stable?</td><td class="yes">YES ✓</td><td>In merge: prefer left element when equal (use ≤ not &lt;)</td></tr>
+      <tr><td>In-place?</td><td class="no">NO ✗</td><td>Needs Θ(n) extra space for aux array</td></tr>
+      <tr><td>Divide cost</td><td>Θ(1)</td><td>Just compute mid</td></tr>
+      <tr><td>Combine cost</td><td>Θ(n)</td><td>Merge takes linear time</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 10 — LOWER BOUND -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="comparison-bound">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div>
+      <div class="section-title">Lower Bound for Comparison-Based Sorting</div>
+      <div class="section-subtitle">Why n log n is the best we can do</div>
+    </div>
+  </div>
+
+  <div class="callout magic">
+    <div class="callout-icon">🎓</div>
+    <div class="callout-body">
+      <h4>The Theorem</h4>
+      <p>Any <strong>comparison-based sorting algorithm</strong> must make <strong>Ω(n log n) comparisons in the worst case</strong>. No comparison-based sort can beat this — it's a proven mathematical lower bound!</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🌳 Proof via Decision Tree</h3>
+    <p style="font-size:13px; color:var(--text2)">Any comparison-based sort can be modeled as a <em>decision tree</em> — a binary tree where each internal node represents a comparison and each leaf represents one possible sorted order.</p>
+    <div class="viz"><span class="green">For n=3 elements [a,b,c], there are n!=6 possible orderings:</span>
+
+             a:b ?
+           ≤/       \>
+          b:c ?      a:c ?
+        ≤/  \>     ≤/   \>
+     a:c ?   abc  b:c ?  ...
+    ≤/ \>        ≤/ \>
+  abc  acb     abc  bac
+
+<span class="blue">6 leaves = 3! possible outcomes</span>
+<span class="hl">Height ≥ log₂(6) ≈ 2.58 → at least 3 comparisons needed!</span></div>
+
+    <div class="steps" style="margin-top:16px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><h4>n! leaves needed</h4><p>For n elements, there are n! possible permutations. Each must be reachable — so the tree needs at least n! leaves.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><h4>Binary tree height bound</h4><p>A binary tree with L leaves has height ≥ log₂(L). So depth ≥ log₂(n!).</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num green">3</div>
+        <div class="step-content"><h4>log(n!) = Θ(n log n)</h4><p>We proved this earlier. So worst-case comparisons ≥ Ω(n log n).</p></div>
+      </div>
+    </div>
+
+    <div class="math-block" style="margin-top:16px">
+      <div class="math">Worst-case comparisons ≥ ⌈log₂(n!)⌉ = Ω(n log n)</div><br>
+      <div class="math" style="font-size:14px; color:var(--accent4)">Merge Sort achieves this bound → Merge Sort is OPTIMAL!</div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <h4>Important: "Worst case" qualification is necessary!</h4>
+      <p>The theorem says: worst-case comparisons = Ω(n log n). It does NOT say ALL cases require Ω(n log n). Insertion sort, for example, takes O(n) on already-sorted input. The lower bound only applies to worst case.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 11 — LINEAR TIME SORTING -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="linear-sort">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div>
+      <div class="section-title">Linear Time Sorting</div>
+      <div class="section-subtitle">Breaking the n log n barrier — by not comparing!</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🚀</div>
+    <div class="callout-body">
+      <h4>How is this possible?</h4>
+      <p>The n log n lower bound applies ONLY to comparison-based algorithms. If we use <em>other information</em> about the keys (like they're integers in a bounded range), we can sort faster!</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab(this,'cs1')">Counting Sort</button>
+      <button class="tab-btn" onclick="showTab(this,'cs2')">Radix Sort</button>
+    </div>
+
+    <div id="cs1" class="tab-panel active">
+      <div class="card green">
+        <h3>🪣 Counting Sort</h3>
+        <div class="callout info" style="margin-bottom:16px">
+          <div class="callout-icon">📋</div>
+          <div class="callout-body">
+            <h4>Assumptions</h4>
+            <p>Keys are non-negative integers. Maximum key value is k (known in advance). Works best when k is not much larger than n.</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num green">1</div>
+            <div class="step-content"><h4>Count occurrences</h4><p>Create count array C[0..k]. For each element x in A, increment C[x]. Time: O(n+k)</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">2</div>
+            <div class="step-content"><h4>Compute positions</h4><p>C[i] += C[i-1] (prefix sum). Now C[x] = number of elements ≤ x. Time: O(k)</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">3</div>
+            <div class="step-content"><h4>Place elements (right-to-left for stability)</h4><p>For each element x (right-to-left): place at position C[x]−1, decrement C[x]. Time: O(n)</p></div>
+          </div>
+        </div>
+        <div class="math-block" style="margin-top:12px">
+          <div class="math">Time: Θ(n + k) &nbsp;&nbsp; Space: Θ(n + k)</div><br>
+          <div class="math" style="font-size:13px">When k = O(n): Time = Θ(n)</div>
+        </div>
+        <span class="badge badge-green">✓ Stable</span>
+        <span class="badge badge-red">✗ NOT In-place (needs extra arrays)</span>
+      </div>
+
+      <div class="accordion" style="margin-top:12px">
+        <div class="acc-head" onclick="toggleAcc(this)">
+          📝 Example: Sort [2, 5, 3, 0, 2, 3, 0, 3] with k=5
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="viz"><span class="hl">A = [2, 5, 3, 0, 2, 3, 0, 3]</span>
+
+<span class="green">Step 1: Count occurrences</span>
+C = [2, 0, 2, 3, 0, 1]  (index 0..5)
+    ↑  ↑  ↑  ↑  ↑  ↑
+    0  1  2  3  4  5
+
+<span class="blue">Step 2: Prefix sums (positions)</span>
+C = [2, 2, 4, 7, 7, 8]
+  C[x] = #elements ≤ x
+
+<span class="purple">Step 3: Build output (right-to-left):</span>
+A[7]=3: output[C[3]-1]=output[6]=3, C[3]=6
+A[6]=0: output[C[0]-1]=output[1]=0, C[0]=1
+A[5]=3: output[C[3]-1]=output[5]=3, C[3]=5
+A[4]=2: output[C[2]-1]=output[3]=2, C[2]=3
+A[3]=0: output[C[0]-1]=output[0]=0, C[0]=0
+A[2]=3: output[C[3]-1]=output[4]=3, C[3]=4
+A[1]=5: output[C[5]-1]=output[7]=5, C[5]=7
+A[0]=2: output[C[2]-1]=output[2]=2, C[2]=2
+
+<span class="hl">Output: [0, 0, 2, 2, 3, 3, 3, 5] ✓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cs2" class="tab-panel">
+      <div class="card">
+        <h3>📡 Radix Sort</h3>
+        <p>Sort by digits, one at a time, from <em>least significant digit</em> (LSD) to most significant. Uses counting sort as a subroutine (must be stable!).</p>
+        <div class="viz"><span class="hl">Sort: [329, 457, 657, 839, 436, 720, 355]</span>
+
+<span class="green">Sort by units digit:</span>
+[720, 355, 436, 457, 657, 329, 839]
+
+<span class="blue">Sort by tens digit (stable!):</span>
+[720, 329, 436, 839, 355, 457, 657]
+
+<span class="purple">Sort by hundreds digit:</span>
+[<span class="hl">329, 355, 436, 457, 657, 720, 839</span>] ✓</div>
+
+        <div class="callout magic" style="margin-top:12px">
+          <div class="callout-icon">✨</div>
+          <div class="callout-body">
+            <h4>Why LSD first? (Not MSD)</h4>
+            <p>If we sort MSD first and then LSD, the LSD sort would undo the MSD work. By going LSD → MSD, each pass <em>refines</em> the ordering. Stability of counting sort guarantees earlier sorts are preserved!</p>
+          </div>
+        </div>
+
+        <div class="math-block" style="margin-top:12px">
+          <div class="math">d passes × Θ(n+k) each = Θ(d(n+k))</div><br>
+          <div class="math" style="font-size:13px">For n integers in range n^t: choose base=n, d=t → Time = Θ(tn)</div>
+        </div>
+
+        <div class="callout success">
+          <div class="callout-icon">🏆</div>
+          <div class="callout-body">
+            <h4>Sorting n integers in range [1, n^t] in Θ(tn)</h4>
+            <p>Use base n (n "buckets"). Each number has t digits in base n. d = t passes of counting sort, each O(n+n) = O(n). Total: O(tn). For constant t, this is O(n)!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 12 — SORTING SUMMARY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="sorting-summary">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div>
+      <div class="section-title">Sorting Algorithms Summary</div>
+      <div class="section-subtitle">Everything in one table — study this well!</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <tr>
+        <th>Algorithm</th>
+        <th>Best Case</th>
+        <th>Average Case</th>
+        <th>Worst Case</th>
+        <th>Space</th>
+        <th>Stable?</th>
+        <th>In-place?</th>
+      </tr>
+      <tr>
+        <td><strong>Bubble Sort</strong><br><span style="font-size:10px;color:var(--text3)">(with swap flag)</span></td>
+        <td class="yes tc">Θ(n)</td>
+        <td class="tc" style="color:var(--accent4)">Θ(n²)</td>
+        <td class="no tc">Θ(n²)</td>
+        <td class="tc">O(1)</td>
+        <td class="yes tc">YES</td>
+        <td class="yes tc">YES</td>
+      </tr>
+      <tr>
+        <td><strong>Insertion Sort</strong></td>
+        <td class="yes tc">Θ(n)</td>
+        <td class="tc" style="color:var(--accent4)">Θ(n²)</td>
+        <td class="no tc">Θ(n²)</td>
+        <td class="tc">O(1)</td>
+        <td class="yes tc">YES</td>
+        <td class="yes tc">YES</td>
+      </tr>
+      <tr>
+        <td><strong>Selection Sort</strong></td>
+        <td class="no tc">Θ(n²)</td>
+        <td class="no tc">Θ(n²)</td>
+        <td class="no tc">Θ(n²)</td>
+        <td class="tc">O(1)</td>
+        <td class="no tc">NO</td>
+        <td class="yes tc">YES</td>
+      </tr>
+      <tr>
+        <td><strong>Heap Sort</strong></td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="tc">O(1)</td>
+        <td class="no tc">NO</td>
+        <td class="yes tc">YES</td>
+      </tr>
+      <tr>
+        <td><strong>Merge Sort</strong></td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="tc no">O(n)</td>
+        <td class="yes tc">YES ★</td>
+        <td class="no tc">NO</td>
+      </tr>
+      <tr>
+        <td><strong>Quick Sort</strong><br><span style="font-size:10px;color:var(--text3)">(random pivot)</span></td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="yes tc">Θ(n log n)</td>
+        <td class="no tc">Θ(n²)</td>
+        <td class="tc">O(log n)</td>
+        <td class="no tc">NO</td>
+        <td class="yes tc">YES</td>
+      </tr>
+      <tr>
+        <td><strong>Counting Sort</strong></td>
+        <td class="yes tc">Θ(n+k)</td>
+        <td class="yes tc">Θ(n+k)</td>
+        <td class="yes tc">Θ(n+k)</td>
+        <td class="tc no">O(n+k)</td>
+        <td class="yes tc">YES</td>
+        <td class="no tc">NO</td>
+      </tr>
+      <tr>
+        <td><strong>Radix Sort</strong></td>
+        <td class="yes tc">Θ(d(n+k))</td>
+        <td class="yes tc">Θ(d(n+k))</td>
+        <td class="yes tc">Θ(d(n+k))</td>
+        <td class="tc no">O(n+k)</td>
+        <td class="yes tc">YES</td>
+        <td class="no tc">NO</td>
+      </tr>
+    </table>
+    <div style="margin-top:12px; font-size:12px; color:var(--text3)">★ = special property; k = max key value in counting/radix sort; d = number of digits</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="callout success">
+      <div class="callout-icon">🏆</div>
+      <div class="callout-body">
+        <h4>Merge Sort = Optimal stable sort</h4>
+        <p>Achieves Θ(n log n) in ALL cases AND is stable. Only downside: O(n) extra space.</p>
+      </div>
+    </div>
+    <div class="callout insight">
+      <div class="callout-icon">⚡</div>
+      <div class="callout-body">
+        <h4>Quick Sort = Best in practice</h4>
+        <p>Not stable, Θ(n²) worst case, but average is Θ(n log n) and constant factors are small. Used in most language standard libraries.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 13 — DIVIDE & CONQUER INTRODUCTION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="dc-intro">
+  <div class="section-header">
+    <div class="section-num">13</div>
+    <div>
+      <div class="section-title">Divide &amp; Conquer — Introduction</div>
+      <div class="section-subtitle">The paradigm, recursion rules, and solving recurrences</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card green">
+      <h3>📜 Three Golden Rules of Recursion</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num green">1</div>
+          <div class="step-content"><h4>Always have a base case</h4><p>A case solvable directly WITHOUT recursion. (e.g. array of 1 element)</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num green">2</div>
+          <div class="step-content"><h4>Progress toward base case</h4><p>Each recursive call must move CLOSER to the base case — never loop forever.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num green">3</div>
+          <div class="step-content"><h4>ASSUME the recursive call works ✨</h4><p>This is the most powerful rule. Don't trace deep — assume sub-problem is solved correctly, then combine for the big problem. This is D&amp;C's "magic".</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="card purple">
+      <h3>🔬 Proof by "Assume &amp; Verify"</h3>
+      <p style="font-size:13px; color:var(--text2); margin-bottom:12px">To verify a recursive algorithm works:</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content"><h4>Verify base case</h4><p>Does it work for the smallest input? (trivially yes, usually)</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content"><h4>Assume sub-problems are solved correctly</h4><p>Pretend the recursive calls return the right answer.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num green">3</div>
+          <div class="step-content"><h4>Does the combination work?</h4><p>Given correct sub-answers, does your combine step produce the correct overall answer?</p></div>
+        </div>
+      </div>
+      <div class="callout magic" style="margin-top:12px">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body"><p style="font-size:12px">This is exactly how mathematical induction works — assume true for k, prove for k+1.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>📐 Solving Recurrences — Master Theorem</h3>
+    <p style="font-size:13px; color:var(--text2); margin-bottom:16px">For recurrences of the form <code>T(n) = a·T(n/b) + f(n)</code> where a ≥ 1, b &gt; 1:</p>
+    <div class="viz"><span class="hl">T(n) = a·T(n/b) + f(n)</span>
+
+Compare f(n)  vs  n^(log_b(a)):
+
+<span class="green">Case 1:</span> f(n) = O(n^(log_b(a) − ε))  for some ε > 0
+  → T(n) = Θ(n^(log_b(a)))   [sub-problems dominate]
+
+<span class="blue">Case 2:</span> f(n) = Θ(n^(log_b(a)) · log^k(n))  for k ≥ 0
+  → T(n) = Θ(n^(log_b(a)) · log^(k+1)(n))  [tied]
+
+<span class="red">Case 3:</span> f(n) = Ω(n^(log_b(a) + ε))  for some ε > 0
+  AND a·f(n/b) ≤ c·f(n) for c &lt; 1 (regularity condition)
+  → T(n) = Θ(f(n))             [combine cost dominates]</div>
+    <table style="margin-top:16px">
+      <tr><th>Recurrence</th><th>a,b,f(n)</th><th>n^log_b(a)</th><th>Case</th><th>Answer</th></tr>
+      <tr><td><code>T(n)=2T(n/2)+n</code></td><td>2,2,n</td><td>n¹</td><td>Case 2 (k=0)</td><td class="yes">Θ(n log n)</td></tr>
+      <tr><td><code>T(n)=2T(n/2)+1</code></td><td>2,2,1</td><td>n¹</td><td>Case 1</td><td class="yes">Θ(n)</td></tr>
+      <tr><td><code>T(n)=T(n/2)+1</code></td><td>1,2,1</td><td>n⁰=1</td><td>Case 2 (k=0)</td><td class="yes">Θ(log n)</td></tr>
+      <tr><td><code>T(n)=4T(n/2)+n</code></td><td>4,2,n</td><td>n²</td><td>Case 1</td><td class="yes">Θ(n²)</td></tr>
+      <tr><td><code>T(n)=8T(n/2)+n²</code></td><td>8,2,n²</td><td>n³</td><td>Case 1</td><td class="yes">Θ(n³)</td></tr>
+      <tr><td><code>T(n)=7T(n/2)+n²</code></td><td>7,2,n²</td><td>n^2.81</td><td>Case 1</td><td class="yes">Θ(n^2.81)</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>🌳 Recursion Tree Method — Intuition</h3>
+    <p style="font-size:13px; color:var(--text2); margin-bottom:12px">Draw the recursion tree. At each level compute total work. Sum all levels.</p>
+    <div class="viz"><span class="green">T(n) = 2T(n/2) + n  (Merge Sort)</span>
+
+Level 0:   n              ← work at root = n
+Level 1:   n/2 + n/2 = n  ← two children each n/2
+Level 2:   n/4×4 = n      ← four children each n/4
+...
+Level k:   n/2^k × 2^k = n ← always n work per level!
+
+Number of levels = log₂n
+Total = n × log₂n = <span class="hl">Θ(n log n)</span>
+
+<span class="blue">T(n) = T(n/2) + 1  (Binary Search)</span>
+
+Level 0: 1
+Level 1: 1  (only ONE branch chosen!)
+Level 2: 1
+...
+Level k: 1
+
+Number of levels = log₂n
+Total = 1 × log₂n = <span class="hl">Θ(log n)</span></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 14 — QUICK SORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="quicksort">
+  <div class="section-header">
+    <div class="section-num">14</div>
+    <div>
+      <div class="section-title">Quick Sort</div>
+      <div class="section-subtitle">Divide by partitioning — the most-used sort in practice</div>
+    </div>
+  </div>
+
+  <div class="callout magic">
+    <div class="callout-icon">⚡</div>
+    <div class="callout-body">
+      <h4>The Idea — "Divide is the hard part"</h4>
+      <p>Pick a <strong>pivot</strong> element. Rearrange array so that everything <em>smaller</em> than pivot is on its left, everything <em>larger</em> is on its right. The pivot is now at its <em>final sorted position</em>. Recursively sort left and right halves — no combine step needed!</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>💻 Quick Sort Skeleton</h3>
+      <div class="code"><span class="fn">quickSort</span>(A, lo, hi):
+  <span class="kw">if</span> lo >= hi: <span class="kw">return</span>  <span class="cm">// 0 or 1 element</span>
+  q = <span class="fn">partition</span>(A, lo, hi)  <span class="cm">// pivot in place</span>
+  <span class="fn">quickSort</span>(A, lo, q−<span class="num">1</span>)   <span class="cm">// sort left half</span>
+  <span class="fn">quickSort</span>(A, q+<span class="num">1</span>, hi)   <span class="cm">// sort right half</span>
+  <span class="cm">// NO merge/combine step!</span></div>
+      <div class="callout insight" style="margin-top:12px">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body"><p style="font-size:12px">Merge sort: divide is free, combine is O(n). Quick sort: divide costs O(n) (partition), combine is free.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📊 Properties</h3>
+      <span class="complexity best">Best/Avg: Θ(n log n)</span><br><br>
+      <span class="complexity worst">Worst: Θ(n²)</span><br><br>
+      <span class="complexity space">Space: O(log n) stack</span>
+      <hr style="margin:12px 0">
+      <span class="badge badge-red">✗ NOT Stable</span>
+      <span class="badge badge-green">✓ In-place</span>
+      <div style="margin-top:12px; font-size:13px; color:var(--text2)">
+        Most practical language stdlib sorts use Quicksort variants (Introsort, Timsort).
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTITION -->
+  <div class="card gold">
+    <h3>🔪 Hoare's Partition Algorithm (Two-Pointer)</h3>
+    <p style="font-size:13px; color:var(--text2); margin-bottom:12px">Pick first element as pivot. Two pointers i (from left) and j (from right) march toward each other, swapping misplaced elements.</p>
+    <div class="code"><span class="fn">partition</span>(A, lo, hi):
+  pivot = A[lo]
+  i = lo + <span class="num">1</span>
+  j = hi
+
+  <span class="kw">while</span> i &lt;= j:
+    <span class="kw">while</span> i &lt;= j <span class="kw">and</span> A[i] &lt;= pivot: i++  <span class="cm">// find left violator</span>
+    <span class="kw">while</span> i &lt;= j <span class="kw">and</span> A[j] >  pivot: j--  <span class="cm">// find right violator</span>
+    <span class="kw">if</span> i &lt; j: swap(A[i], A[j]); i++; j--
+
+  swap(A[lo], A[j])   <span class="cm">// put pivot in its place</span>
+  <span class="kw">return</span> j            <span class="cm">// pivot's final index</span></div>
+    <div class="callout insight" style="margin-top:12px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>What does partition guarantee?</h4>
+        <p>After partition(A, lo, hi) returns q: A[lo..q−1] ≤ A[q] ≤ A[q+1..hi]. Pivot is at its <em>exact</em> sorted position.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Worked Example -->
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Worked Example — Partition [7, 1, 3, 10, 2, 5]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">A = [7, 1, 3, 10, 2, 5]  pivot=7  i=1  j=5</span>
+
+<span class="green">i scans right looking for element &gt; pivot(7):</span>
+  A[1]=1 ≤ 7 → i=2
+  A[2]=3 ≤ 7 → i=3
+  A[3]=10 &gt; 7 → STOP at i=3
+
+<span class="blue">j scans left looking for element ≤ pivot(7):</span>
+  A[5]=5 ≤ 7 → STOP at j=5
+
+Swap A[3] and A[5]: [7, 1, 3, <span class="red">5</span>, 2, <span class="red">10</span>]  i=4, j=4
+
+<span class="green">i scans right:</span>
+  A[4]=2 ≤ 7 → i=5
+  i=5 &gt; j=4 → STOP outer loop
+
+<span class="purple">Place pivot: swap A[lo]=A[0] with A[j]=A[4]:</span>
+[<span class="hl">2</span>, 1, 3, 5, <span class="hl">7</span>, 10]
+
+Pivot 7 is at index 4. All left ≤ 7, all right &gt; 7. ✓
+
+<span class="green">Recursive calls:</span>
+  quickSort([2,1,3,5]) → left half
+  quickSort([10])      → right half (trivial)</div>
+    </div>
+  </div>
+
+  <!-- Best/Worst/Average -->
+  <div class="tabs" style="margin-top:20px">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab(this,'qs1')">Best Case</button>
+      <button class="tab-btn" onclick="showTab(this,'qs2')">Worst Case</button>
+      <button class="tab-btn" onclick="showTab(this,'qs3')">Average Case</button>
+      <button class="tab-btn" onclick="showTab(this,'qs4')">Randomized QS</button>
+    </div>
+
+    <div id="qs1" class="tab-panel active">
+      <div class="card green">
+        <h3>🏆 Best Case — Balanced Splits</h3>
+        <p>Pivot always lands at the middle → splits into n/2 and n/2 every time.</p>
+        <div class="math-block">
+          <div class="math">T(n) = 2T(n/2) + Θ(n)  →  Θ(n log n)</div>
+        </div>
+        <div class="callout insight">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <h4>General best case: ANY fixed fraction split</h4>
+            <p>Even a 1%/99% split gives T(n) = T(n/100) + T(99n/100) + n → Θ(n log n)! As long as both parts are a <em>fraction</em> of n (not constant), it's Θ(n log n).</p>
+          </div>
+        </div>
+        <div class="viz"><span class="green">Intuition for balanced split (n=8):</span>
+Level 0: n         work → n
+Level 1: n/2, n/2  work → n
+Level 2: n/4, ...  work → n
+Level log₂n: all 1s work → n
+Total = n × log₂n = <span class="hl">Θ(n log n)</span></div>
+      </div>
+    </div>
+
+    <div id="qs2" class="tab-panel">
+      <div class="card red">
+        <h3>💀 Worst Case — Constant Splits</h3>
+        <p>Pivot always lands at one end → splits into 0 and n−1 every time. This happens when the array is <strong>already sorted</strong> and we pick the first element as pivot!</p>
+        <div class="math-block">
+          <div class="math">T(n) = T(n−1) + T(1) + Θ(n) = T(n−1) + Θ(n)</div><br>
+          <div class="math">→ n + (n−1) + (n−2) + … + 1 = Θ(n²)</div>
+        </div>
+        <div class="viz"><span class="red">Worst case (sorted array, first-element pivot):</span>
+[1, 2, 3, 4, 5, 6, 7, 8]
+ pivot=1 → left=[], right=[2,3,4,5,6,7,8]  (n−1 elements!)
+   pivot=2 → left=[], right=[3,4,5,6,7,8]
+     pivot=3 → ...
+
+Tree height = n, each level costs O(n) → <span class="hl">O(n²)</span></div>
+        <div class="callout warning" style="margin-top:12px">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <h4>Worst case inputs for first-element pivot</h4>
+            <p>Sorted array, reverse-sorted array, or any array where pivot is always the min or max of its subarray.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="qs3" class="tab-panel">
+      <div class="card">
+        <h3>📊 Average Case — Θ(n log n)</h3>
+        <p>Over all possible inputs (equally likely permutations), quicksort averages Θ(n log n) comparisons.</p>
+        <div class="callout insight">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <h4>Intuition via "good splits"</h4>
+            <p>A split is "good" if pivot lands in the middle 50% of elements → splits at worst 25%/75%. A split is "bad" otherwise. On average, every other split is good. Good splits give Θ(n log n) levels → average is Θ(n log n) even mixing good and bad splits.</p>
+          </div>
+        </div>
+        <div class="math-block">
+          <div class="math">E[comparisons] = Θ(n log n)</div>
+        </div>
+        <p style="font-size:13px; color:var(--text2)">Detailed proof: each pair (i,j) is compared at most once. P(i and j compared) = 2/(j−i+1). Sum over all pairs gives n·H_n ≈ n ln n = Θ(n log n).</p>
+      </div>
+    </div>
+
+    <div id="qs4" class="tab-panel">
+      <div class="card purple">
+        <h3>🎲 Randomized Quick Sort</h3>
+        <p>Instead of always picking the first element as pivot, pick a <em>random</em> element. One extra line:</p>
+        <div class="code">r = random(lo, hi)
+swap(A[r], A[lo])
+<span class="cm">// now call standard partition</span></div>
+        <div class="grid-2" style="margin-top:12px">
+          <div class="callout success">
+            <div class="callout-icon">✅</div>
+            <div class="callout-body">
+              <h4>What changes</h4>
+              <p>No specific input can force worst case! An adversary cannot choose an input that makes it slow — they'd need to know the random choices too.</p>
+            </div>
+          </div>
+          <div class="callout warning">
+            <div class="callout-icon">⚠️</div>
+            <div class="callout-body">
+              <h4>What doesn't change</h4>
+              <p>Worst case is still Θ(n²) — it can happen with tiny probability. But expected time is always Θ(n log n) regardless of input.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout magic" style="margin-top:12px">
+          <div class="callout-icon">🔑</div>
+          <div class="callout-body">
+            <h4>Key insight for GATE</h4>
+            <p>Randomized QS: worst case is a property of the <em>algorithm's random choices</em>, not the <em>input</em>. No fixed input can always cause worst case. This is the fundamental difference.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QS vs Merge Sort -->
+  <div class="card">
+    <h3>⚖️ Quick Sort vs Merge Sort</h3>
+    <table>
+      <tr><th>Property</th><th>Quick Sort</th><th>Merge Sort</th></tr>
+      <tr><td>Divide cost</td><td>Θ(n) — partition</td><td>Θ(1) — just find mid</td></tr>
+      <tr><td>Combine cost</td><td>Θ(1) — nothing!</td><td>Θ(n) — merge step</td></tr>
+      <tr><td>Worst case</td><td class="no">Θ(n²)</td><td class="yes">Θ(n log n)</td></tr>
+      <tr><td>Average case</td><td class="yes">Θ(n log n)</td><td class="yes">Θ(n log n)</td></tr>
+      <tr><td>Space</td><td class="yes">O(log n) stack</td><td class="no">O(n) aux array</td></tr>
+      <tr><td>Stable</td><td class="no">NO</td><td class="yes">YES</td></tr>
+      <tr><td>In-place</td><td class="yes">YES</td><td class="no">NO</td></tr>
+      <tr><td>Cache friendly</td><td class="yes">Better</td><td class="no">Worse</td></tr>
+    </table>
+    <div class="callout insight" style="margin-top:12px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>Why Quick Sort is used in practice despite O(n²) worst case</h4>
+        <p>With random pivot, worst case is astronomically rare. Cache performance is better (accesses sequential memory). Constant factors in the Θ are smaller. In-place saves memory. For most real data, QS is faster than Merge Sort.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 15 — COUNTING INVERSIONS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="inversions">
+  <div class="section-header">
+    <div class="section-num">15</div>
+    <div>
+      <div class="section-title">Counting Inversions</div>
+      <div class="section-subtitle">From O(n²) brute force to O(n log n) using Merge Sort</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🎯</div>
+    <div class="callout-body">
+      <h4>What is an Inversion?</h4>
+      <p>A pair (i, j) is an inversion if <strong>i &lt; j</strong> but <strong>A[i] &gt; A[j]</strong>. Sorted array has 0 inversions. Reverse-sorted array has n(n−1)/2 inversions (maximum). Inversion count measures "how unsorted" an array is.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>🌍 Real-World Motivation</h3>
+      <p style="font-size:13px; color:var(--text2)">Netflix/Amazon recommendation: how similar are two users' preferences? User A rates movies [1,2,3,4,5]. User B rates same movies [3,1,2,5,4]. Count inversions between rankings → measure of dissimilarity.</p>
+      <div class="callout magic" style="margin-top:12px">
+        <div class="callout-icon">🎬</div>
+        <div class="callout-body">
+          <p style="font-size:12px">Fewer inversions = more similar taste → recommend what that user liked but you haven't seen! This is <strong>collaborative filtering</strong>.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📏 Quick Facts</h3>
+      <table>
+        <tr><th>Array type</th><th>Inversions</th></tr>
+        <tr><td>Sorted (1,2,3…n)</td><td class="yes">0</td></tr>
+        <tr><td>Reverse sorted</td><td class="no">n(n−1)/2</td></tr>
+        <tr><td>Random array</td><td>≈ n²/4</td></tr>
+      </table>
+      <div style="margin-top:12px; font-size:13px; color:var(--text2)">
+        For insertion sort: <strong>number of swaps = number of inversions</strong>. This is the exact connection between inversions and sorting cost!
+      </div>
+    </div>
+  </div>
+
+  <div class="card red">
+    <h3>❌ Brute Force — O(n²)</h3>
+    <div class="code"><span class="kw">count</span> = <span class="num">0</span>
+<span class="kw">for</span> i = <span class="num">0</span> to n−<span class="num">2</span>:
+  <span class="kw">for</span> j = i+<span class="num">1</span> to n−<span class="num">1</span>:
+    <span class="kw">if</span> A[i] > A[j]: count++
+<span class="kw">return</span> count  <span class="cm">// O(n²) — checks all n(n-1)/2 pairs</span></div>
+  </div>
+
+  <div class="card green">
+    <h3>🏆 Modified Merge Sort — O(n log n)</h3>
+    <div class="callout magic">
+      <div class="callout-icon">✨</div>
+      <div class="callout-body">
+        <h4>The Key Insight (The Magic!)</h4>
+        <p>During the MERGE step, whenever we pick an element from the <strong>right subarray</strong> over the left, ALL remaining elements in the left subarray form inversions with it! We count them all at once in O(1) per pick, not O(n).</p>
+      </div>
+    </div>
+    <div class="code"><span class="fn">mergeCount</span>(A, i, j):
+  <span class="kw">if</span> i == j: <span class="kw">return</span> <span class="num">0</span>   <span class="cm">// base: 0 inversions</span>
+  mid = (i+j)//<span class="num">2</span>
+  left  = <span class="fn">mergeCount</span>(A, i, mid)     <span class="cm">// inversions in left</span>
+  right = <span class="fn">mergeCount</span>(A, mid+<span class="num">1</span>, j)  <span class="cm">// inversions in right</span>
+  cross = <span class="fn">mergeAndCount</span>(A, i, mid, j) <span class="cm">// cross-inversions</span>
+  <span class="kw">return</span> left + right + cross
+
+<span class="fn">mergeAndCount</span>(A, i, mid, j):
+  count = <span class="num">0</span>; p = i; q = mid+<span class="num">1</span>; k = <span class="num">0</span>
+  <span class="kw">while</span> p &lt;= mid <span class="kw">and</span> q &lt;= j:
+    <span class="kw">if</span> A[p] &lt;= A[q]:
+      B[k++] = A[p++]           <span class="cm">// no inversion</span>
+    <span class="kw">else</span>:
+      B[k++] = A[q++]
+      count += (mid − p + <span class="num">1</span>)  <span class="cm">// ALL remaining left elements are inversions!</span>
+  <span class="cm">// copy remaining...</span>
+  <span class="kw">return</span> count</div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Worked Example — Count inversions in [5, 3, 2, 4, 1]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">Array: [5, 3, 2, 4, 1]</span>
+Brute force check: (5,3)(5,2)(5,4)(5,1)(3,2)(3,1)(2,1)(4,1) → <span class="hl">8 inversions</span>
+
+<span class="green">Modified Merge Sort trace:</span>
+
+Split: [5,3,2] and [4,1]
+  Split [5,3,2]: [5,3] and [2]
+    Split [5,3]: [5] and [3]
+    Merge [5][3]: 3&lt;5 → count += 1 (mid−p+1 = 0+1=1)
+      → sorted: [3,5], count=1
+    Merge [3,5][2]: 2&lt;3 → count += 2 (2 elements in left)
+      → sorted: [2,3,5], count=3
+  Split [4,1]: [4] and [1]
+  Merge [4][1]: 1&lt;4 → count += 1
+    → sorted: [1,4], count=1
+
+<span class="blue">Merge [2,3,5] and [1,4]:</span>
+  p=0(A=2), q=0(B=1):
+    1 &lt; 2 → write 1, count += (mid-p+1) = 3   [all of 2,3,5 > 1]
+    2 &lt; 4 → write 2 (no inversion)
+    3 &lt; 4 → write 3 (no inversion)
+    4 &lt; 5 → write 4 (no inversion)
+    write 5
+  cross count = 3
+
+<span class="hl">Total = 1 + 3 + 1 + 3 = 8 ✓</span>
+Time: Θ(n log n) — same as merge sort!</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 16 — BINARY SEARCH -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="binary-search">
+  <div class="section-header">
+    <div class="section-num">16</div>
+    <div>
+      <div class="section-title">Binary Search</div>
+      <div class="section-subtitle">Halving the search space — O(n) to O(log n)</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🔍</div>
+    <div class="callout-body">
+      <h4>Prerequisite &amp; Core Idea</h4>
+      <p>Array MUST be sorted. Go to the middle element. If it equals key → found! If key is smaller → search left half. If key is larger → search right half. Each step discards HALF the array → log n steps max.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>💻 Binary Search Code</h3>
+      <div class="code"><span class="fn">binarySearch</span>(A, lo, hi, key):
+  <span class="kw">if</span> lo > hi: <span class="kw">return</span> −<span class="num">1</span>   <span class="cm">// not found</span>
+  mid = (lo + hi) // <span class="num">2</span>
+  <span class="kw">if</span> A[mid] == key:
+    <span class="kw">return</span> mid          <span class="cm">// found!</span>
+  <span class="kw">elif</span> A[mid] > key:
+    <span class="kw">return</span> <span class="fn">binarySearch</span>(A, lo, mid−<span class="num">1</span>, key)
+  <span class="kw">else</span>:
+    <span class="kw">return</span> <span class="fn">binarySearch</span>(A, mid+<span class="num">1</span>, hi, key)
+
+<span class="cm">// Call: binarySearch(A, 0, n−1, key)</span></div>
+    </div>
+    <div class="card purple">
+      <h3>📐 Recurrence &amp; Time</h3>
+      <div class="math-block">
+        <div class="math">T(n) = T(n/2) + Θ(1)</div><br>
+        <div class="math" style="font-size:14px">By Master Theorem (Case 2):</div><br>
+        <div class="math" style="color:var(--accent4); font-size:20px">T(n) = Θ(log n)</div>
+      </div>
+      <div style="margin-top:12px; font-size:13px">
+        <span class="complexity best">Best: Θ(1) — key is at mid</span><br><br>
+        <span class="complexity worst">Worst: Θ(log n) — key not found or at leaf</span><br><br>
+        <span class="complexity avg">Average: Θ(log n)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Worked Example — Search for 15 in [1, 3, 5, 7, 10, 12, 15, 20]
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">A = [1, 3, 5, 7, 10, 12, 15, 20]  key=15</span>
+Indices: 0  1  2  3   4   5   6   7
+
+<span class="green">Step 1:</span> lo=0, hi=7, mid=3, A[3]=7
+  7 &lt; 15 → search right half
+  lo=4, hi=7
+
+<span class="blue">Step 2:</span> lo=4, hi=7, mid=5, A[5]=12
+  12 &lt; 15 → search right half
+  lo=6, hi=7
+
+<span class="purple">Step 3:</span> lo=6, hi=7, mid=6, A[6]=15
+  15 == 15 → <span class="hl">FOUND at index 6! ✓</span>
+
+3 comparisons for n=8 elements.
+log₂(8)=3 comparisons. Matches Θ(log n)!
+
+<span class="red">What if key=6 (not present)?</span>
+Step 1: mid=3, A[3]=7 &gt; 6 → go left (lo=0,hi=2)
+Step 2: mid=1, A[1]=3 &lt; 6 → go right (lo=2,hi=2)
+Step 3: mid=2, A[2]=5 &lt; 6 → go right (lo=3,hi=2)
+lo &gt; hi → return −1 (not found). 3 comparisons.</div>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>🌳 Binary Search = Balanced BST Traversal</h3>
+    <p style="font-size:13px; color:var(--text2)">Binary search on a sorted array is equivalent to searching in a balanced BST (like AVL tree) built from those elements. Same Θ(log n) height → same time complexity.</p>
+    <div class="viz"><span class="green">Array [1,3,5,7,10,12,15,20] as a BST:</span>
+
+                   7
+                /     \
+              3          12
+            /   \       /   \
+           1     5    10     15
+                             \
+                              20
+
+Search path for 15: 7→12→15 (3 hops = log₂8)
+This is exactly what binary search does!</div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <h4>Why can't we use Binary Search on Linked Lists?</h4>
+      <p>Can't jump to middle in O(1) — must traverse from head. So binary search is O(n) on linked lists, not O(log n). Always use arrays for binary search.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 17 — MERGE K SORTED ARRAYS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="merge-k">
+  <div class="section-header">
+    <div class="section-num">17</div>
+    <div>
+      <div class="section-title">Merging k Sorted Arrays</div>
+      <div class="section-subtitle">Five methods — from O(nk) down to O(n log k)</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🎯</div>
+    <div class="callout-body">
+      <h4>Problem Setup</h4>
+      <p>Given k sorted arrays, each of size n/k (so total n elements). Merge them into one sorted array of n elements. How efficiently can we do this?</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab(this,'mk1')">M1: Append+Sort</button>
+      <button class="tab-btn" onclick="showTab(this,'mk2')">M2: Successive</button>
+      <button class="tab-btn" onclick="showTab(this,'mk3')">M3: Find Min</button>
+      <button class="tab-btn" onclick="showTab(this,'mk4')">M4: Min-Heap ★</button>
+      <button class="tab-btn" onclick="showTab(this,'mk5')">M5: Pairwise ★</button>
+    </div>
+
+    <div id="mk1" class="tab-panel active">
+      <div class="card red">
+        <h3>Method 1: Append All + Sort</h3>
+        <p>Put all n elements side by side, sort the combined array.</p>
+        <div class="math-block"><div class="math">Time: Θ(n log n)</div></div>
+        <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><p style="font-size:12px">Doesn't exploit the fact that arrays are ALREADY sorted. Wasteful!</p></div></div>
+      </div>
+    </div>
+
+    <div id="mk2" class="tab-panel">
+      <div class="card red">
+        <h3>Method 2: Successive Merge</h3>
+        <p>Merge array 1 and 2 → result. Merge result with array 3 → result. Continue until all merged.</p>
+        <div class="viz">Merge A₁+A₂ → cost 2(n/k)
+Merge result+A₃ → cost 3(n/k)
+...
+Merge result+Aₖ → cost k(n/k)=n
+
+Total = (n/k)(2+3+…+k) = (n/k)·k(k+1)/2 ≈ nk/2</div>
+        <div class="math-block"><div class="math">Time: Θ(nk)</div></div>
+        <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><p style="font-size:12px">When k is large (e.g., k=n), this is O(n²) — terrible!</p></div></div>
+      </div>
+    </div>
+
+    <div id="mk3" class="tab-panel">
+      <div class="card red">
+        <h3>Method 3: Repeatedly Find Minimum</h3>
+        <p>Maintain a pointer to the current front of each array. At each step, find the minimum among all k fronts (linear scan), write it to output, advance that pointer.</p>
+        <div class="math-block"><div class="math">Per element: O(k) to find min among k fronts</div><br><div class="math">Total n elements: Θ(nk)</div></div>
+        <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><p style="font-size:12px">Same as Method 2. We re-scan all k fronts for every output element — repeated work!</p></div></div>
+      </div>
+    </div>
+
+    <div id="mk4" class="tab-panel">
+      <div class="card green">
+        <h3>🏆 Method 4: Min-Heap (Optimal!)</h3>
+        <div class="callout magic">
+          <div class="callout-icon">✨</div>
+          <div class="callout-body">
+            <h4>Key Insight over Method 3</h4>
+            <p>Don't re-scan all k fronts every time. Use a min-heap of size k. When we remove the minimum, insert the next element from that same array — heap self-adjusts in O(log k)!</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num green">1</div>
+            <div class="step-content"><h4>Build min-heap of first elements</h4><p>Insert the first element from each of the k arrays into a min-heap. Store (value, array-index) pairs. Time: O(k)</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">2</div>
+            <div class="step-content"><h4>Extract min + insert next</h4><p>Extract min from heap → write to output. Insert the next element from that same array into heap. Each step: O(log k). Repeat n times.</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">3</div>
+            <div class="step-content"><h4>Until done</h4><p>When an array is exhausted, don't insert anything. Keep going until heap is empty.</p></div>
+          </div>
+        </div>
+        <div class="math-block" style="margin-top:12px">
+          <div class="math">Build heap: O(k)</div><br>
+          <div class="math">n × (extract + insert): n × 2·O(log k) = O(n log k)</div><br>
+          <div class="math" style="color:var(--accent4); font-size:18px">Total: Θ(n log k) ★</div>
+        </div>
+        <div class="accordion">
+          <div class="acc-head" onclick="toggleAcc(this)">📝 Example: Merge 3 sorted arrays<span class="acc-arrow">▼</span></div>
+          <div class="acc-body">
+            <div class="viz"><span class="hl">A₁=[1,4,7]  A₂=[2,5,8]  A₃=[3,6,9]</span>
+
+<span class="green">Build heap from first elements:</span>
+heap = [(1,A₁), (2,A₂), (3,A₃)]  min=(1,A₁)
+
+<span class="blue">Step 1:</span> output=[1], insert A₁'s next=4 → heap=[(2,A₂),(3,A₃),(4,A₁)]
+<span class="blue">Step 2:</span> output=[1,2], insert 5 → heap=[(3,A₃),(4,A₁),(5,A₂)]
+<span class="blue">Step 3:</span> output=[1,2,3], insert 6 → heap=[(4,A₁),(5,A₂),(6,A₃)]
+<span class="blue">Step 4:</span> output=[1,2,3,4], insert 7...
+...
+<span class="hl">Final: [1,2,3,4,5,6,7,8,9] ✓</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mk5" class="tab-panel">
+      <div class="card green">
+        <h3>🏆 Method 5: Pairwise Merge (Bottom-Up Merge Sort)</h3>
+        <div class="callout insight">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <h4>Borrowed from Iterative Merge Sort</h4>
+            <p>Don't merge successively — merge in pairs like a tournament bracket! Round 1: merge pairs (A₁+A₂, A₃+A₄, …). Round 2: merge the results in pairs. Continue until one array remains.</p>
+          </div>
+        </div>
+        <div class="viz">k=8 arrays, each of size n/8 = m:
+
+Round 1: 4 merges of size m+m=2m each → total work 4×2m = n
+Round 2: 2 merges of size 2m+2m=4m each → total work 2×4m = n
+Round 3: 1 merge of size 4m+4m=8m → total work n
+
+Rounds = log₂(k). Each round: n total work.
+Total = n × log₂(k) = <span class="hl">Θ(n log k) ★</span></div>
+        <div class="math-block">
+          <div class="math">Time: Θ(n log k)</div>
+        </div>
+        <div class="callout success">
+          <div class="callout-icon">✅</div>
+          <div class="callout-body"><p style="font-size:12px">Same asymptotic time as Min-Heap, but simpler to implement for many use cases.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>📊 All 5 Methods Summary</h3>
+    <table>
+      <tr><th>#</th><th>Method</th><th>Time</th><th>Notes</th></tr>
+      <tr><td>1</td><td>Append + Sort</td><td class="tc" style="color:var(--accent4)">Θ(n log n)</td><td>Ignores sorted property</td></tr>
+      <tr><td>2</td><td>Successive Merge</td><td class="no tc">Θ(nk)</td><td>Early arrays merged too many times</td></tr>
+      <tr><td>3</td><td>Repeated Linear Min</td><td class="no tc">Θ(nk)</td><td>Scans all k fronts each step</td></tr>
+      <tr><td>4</td><td>Min-Heap</td><td class="yes tc">Θ(n log k) ★</td><td>Heap size = k, log k per step</td></tr>
+      <tr><td>5</td><td>Pairwise Merge</td><td class="yes tc">Θ(n log k) ★</td><td>log k rounds, n work each</td></tr>
+    </table>
+    <div class="callout info" style="margin-top:12px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>GATE Trick: Merge log n arrays of n/log n each</h4>
+        <p>k = log n, total elements = n. Min-heap time = n × O(log(log n)) = <strong>O(n log log n)</strong>. Better than n log n!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 18 — FAST EXPONENTIATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="exponentiation">
+  <div class="section-header">
+    <div class="section-num">18</div>
+    <div>
+      <div class="section-title">Fast Exponentiation</div>
+      <div class="section-subtitle">Computing aⁿ in O(log n) instead of O(n)</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card red">
+      <h3>❌ Naive — O(n)</h3>
+      <div class="code"><span class="cm">// Multiply a by itself n times</span>
+result = <span class="num">1</span>
+<span class="kw">for</span> i = <span class="num">1</span> to n:
+  result = result × a
+<span class="kw">return</span> result  <span class="cm">// n−1 multiplications</span></div>
+      <div class="math-block"><div class="math">T(n) = Θ(n)</div></div>
+    </div>
+    <div class="card green">
+      <h3>🏆 D&amp;C — O(log n)</h3>
+      <div class="callout magic">
+        <div class="callout-icon">✨</div>
+        <div class="callout-body">
+          <h4>Key Insight</h4>
+          <p>aⁿ = (aⁿ/²)². Compute aⁿ/² <em>once</em>, square it. Halve the problem each time — log n steps!</p>
+        </div>
+      </div>
+      <div class="code"><span class="fn">power</span>(a, n):
+  <span class="kw">if</span> n == <span class="num">0</span>: <span class="kw">return</span> <span class="num">1</span>
+  x = <span class="fn">power</span>(a, n//<span class="num">2</span>)  <span class="cm">// solve ONE sub-problem</span>
+  <span class="kw">if</span> n % <span class="num">2</span> == <span class="num">0</span>:
+    <span class="kw">return</span> x × x      <span class="cm">// aⁿ = (aⁿ/²)²</span>
+  <span class="kw">else</span>:
+    <span class="kw">return</span> x × x × a  <span class="cm">// aⁿ = (aⁿ/²)² × a</span></div>
+      <div class="math-block">
+        <div class="math">T(n) = T(n/2) + Θ(1)  →  T(n) = Θ(log n)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <h4>Why T(n/2), not 2T(n/2)?</h4>
+      <p>We solve only ONE sub-problem of size n/2 (not two). The key is computing <code>x = power(a, n/2)</code> <em>once</em> and reusing it. Writing <code>power(a,n/2) × power(a,n/2)</code> would be two calls = T(n) = O(n)! The trick is storing the result in <code>x</code>.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="toggleAcc(this)">
+      📝 Example: Compute 2¹³
+      <span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <div class="viz"><span class="hl">power(2, 13)</span>
+
+power(2,13): n=13 (odd)  → x = power(2,6), return x×x×2
+  power(2,6): n=6 (even)  → x = power(2,3), return x×x
+    power(2,3): n=3 (odd)  → x = power(2,1), return x×x×2
+      power(2,1): n=1 (odd)  → x = power(2,0)=1, return 1×1×2 = 2
+    ↑ x=2 → 2×2×2 = 8
+  ↑ x=8 → 8×8 = 64
+↑ x=64 → 64×64×2 = 8192
+
+<span class="hl">2¹³ = 8192 ✓</span>  (Only 5 multiplications vs 12 for naive)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 19 — MATRIX MULTIPLICATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="matrix-mult">
+  <div class="section-header">
+    <div class="section-num">19</div>
+    <div>
+      <div class="section-title">Matrix Multiplication</div>
+      <div class="section-subtitle">From O(n³) to Strassen's O(n^2.81)</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card red">
+      <h3>❌ Naive — O(n³)</h3>
+      <p style="font-size:13px; color:var(--text2)">C[i][j] = Σ A[i][k]×B[k][j] for all k. For n×n matrices, n² output elements, each requiring n multiplications.</p>
+      <div class="math-block"><div class="math">Θ(n³) multiplications</div></div>
+      <div class="code"><span class="kw">for</span> i = <span class="num">0</span> to n−<span class="num">1</span>:
+  <span class="kw">for</span> j = <span class="num">0</span> to n−<span class="num">1</span>:
+    C[i][j] = <span class="num">0</span>
+    <span class="kw">for</span> k = <span class="num">0</span> to n−<span class="num">1</span>:
+      C[i][j] += A[i][k] × B[k][j]</div>
+    </div>
+    <div class="card">
+      <h3>🔄 Divide into blocks</h3>
+      <p style="font-size:13px; color:var(--text2)">Split each n×n matrix into four n/2 × n/2 blocks. Use block multiplication formulas.</p>
+      <div class="viz"><span class="green">Block multiplication:</span>
+[A₁₁ A₁₂] × [B₁₁ B₁₂] = [C₁₁ C₁₂]
+[A₂₁ A₂₂]   [B₂₁ B₂₂]   [C₂₁ C₂₂]
+
+C₁₁ = A₁₁×B₁₁ + A₁₂×B₂₁
+C₁₂ = A₁₁×B₁₂ + A₁₂×B₂₂
+C₂₁ = A₂₁×B₁₁ + A₂₂×B₂₁
+C₂₂ = A₂₁×B₁₂ + A₂₂×B₂₂
+
+8 multiplications of (n/2)×(n/2) matrices
++ 4 additions (combining)</div>
+      <div class="math-block"><div class="math">T(n) = 8T(n/2) + Θ(n²)  →  Θ(n³)</div></div>
+      <div style="font-size:12px; color:var(--text3); margin-top:8px">Same as naive — block multiplication alone doesn't help!</div>
+    </div>
+  </div>
+
+  <div class="card green">
+    <h3>🏆 Strassen's Algorithm — O(n^2.81)</h3>
+    <div class="callout magic">
+      <div class="callout-icon">✨</div>
+      <div class="callout-body">
+        <h4>The Genius Move (1969)</h4>
+        <p>Strassen found 7 clever formulas (M₁…M₇) that compute the same 4 block products using only <strong>7 multiplications</strong> instead of 8, at the cost of more additions. Additions are "cheap" — multiplications are the bottleneck!</p>
+      </div>
+    </div>
+    <div class="viz"><span class="green">Strassen's 7 products (M₁..M₇ are each n/2 × n/2 matrix multiplications):</span>
+M₁ = (A₁₁ + A₂₂)(B₁₁ + B₂₂)
+M₂ = (A₂₁ + A₂₂)·B₁₁
+M₃ = A₁₁·(B₁₂ − B₂₂)
+M₄ = A₂₂·(B₂₁ − B₁₁)
+M₅ = (A₁₁ + A₁₂)·B₂₂
+M₆ = (A₂₁ − A₁₁)·(B₁₁ + B₁₂)
+M₇ = (A₁₂ − A₂₂)·(B₂₁ + B₂₂)
+
+<span class="blue">Combine:</span>
+C₁₁ = M₁+M₄−M₅+M₇
+C₁₂ = M₃+M₅
+C₂₁ = M₂+M₄
+C₂₂ = M₁−M₂+M₃+M₆</div>
+    <div class="math-block" style="margin-top:12px">
+      <div class="math">T(n) = 7T(n/2) + Θ(n²)</div><br>
+      <div class="math" style="font-size:14px">n^(log₂7) = n^2.807 &gt; n² → Case 1 of Master Theorem</div><br>
+      <div class="math" style="color:var(--accent4); font-size:18px">T(n) = Θ(n^log₂7) ≈ Θ(n^2.81) ★</div>
+    </div>
+    <table style="margin-top:16px">
+      <tr><th>Algorithm</th><th>Multiplications</th><th>Time</th></tr>
+      <tr><td>Naive</td><td>n³</td><td class="no">Θ(n³)</td></tr>
+      <tr><td>Block (8 sub-mults)</td><td>8×(n/2)³</td><td class="no">Θ(n³)</td></tr>
+      <tr><td><strong>Strassen (7 sub-mults)</strong></td><td>7×(n/2)³×…</td><td class="yes">Θ(n^2.81) ★</td></tr>
+    </table>
+    <div class="callout insight" style="margin-top:12px">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>Why does this matter?</h4>
+        <p>Neural networks = matrix multiplications. Faster matrix multiply = faster AI training. This is why Strassen (and subsequent improvements) are extremely practically important today.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <h4>GATE Note on Strassen</h4>
+      <p>You do NOT need to memorize the M₁…M₇ formulas for GATE. Just know: uses <strong>7 recursive multiplications</strong> (not 8), recurrence is T(n)=7T(n/2)+Θ(n²), result is <strong>Θ(n^2.81)</strong> or Θ(n^log₂7).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 20 — SELECT / KTH SMALLEST -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="select">
+  <div class="section-header">
+    <div class="section-num">20</div>
+    <div>
+      <div class="section-title">Select — Finding k-th Smallest</div>
+      <div class="section-subtitle">From O(n log n) sort to O(n) using Median of Medians</div>
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-icon">🎯</div>
+    <div class="callout-body">
+      <h4>Problem</h4>
+      <p>Given unsorted array of n elements and integer k (1 ≤ k ≤ n), find the k-th smallest element. Special cases: k=1 (min), k=n (max), k=⌈n/2⌉ (median).</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card red">
+      <h3>Method 1: Sort First — O(n log n)</h3>
+      <p>Sort the array. Return A[k−1]. Simple but can we do better?</p>
+      <div class="math-block"><div class="math">T(n) = Θ(n log n)</div></div>
+    </div>
+    <div class="card gold">
+      <h3>Method 2: Quick Select — O(n) average</h3>
+      <p>Use Quick Sort's partition idea: after partitioning, pivot is at its final position q. Compare k with q to decide which half to recurse into — but only ONE half!</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Quick Select Algorithm</h3>
+    <div class="code"><span class="fn">select</span>(A, lo, hi, k):
+  <span class="kw">if</span> lo == hi: <span class="kw">return</span> A[lo]
+
+  q = <span class="fn">partition</span>(A, lo, hi)  <span class="cm">// pivot ends up at index q</span>
+  rank = q − lo + <span class="num">1</span>          <span class="cm">// pivot is rank-th smallest in A[lo..hi]</span>
+
+  <span class="kw">if</span> k == rank:
+    <span class="kw">return</span> A[q]              <span class="cm">// lucky! pivot IS the k-th smallest</span>
+  <span class="kw">elif</span> k &lt; rank:
+    <span class="kw">return</span> <span class="fn">select</span>(A, lo, q−<span class="num">1</span>, k)      <span class="cm">// k-th is in left half</span>
+  <span class="kw">else</span>:
+    <span class="kw">return</span> <span class="fn">select</span>(A, q+<span class="num">1</span>, hi, k−rank) <span class="cm">// k-th in right half (adjusted)</span></code></div>
+    <div class="callout magic" style="margin-top:12px">
+      <div class="callout-icon">✨</div>
+      <div class="callout-body">
+        <h4>Key difference from Quick Sort</h4>
+        <p>Quick Sort recurses on BOTH halves. Quick Select recurses on only ONE half (the one containing the k-th element). This is why it can be O(n) instead of O(n log n)!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📐 Time Complexity Analysis</h3>
+    <div class="tabs">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab(this,'sel1')">Average Case</button>
+        <button class="tab-btn" onclick="showTab(this,'sel2')">Worst Case</button>
+        <button class="tab-btn" onclick="showTab(this,'sel3')">Median of Medians</button>
+      </div>
+      <div id="sel1" class="tab-panel active">
+        <p>With random pivot, average split is balanced. Only one half recursed into.</p>
+        <div class="math-block"><div class="math">E[T(n)] = E[T(n/2)] + Θ(n)  →  Θ(n) average</div></div>
+        <div class="viz">n + n/2 + n/4 + n/8 + ... = 2n = Θ(n)</div>
+      </div>
+      <div id="sel2" class="tab-panel">
+        <p>If pivot always worst (min or max), we reduce by 1 each time.</p>
+        <div class="math-block"><div class="math">T(n) = T(n−1) + Θ(n)  →  Θ(n²) worst case</div></div>
+        <div class="callout warning"><div class="callout-icon">⚠️</div><div class="callout-body"><p style="font-size:12px">Same worst case as Quick Sort. Need a better pivot selection strategy to guarantee O(n).</p></div></div>
+      </div>
+      <div id="sel3" class="tab-panel">
+        <div class="callout magic">
+          <div class="callout-icon">✨</div>
+          <div class="callout-body">
+            <h4>Median of Medians — Guarantees O(n) worst case!</h4>
+            <p>A clever pivot selection strategy that always picks an <em>approximate median</em> — guaranteeing at least n/4 elements on each side.</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num green">1</div>
+            <div class="step-content"><h4>Divide into groups of 5</h4><p>Split array into ⌈n/5⌉ groups of 5 elements each. Time: O(n)</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">2</div>
+            <div class="step-content"><h4>Find median of each group</h4><p>Sort each group (constant since size 5) and pick median. Get ⌈n/5⌉ medians. Time: O(n)</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">3</div>
+            <div class="step-content"><h4>Recursively find median of medians</h4><p>Call Select on the ⌈n/5⌉ medians to find THEIR median. This is our pivot. Time: T(n/5)</p></div>
+          </div>
+          <div class="step">
+            <div class="step-num green">4</div>
+            <div class="step-content"><h4>Partition and recurse</h4><p>Use this pivot to partition. At least 3n/10 elements are smaller, at least 3n/10 larger. So recursion on at most 7n/10 elements. Time: T(7n/10)</p></div>
+          </div>
+        </div>
+        <div class="math-block" style="margin-top:12px">
+          <div class="math">T(n) = T(n/5) + T(7n/10) + Θ(n)</div><br>
+          <div class="math" style="color:var(--accent4); font-size:18px">→ T(n) = Θ(n)  (worst case!) ★</div>
+        </div>
+        <div class="callout warning" style="margin-top:8px">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <h4>GATE Note</h4>
+            <p>You don't need to memorize Median of Medians details. Just know: <strong>kth smallest can be found in Θ(n) worst case</strong> using a clever pivot strategy. The idea: recurse on only ONE half after partitioning.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card gold">
+    <h3>📊 Select: All Methods Summary</h3>
+    <table>
+      <tr><th>Method</th><th>Time</th><th>Notes</th></tr>
+      <tr><td>Sort + Pick</td><td class="tc" style="color:var(--accent4)">Θ(n log n)</td><td>Simple, wasteful</td></tr>
+      <tr><td>Quick Select (random pivot)</td><td class="yes tc">Θ(n) avg, Θ(n²) worst</td><td>Practical</td></tr>
+      <tr><td>Median of Medians</td><td class="yes tc">Θ(n) worst case ★</td><td>Theoretical optimum</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FINAL SUMMARY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="final">
+  <div class="card" style="background:linear-gradient(135deg,rgba(79,158,255,0.07),rgba(199,125,255,0.07)); border-color:rgba(79,158,255,0.3)">
+    <h3>🏆 Master Reference — All Algorithms</h3>
+    <table>
+      <tr><th>Algorithm / Problem</th><th>Time Complexity</th><th>Space</th><th>Key Technique</th></tr>
+      <tr><td>Find Max (or Min)</td><td class="yes">Θ(n) — n−1 comp.</td><td>O(1)</td><td>Single pass</td></tr>
+      <tr><td>Find Max + Min</td><td class="yes">⌈3n/2⌉−2 comp.</td><td>O(1)</td><td>CLRS pairwise</td></tr>
+      <tr><td>2nd Maximum</td><td class="yes">n+log n−2 comp.</td><td>O(log n)</td><td>Tournament tree</td></tr>
+      <tr><td>Bubble Sort</td><td style="color:var(--accent4)">Θ(n)/Θ(n²)</td><td>O(1)</td><td>Adjacent swaps</td></tr>
+      <tr><td>Insertion Sort</td><td style="color:var(--accent4)">Θ(n)/Θ(n²)</td><td>O(1)</td><td>Insert into sorted prefix</td></tr>
+      <tr><td>Selection Sort</td><td class="no">Θ(n²) all</td><td>O(1)</td><td>Find max, place</td></tr>
+      <tr><td>Heap Sort</td><td class="yes">Θ(n log n) all</td><td>O(1)</td><td>Max-heap extract</td></tr>
+      <tr><td>Merge Sort</td><td class="yes">Θ(n log n) all</td><td>O(n)</td><td>Divide + merge</td></tr>
+      <tr><td>Quick Sort</td><td style="color:var(--accent4)">Θ(n log n) avg/Θ(n²) worst</td><td>O(log n)</td><td>Pivot + partition</td></tr>
+      <tr><td>Counting Sort</td><td class="yes">Θ(n+k)</td><td>O(n+k)</td><td>Count, prefix sum</td></tr>
+      <tr><td>Radix Sort</td><td class="yes">Θ(d(n+k))</td><td>O(n+k)</td><td>LSD sort by digit</td></tr>
+      <tr><td>Binary Search</td><td class="yes">Θ(log n)</td><td>O(1)</td><td>Halve search space</td></tr>
+      <tr><td>Counting Inversions</td><td class="yes">Θ(n log n)</td><td>O(n)</td><td>Modified merge sort</td></tr>
+      <tr><td>Merge k Arrays</td><td class="yes">Θ(n log k)</td><td>O(k)</td><td>Min-heap or pairwise</td></tr>
+      <tr><td>Fast Exponentiation</td><td class="yes">Θ(log n)</td><td>O(log n)</td><td>T(n)=T(n/2)+O(1)</td></tr>
+      <tr><td>Matrix Multiply (Strassen)</td><td class="yes">Θ(n^2.81)</td><td>O(n²)</td><td>7 sub-multiplications</td></tr>
+      <tr><td>k-th Smallest (Select)</td><td class="yes">Θ(n) worst</td><td>O(log n)</td><td>Median of Medians</td></tr>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<!-- QUICK REVISION BUTTON -->
+<button id="revision-btn" onclick="toggleRevision()">
+  📋 Quick Revision
+</button>
+
+<!-- QUICK REVISION PANEL -->
+<div id="revision-panel">
+  <h2>⚡ Quick Revision</h2>
+  <p style="font-size:11px; color:var(--text3); margin-bottom:16px">All key facts — Complete Notes</p>
+
+  <div class="revision-item">
+    <div class="ri-head">Finding Max/Min</div>
+    • Max only: n−1 comparisons<br>
+    • Max+Min CLRS pairwise: ⌈3n/2⌉−2 (OPTIMAL, all cases)<br>
+    • Key: process pairs — bigger→max, smaller→min
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Second Maximum</div>
+    • 2nd max only beaten by the maximum<br>
+    • Balanced tournament → log n siblings of max<br>
+    • Total: n + log n − 2
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Cases &amp; Notations (CRITICAL!)</div>
+    • O, Ω, Θ usable with ANY case<br>
+    • Worst case = O(f) → all cases = O(f) ✓<br>
+    • Best case = Ω(f) → all cases = Ω(f) ✓<br>
+    • Worst case = Ω(f) does NOT imply all cases = Ω(f) ✗
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Sorting Summary</div>
+    • Bubble/Insertion: Best Θ(n), Worst/Avg Θ(n²). Stable ✓<br>
+    • Selection: ALL Θ(n²). NOT stable ✗<br>
+    • Heap: ALL Θ(n log n). NOT stable ✗. In-place ✓<br>
+    • Merge: ALL Θ(n log n). Stable ✓. NOT in-place ✗ O(n) extra<br>
+    • Quick: Avg Θ(n log n), Worst Θ(n²). NOT stable ✗. In-place ✓<br>
+    • Insertion: T = Θ(n + inversions)<br>
+    • Counting: Θ(n+k). Radix: Θ(d(n+k)). Both stable ✓
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Lower Bound</div>
+    • Any comparison sort: worst case ≥ Ω(n log n)<br>
+    • Proof: n! leaves in decision tree → height ≥ log(n!) = Θ(n log n)<br>
+    • Merge Sort achieves this → OPTIMAL
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">D&amp;C Recurrences (Master Thm)</div>
+    • T(n)=2T(n/2)+n → Θ(n log n) [Merge Sort]<br>
+    • T(n)=2T(n/2)+1 → Θ(n) [Max finding]<br>
+    • T(n)=T(n/2)+1 → Θ(log n) [Binary Search]<br>
+    • T(n)=7T(n/2)+n² → Θ(n^2.81) [Strassen]<br>
+    • T(n)=8T(n/2)+n² → Θ(n³) [Naive block mult]
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Quick Sort</div>
+    • Divide=partition O(n), Combine=nothing<br>
+    • Best/Avg: Θ(n log n) — balanced splits<br>
+    • Worst: Θ(n²) — sorted array + first-element pivot<br>
+    • NOT stable ✗. In-place ✓. Space: O(log n) stack<br>
+    • Randomized QS: no adversary can force worst case
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Counting Inversions</div>
+    • Inversion: i&lt;j but A[i]&gt;A[j]<br>
+    • Brute force: Θ(n²). Modified merge sort: Θ(n log n)<br>
+    • Key: during merge, if right element chosen, ALL remaining left = inversions → count += (mid−p+1)<br>
+    • Insertion sort swaps = number of inversions
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Binary Search</div>
+    • Requires sorted array. Go to mid, recurse on ONE half<br>
+    • T(n)=T(n/2)+1 → Θ(log n)<br>
+    • Equivalent to searching a balanced BST
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Merge k Arrays</div>
+    • Methods 1-3: O(nk) or O(n log n)<br>
+    • Min-Heap: Θ(n log k) ★<br>
+    • Pairwise merge: Θ(n log k) ★<br>
+    • For k=log n arrays: Θ(n log log n)
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">Fast Exponentiation &amp; Matrix Mult</div>
+    • aⁿ: store x=power(a,n/2), return x×x [or ×a if odd] → Θ(log n)<br>
+    • Matrix naive: Θ(n³). Strassen: 7 submults → Θ(n^2.81)<br>
+    • Strassen recurrence: T(n)=7T(n/2)+Θ(n²)
+  </div>
+  <div class="revision-item">
+    <div class="ri-head">kth Smallest (Select)</div>
+    • Sort + pick: Θ(n log n)<br>
+    • Quick Select (random): Θ(n) avg, Θ(n²) worst<br>
+    • Median of Medians: Θ(n) WORST CASE ★<br>
+    • Key: recurse on only ONE half after partition!
+  </div>
+</div>
+
+<script>
+// ── NAV HIGHLIGHTING ──
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) cur = s.id;
+  });
+  navLinks.forEach(l => {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + cur) l.classList.add('active');
+  });
+});
+
+// ── TABS ──
+function showTab(btn, panelId) {
+  const tabBar = btn.closest('.tab-bar');
+  const tabs = tabBar.parentElement;
+  tabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  tabs.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+// ── ACCORDION ──
+function toggleAcc(head) {
+  head.classList.toggle('open');
+  const body = head.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ── REVISION PANEL ──
+function toggleRevision() {
+  document.getElementById('revision-panel').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const panel = document.getElementById('revision-panel');
+  const btn = document.getElementById('revision-btn');
+  if (!panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1364 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linked Lists — In-Depth Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --border: #252a3a;
+    --accent: #e8925a;
+    --accent2: #5a9ee8;
+    --accent3: #7de8a0;
+    --accent4: #e85a9e;
+    --text: #d4d8e8;
+    --text-dim: #7a8099;
+    --text-bright: #f0f4ff;
+    --code-bg: #0a0c10;
+    --highlight: rgba(232,146,90,0.12);
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.75;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 28px 80px;
+  }
+
+  /* ── Header ── */
+  .doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .doc-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -28px; right: -28px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  }
+  .doc-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .doc-header h1 {
+    font-family: var(--serif);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .doc-header p {
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 52px;
+  }
+  .toc h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 14px;
+  }
+  .toc ol { padding-left: 22px; }
+  .toc li { margin: 5px 0; }
+  .toc a { color: var(--text-dim); text-decoration: none; font-size: 14px; }
+  .toc a:hover { color: var(--accent); }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 64px;
+    scroll-margin-top: 20px;
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: .7;
+    margin-bottom: 6px;
+  }
+  .section > h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--accent2);
+    margin: 28px 0 10px;
+  }
+  h4 {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent3);
+    margin: 20px 0 8px;
+    letter-spacing: .04em;
+  }
+
+  /* ── Paragraphs / Lists ── */
+  p { margin-bottom: 12px; color: var(--text); }
+  ul, ol { padding-left: 22px; margin-bottom: 14px; }
+  li { margin: 5px 0; }
+  strong { color: var(--text-bright); font-weight: 500; }
+  em { color: var(--accent); font-style: normal; }
+
+  /* ── Code ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: 8px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c9d1e3;
+  }
+  .kw  { color: #e87de8; }
+  .ty  { color: #7de8c9; }
+  .fn  { color: #7db8e8; }
+  .cm  { color: #4a5570; font-style: italic; }
+  .nu  { color: #e8c57d; }
+  .st  { color: #7de8a0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent3);
+  }
+
+  /* ── Diagram / Box ── */
+  .diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+    color: #a0b0d0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .diagram .hl { color: var(--accent); }
+  .diagram .hl2 { color: var(--accent2); }
+  .diagram .hl3 { color: var(--accent3); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 10px;
+  }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .callout-goal   { background: rgba(90,158,232,.08); border-left: 3px solid var(--accent2); }
+  .callout-tip    { background: rgba(125,232,160,.08); border-left: 3px solid var(--accent3); }
+  .callout-warn   { background: rgba(232,90,90,.08);  border-left: 3px solid #e85a5a; }
+  .callout-magic  { background: rgba(232,146,90,.08); border-left: 3px solid var(--accent); }
+  .callout-key    { color: var(--text-bright); font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; font-family: var(--mono); }
+
+  /* ── Compare Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .05em;
+    text-align: left;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  .good { color: var(--accent3); }
+  .bad  { color: #e85a5a; }
+
+  /* ── Steps ── */
+  .steps { counter-reset: step; margin: 12px 0; }
+  .step {
+    display: flex; gap: 14px; align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .step-num {
+    min-width: 26px; height: 26px;
+    background: var(--accent); color: #0d0f14;
+    border-radius: 50%;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+
+  /* ── Op sections ── */
+  .op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+  @media(max-width: 640px) { .op-grid { grid-template-columns: 1fr; } }
+
+  /* ── Pro section ── */
+  .pro-section {
+    background: linear-gradient(135deg, #0f1520 0%, #0d1118 100%);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 32px;
+    margin-top: 10px;
+  }
+  .pro-section h2 {
+    font-family: var(--serif);
+    font-size: 30px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(232,146,90,.25);
+    padding-bottom: 14px;
+  }
+  .pro-section h3 { color: var(--accent); }
+  .mental-model {
+    background: rgba(232,146,90,.07);
+    border: 1px solid rgba(232,146,90,.2);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 14px 0;
+  }
+  .mental-model .mm-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .tag { 
+    display: inline-block; 
+    font-family: var(--mono); font-size: 10px; 
+    padding: 2px 8px; border-radius: 20px; 
+    margin: 2px; letter-spacing: .05em;
+  }
+  .tag-o { background: rgba(232,146,90,.2); color: var(--accent); }
+  .tag-b { background: rgba(90,158,232,.2); color: var(--accent2); }
+  .tag-g { background: rgba(125,232,160,.2); color: var(--accent3); }
+
+  /* complexity table */
+  .ctable { font-family: var(--mono); font-size: 13px; }
+  .ctable th { font-size: 11px; }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  /* ── Python Tutor Embeds ── */
+  .pt-wrap { margin:20px 0; border:1px solid var(--border); border-radius:10px; overflow:auto; resize:both; min-width:360px; max-width:100%; }
+  .pt-lbl  { font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--accent); background:var(--surface2); padding:6px 14px; border-bottom:1px solid var(--border); }
+  .pt-wrap iframe { display:block; width:100%; border:none; }
+
+  /* ── Light mode ── */
+  body.light {
+    --bg: #f5f2ec;
+    --surface: #eae7df;
+    --surface2: #dedad1;
+    --border: #c8c4ba;
+    --accent: #b8601a;
+    --accent2: #1a60b8;
+    --accent3: #1a7a3a;
+    --accent4: #b81a6a;
+    --text: #2a2c38;
+    --text-dim: #6a6c78;
+    --text-bright: #0a0c14;
+    --code-bg: #e2dfd7;
+    --highlight: rgba(184,96,26,0.10);
+  }
+  body.light pre   { color: #252830; }
+  body.light .kw   { color: #8020a0; }
+  body.light .ty   { color: #0a6050; }
+  body.light .fn   { color: #1050a0; }
+  body.light .cm   { color: #8090a4; font-style: italic; }
+  body.light .nu   { color: #8a6010; }
+  body.light .st   { color: #1a7a3a; }
+  body.light .diagram { color: #354060; }
+  body.light .pro-section { background: linear-gradient(135deg, #faf5ec 0%, #f5f0e8 100%); }
+  body.light tr:nth-child(even) td { background: rgba(0,0,0,.04); }
+
+  /* ── Mode toggle button ── */
+  #mode-toggle {
+    position: fixed;
+    top: 16px; right: 16px;
+    z-index: 999;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .06em;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  #mode-toggle:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
+</style>
+</head>
+<body>
+
+<button id="mode-toggle">☀ Light</button>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="doc-header">
+  <span class="doc-tag">Data Structures · GO Classes · Sachin Mittal</span>
+  <h1>Linked Lists</h1>
+  <p>In-depth structured notes · Singly · Circular · Doubly · Recursion · Reversal</p>
+</div>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">What is a Linked List?</a></li>
+    <li><a href="#s2">Anatomy of a Node (Memory Model)</a></li>
+    <li><a href="#s3">Traversal — How to Walk the List</a></li>
+    <li><a href="#s4">Array vs Linked List</a></li>
+    <li><a href="#s5">Real-World Use Cases</a></li>
+    <li><a href="#s6">Operations on Singly Linked List</a></li>
+    <li><a href="#s7">Recursion on Linked Lists</a></li>
+    <li><a href="#s8">Reversing a Linked List</a></li>
+    <li><a href="#s9">Circular Linked List (CLL)</a></li>
+    <li><a href="#s10">Doubly Linked List (DLL)</a></li>
+    <li><a href="#s11">Complexity Summary</a></li>
+    <li><a href="#pro">🧠 Pro Thinking — Become a Problem-Solving Expert</a></li>
+  </ol>
+</div>
+
+
+<!-- ═══════════════ S1: WHAT IS ═══════════════ -->
+<div class="section" id="s1">
+  <div class="section-label">Section 01</div>
+  <h2>What is a Linked List?</h2>
+
+  <h3>The Problem it Solves</h3>
+  <p>An <strong>array</strong> is a fixed block of memory. When you declare <code>int arr[10]</code>, you reserve 10 slots. The problem: you must decide the size <em>before</em> you start. You cannot easily grow or shrink it, and inserting/removing in the middle is slow because all elements must shift.</p>
+  <p>A <strong>linked list</strong> solves this by storing elements one by one in heap memory. Each element knows where the next one is. You never need to decide the size in advance, and insertion/deletion is very fast if you are at the right place.</p>
+
+  <div class="callout callout-goal">
+    <div class="callout-key">Goal</div>
+    A dynamic data structure where elements can be added/removed at any time without wasting or pre-reserving memory.
+  </div>
+
+  <h3>What Does it Look Like?</h3>
+  <p>A linked list is a chain of <strong>nodes</strong>. Each node holds two things:</p>
+  <ol>
+    <li><strong>data</strong> — the actual value (like an integer)</li>
+    <li><strong>next</strong> — an address (pointer) to the next node</li>
+  </ol>
+  <p>The last node's <code>next</code> points to <code>NULL</code>, meaning "end of list". There is also a special pointer called <strong>Head</strong> that always points to the first node.</p>
+
+  <div class="diagram"><span class="hl2">Head</span>
+  │
+  ▼
+┌──────┬──────┐     ┌──────┬──────┐     ┌──────┬──────┐     ┌──────┬──────┐
+│  <span class="hl">4</span>   │  ●───┼────>│  <span class="hl">15</span>  │  ●───┼────>│  <span class="hl">7</span>   │  ●───┼────>│  <span class="hl">40</span>  │ <span class="hl3">NULL</span> │
+│ data │ next │     │ data │ next │     │ data │ next │     │ data │ next │
+└──────┴──────┘     └──────┴──────┘     └──────┴──────┘     └──────┴──────┘
+  addr: 1000          addr: 2000          addr: 3000          addr: 4000</div>
+
+  <div class="callout callout-magic">
+    <div class="callout-key">✦ The magic idea</div>
+    The nodes do NOT need to be next to each other in memory. They can be anywhere on the heap. The <em>pointer</em> is the chain that connects them. This is the fundamental insight of a linked list.
+  </div>
+</div>
+
+
+<!-- ═══════════════ S2: NODE ═══════════════ -->
+<div class="section" id="s2">
+  <div class="section-label">Section 02</div>
+  <h2>Anatomy of a Node (Memory Model)</h2>
+
+  <h3>Struct Definition in C</h3>
+  <p>In C, a node is defined as a <code>struct</code>. It contains data AND a pointer to another node of the same type — this self-referential pointer is the chain link.</p>
+
+<pre><span class="kw">struct</span> <span class="ty">node</span> {
+    <span class="ty">int</span> data;             <span class="cm">// holds the value</span>
+    <span class="kw">struct</span> <span class="ty">node</span> *next;    <span class="cm">// pointer to the next node (same type!)</span>
+};</pre>
+
+  <h3>How Memory Works (Stack vs Heap)</h3>
+  <p>When you write <code>int x;</code> it goes on the <strong>stack</strong> — local, fast, automatically freed.</p>
+  <p>When you write <code>malloc(...)</code> it allocates on the <strong>heap</strong> — lives as long as you want, you must free it manually.</p>
+  <p>Linked list nodes live on the <strong>heap</strong>. Each node is created with <code>malloc</code>.</p>
+
+<pre><span class="cm">// Creating a new node step by step:</span>
+<span class="kw">struct</span> <span class="ty">node</span> *p = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">struct</span> <span class="ty">node</span>));
+                 <span class="cm">// ^^ allocates exactly enough heap space for one node</span>
+
+p->data = <span class="nu">5</span>;     <span class="cm">// set the value</span>
+p->next = <span class="kw">NULL</span>; <span class="cm">// no next node yet</span></pre>
+
+  <div class="callout callout-tip">
+    <div class="callout-key">Key Pointer Rule</div>
+    <code>p->data</code> means: "go to where p points, then access data."<br>
+    <code>p->next</code> means: "go to where p points, then access next."<br>
+    If <code>q = p->next</code>, then <code>q</code> now points to the NEXT node.
+  </div>
+
+  <h3>Size of a Node</h3>
+  <div class="diagram"><span class="kw">struct</span> <span class="ty">node</span> x;         // size = 4 bytes (int) + 8 bytes (pointer) = <span class="hl">12–16 bytes</span>
+<span class="kw">sizeof</span>(<span class="ty">int</span> *)  = 8     // on 64-bit systems
+<span class="kw">sizeof</span>(<span class="ty">char</span> *) = 8
+<span class="kw">sizeof</span>(<span class="ty">void</span> *) = 8    // all pointers same size on same system</div>
+
+  <h3>Understanding Node Linking</h3>
+  <p>Given two nodes <code>x</code> at address 1000 and <code>y</code> at address 2000:</p>
+<pre><span class="kw">struct</span> <span class="ty">node</span> x, y;
+<span class="kw">struct</span> <span class="ty">node</span> *p;
+
+p = &x;             <span class="cm">// p points to node x (address 1000)</span>
+x.next = &y;        <span class="cm">// x's next points to y</span>
+<span class="cm">// OR equivalently: p->next = &y</span>
+
+y.next = <span class="kw">NULL</span>;      <span class="cm">// y is the last node</span>
+
+<span class="cm">// Accessing y's data through the chain:</span>
+p->next->data       <span class="cm">// same as x.next.data = y's data</span></pre>
+</div>
+
+
+<!-- ═══════════════ S3: TRAVERSAL ═══════════════ -->
+<div class="section" id="s3">
+  <div class="section-label">Section 03</div>
+  <h2>Traversal — How to Walk the List</h2>
+
+  <p>To visit every node, you start from <code>head</code> and keep moving to <code>->next</code> until you reach <code>NULL</code>.</p>
+
+  <div class="callout callout-warn">
+    <div class="callout-key">⚠ Never modify head directly during traversal</div>
+    Always use a temporary pointer like <code>current</code> or <code>temp</code>. If you move head forward, you lose access to the beginning of the list forever.
+  </div>
+
+<pre><span class="cm">// Print all elements</span>
+<span class="kw">void</span> <span class="fn">printList</span>(<span class="kw">struct</span> <span class="ty">node</span> *head) {
+    <span class="kw">struct</span> <span class="ty">node</span> *current = head;   <span class="cm">// temp pointer, head stays safe</span>
+    <span class="kw">while</span> (current != <span class="kw">NULL</span>) {
+        <span class="fn">printf</span>(<span class="st">"%d "</span>, current->data);
+        current = current->next;    <span class="cm">// move to next node</span>
+    }
+}
+
+<span class="cm">// Count length</span>
+<span class="ty">int</span> <span class="fn">length</span>(<span class="kw">struct</span> <span class="ty">node</span> *head) {
+    <span class="ty">int</span> count = <span class="nu">0</span>;
+    <span class="kw">while</span> (head != <span class="kw">NULL</span>) {
+        count++;
+        head = head->next;
+    }
+    <span class="kw">return</span> count;
+}</pre>
+
+  <h3>Accessing the Nth element</h3>
+  <div class="diagram">head -> next -> data           = 2nd element's value
+head -> next -> next -> data   = 3rd element's value
+head -> next -> next -> next   = 4th node's address</div>
+
+  <p>This is O(n) — you must walk from the beginning every time. There is no "jump to index 3" like arrays.</p>
+</div>
+
+
+<!-- ═══════════════ S4: ARRAY VS LL ═══════════════ -->
+<div class="section" id="s4">
+  <div class="section-label">Section 04</div>
+  <h2>Array vs Linked List</h2>
+
+  <table>
+    <tr>
+      <th>Property</th>
+      <th>Array</th>
+      <th>Linked List</th>
+    </tr>
+    <tr>
+      <td><strong>Memory layout</strong></td>
+      <td>Contiguous (all together)</td>
+      <td>Scattered (anywhere on heap)</td>
+    </tr>
+    <tr>
+      <td><strong>Size</strong></td>
+      <td class="bad">Fixed at declaration</td>
+      <td class="good">Dynamic — grows/shrinks anytime</td>
+    </tr>
+    <tr>
+      <td><strong>Random access</strong></td>
+      <td class="good">O(1) — direct by index</td>
+      <td class="bad">O(n) — must traverse from head</td>
+    </tr>
+    <tr>
+      <td><strong>Insert/Delete at front</strong></td>
+      <td class="bad">O(n) — shift all elements</td>
+      <td class="good">O(1) — just update head pointer</td>
+    </tr>
+    <tr>
+      <td><strong>Insert/Delete in middle</strong></td>
+      <td class="bad">O(n) — shift elements</td>
+      <td class="good">O(1) if pointer already at position</td>
+    </tr>
+    <tr>
+      <td><strong>Cache locality</strong></td>
+      <td class="good">Excellent — elements in cache together</td>
+      <td class="bad">Poor — nodes spread across memory</td>
+    </tr>
+    <tr>
+      <td><strong>Memory overhead</strong></td>
+      <td class="good">No extra overhead per element</td>
+      <td class="bad">Each node stores an extra pointer (8 bytes)</td>
+    </tr>
+    <tr>
+      <td><strong>Binary search possible?</strong></td>
+      <td class="good">Yes</td>
+      <td class="bad">No (can't jump to middle)</td>
+    </tr>
+  </table>
+
+  <h3>Cache Locality — Why Arrays are Faster in Loops</h3>
+  <p>The CPU has a small, fast cache memory. When you access <code>a[0]</code>, the CPU also loads <code>a[1]</code>, <code>a[2]</code>, <code>a[3]</code>... into cache automatically (this is called a cache line). So <code>a[1]</code> is <em>super fast</em> — already in cache.</p>
+  <p>For a linked list, each node is at a random address. When you access node 1, the CPU cannot predict where node 2 is. Each access may be a <em>cache miss</em> — slow round trip to main memory.</p>
+
+  <div class="diagram"><span class="cm">Array traversal:</span>
+a[0] → little slow (first access, loads into cache)
+a[1] → <span class="hl3">SUPER FAST</span> (already in cache!)
+a[2] → <span class="hl3">SUPER FAST</span> (already in cache!)
+
+<span class="cm">Linked list traversal:</span>
+node at 1000 → slow (loads to cache, but next node is elsewhere)
+node at 8540 → slow (cache miss, go to main memory again)
+node at 3120 → slow (cache miss again...)</div>
+
+  <div class="callout callout-tip">
+    <div class="callout-key">When to choose which</div>
+    Use <strong>Array</strong> when: size is known, you need random access, you loop through data often.<br>
+    Use <strong>Linked List</strong> when: size is unknown/changing, you need many insertions/deletions at the front.
+  </div>
+</div>
+
+
+<!-- ═══════════════ S5: USE CASES ═══════════════ -->
+<div class="section" id="s5">
+  <div class="section-label">Section 05</div>
+  <h2>Real-World Use Cases</h2>
+
+  <div class="op-grid">
+    <div class="card">
+      <div class="card-title">🎵 Music Playlist</div>
+      <p>Each song is a node. It has the song data and a pointer to the next song. "Previous" and "Next" buttons are just <code>prev</code> and <code>next</code> pointers — a Doubly Linked List.</p>
+      <div class="diagram" style="font-size:11px">cheap thrills ←→ shape of you ←→ bohemian rhapsody ←→ feels ←→ uptown funk</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🌐 Browser Back/Forward</div>
+      <p>Each webpage visited is a node. Back button follows the <code>prev</code> pointer. Forward button follows the <code>next</code> pointer.</p>
+      <div class="diagram" style="font-size:11px">google.com ←→ github.com ←→ stackoverflow.com
+                  ↑ current</div>
+    </div>
+  </div>
+  <div class="op-grid">
+    <div class="card">
+      <div class="card-title">↩️ Undo/Redo in editors</div>
+      <p>Each action is a node. Undo moves back, redo moves forward through the linked chain of actions.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🖨️ Print Queue</div>
+      <p>Print jobs are added dynamically. A linked list handles an unknown number of jobs efficiently.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ S6: OPERATIONS ═══════════════ -->
+<div class="section" id="s6">
+  <div class="section-label">Section 06</div>
+  <h2>Operations on Singly Linked List (SLL)</h2>
+
+  <!-- INSERT AT BEGINNING -->
+  <h3>① Insert at Beginning</h3>
+  <p><strong>Why:</strong> You want to add a new node as the new first node.</p>
+  <p><strong>Key idea:</strong> New node's <code>next</code> must point to the old head. Then head must update to the new node. Do step 1 FIRST — if you update head first, you lose the chain.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div>Create a new node: allocate with malloc, set its data.</div></div>
+    <div class="step"><div class="step-num">2</div><div>Set <code>newNode->next = head</code> (new node points to the old first node).</div></div>
+    <div class="step"><div class="step-num">3</div><div>Set <code>head = newNode</code> (head now points to the new node).</div></div>
+  </div>
+
+  <div class="diagram"><span class="cm">Before:</span>  head → [15] → [7] → [40] → NULL
+
+<span class="cm">After inserting 5:</span>
+          new → [<span class="hl">5</span>] → [15] → [7] → [40] → NULL
+                  ↑
+                 head</div>
+
+<pre><span class="kw">void</span> <span class="fn">insertAtBeginning</span>(<span class="kw">struct</span> <span class="ty">node</span> **head, <span class="ty">int</span> data) {
+    <span class="kw">struct</span> <span class="ty">node</span> *newNode = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">struct</span> <span class="ty">node</span>));
+    newNode->data = data;
+    newNode->next = *head;   <span class="cm">// step 1: link to old head</span>
+    *head = newNode;         <span class="cm">// step 2: update head</span>
+}</pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-key">⚠ Double Pointer</div>
+    We use <code>struct node **head</code> (pointer to pointer) so we can change where head points. If you pass just <code>*head</code>, changes won't reflect outside the function.
+  </div>
+
+  <!-- INSERT AT END -->
+  <h3>② Insert at End</h3>
+  <p><strong>Key idea:</strong> Walk to the last node (the one whose <code>next == NULL</code>), then attach the new node there.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div>Create new node. Set its data. Set its <code>next = NULL</code>.</div></div>
+    <div class="step"><div class="step-num">2</div><div>If list is empty, new node becomes head. Done.</div></div>
+    <div class="step"><div class="step-num">3</div><div>Otherwise traverse to the last node (while <code>current->next != NULL</code>).</div></div>
+    <div class="step"><div class="step-num">4</div><div>Set <code>lastNode->next = newNode</code>.</div></div>
+  </div>
+
+<pre><span class="kw">void</span> <span class="fn">insertAtEnd</span>(<span class="kw">struct</span> <span class="ty">node</span> **head, <span class="ty">int</span> data) {
+    <span class="kw">struct</span> <span class="ty">node</span> *newNode = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">struct</span> <span class="ty">node</span>));
+    newNode->data = data;
+    newNode->next = <span class="kw">NULL</span>;
+
+    <span class="kw">if</span> (*head == <span class="kw">NULL</span>) { *head = newNode; <span class="kw">return</span>; }
+
+    <span class="kw">struct</span> <span class="ty">node</span> *current = *head;
+    <span class="kw">while</span> (current->next != <span class="kw">NULL</span>)
+        current = current->next;   <span class="cm">// walk to last node</span>
+
+    current->next = newNode;        <span class="cm">// attach new node</span>
+}</pre>
+
+  <!-- INSERT AT MIDDLE -->
+  <h3>③ Insert After a Given Node (Middle)</h3>
+  <p><strong>Key idea:</strong> You have a pointer to the node AFTER which you want to insert. You must save the current next before overwriting it.</p>
+
+  <div class="diagram"><span class="cm">Insert new node after node with value 15:</span>
+
+Before: head → [4] → [<span class="hl">15</span>] → [7] → [40] → NULL
+                        ↑
+                    position node
+
+Step 1: newNode->next = position->next   <span class="cm">// newNode points to [7]</span>
+Step 2: position->next = newNode         <span class="cm">// [15] now points to newNode</span>
+
+After:  head → [4] → [15] → [<span class="hl3">5</span>] → [7] → [40] → NULL</div>
+
+<pre><span class="kw">void</span> <span class="fn">insertAfter</span>(<span class="kw">struct</span> <span class="ty">node</span> *position, <span class="ty">int</span> data) {
+    <span class="kw">struct</span> <span class="ty">node</span> *newNode = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">struct</span> <span class="ty">node</span>));
+    newNode->data = data;
+    newNode->next = position->next;  <span class="cm">// preserve the rest of the list</span>
+    position->next = newNode;        <span class="cm">// link in the new node</span>
+}</pre>
+
+  <hr class="divider">
+
+  <!-- DELETE FIRST -->
+  <h3>④ Delete First Node</h3>
+  <p><strong>Key idea:</strong> Save head in a temp pointer (so you can free it), then move head forward.</p>
+
+<pre><span class="kw">void</span> <span class="fn">deleteFirst</span>(<span class="kw">struct</span> <span class="ty">node</span> **head) {
+    <span class="kw">if</span> (*head == <span class="kw">NULL</span>) <span class="kw">return</span>;     <span class="cm">// empty list</span>
+    <span class="kw">struct</span> <span class="ty">node</span> *temp = *head;
+    *head = (*head)->next;           <span class="cm">// move head forward</span>
+    <span class="fn">free</span>(temp);                     <span class="cm">// release the old node</span>
+}</pre>
+
+  <!-- DELETE LAST -->
+  <h3>⑤ Delete Last Node</h3>
+  <p><strong>Key idea:</strong> Walk until you find the second-to-last node (where <code>current->next->next == NULL</code>). Then set its <code>next = NULL</code> and free the last node.</p>
+
+<pre><span class="kw">void</span> <span class="fn">deleteLast</span>(<span class="kw">struct</span> <span class="ty">node</span> **head) {
+    <span class="kw">if</span> (*head == <span class="kw">NULL</span>) <span class="kw">return</span>;
+    <span class="kw">if</span> ((*head)->next == <span class="kw">NULL</span>) {  <span class="cm">// only one node</span>
+        <span class="fn">free</span>(*head); *head = <span class="kw">NULL</span>; <span class="kw">return</span>;
+    }
+    <span class="kw">struct</span> <span class="ty">node</span> *current = *head;
+    <span class="kw">while</span> (current->next->next != <span class="kw">NULL</span>)  <span class="cm">// stop at 2nd-to-last</span>
+        current = current->next;
+    <span class="fn">free</span>(current->next);
+    current->next = <span class="kw">NULL</span>;
+}</pre>
+
+  <!-- DELETE MIDDLE -->
+  <h3>⑥ Delete a Middle Node (by value)</h3>
+  <p><strong>Key idea:</strong> Walk until you find the node BEFORE the one you want to delete. Then bypass the target node.</p>
+
+  <div class="diagram"><span class="cm">Delete node with value 7:</span>
+
+head → [4] → [15] → [<span class="hl">7</span>] → [40] → NULL
+               ↑     ↑
+             prev   target
+
+Step 1: while (head->next->data != 7): walk forward
+Step 2: temp = head->next              <span class="cm">// save target</span>
+Step 3: head->next = head->next->next  <span class="cm">// bypass target</span>
+Step 4: free(temp)                     <span class="cm">// release memory</span>
+
+After: head → [4] → [15] → [40] → NULL</div>
+
+<pre><span class="kw">void</span> <span class="fn">deleteMiddle</span>(<span class="kw">struct</span> <span class="ty">node</span> *head, <span class="ty">int</span> value) {
+    <span class="kw">while</span> (head->next->data != value)
+        head = head->next;
+    <span class="kw">struct</span> <span class="ty">node</span> *temp = head->next;
+    head->next = head->next->next;
+    <span class="fn">free</span>(temp);
+}</pre>
+</div>
+
+
+<!-- ═══════════════ S7: RECURSION ═══════════════ -->
+<div class="section" id="s7">
+  <div class="section-label">Section 07</div>
+  <h2>Recursion on Linked Lists</h2>
+
+  <p>The recursive pattern on linked lists is always the same: <em>"Handle the head, then recursively call on the rest."</em></p>
+  <p>The rest of the list from the second node is itself a smaller linked list. This is the key insight.</p>
+
+  <h3>Pattern: Search for a value</h3>
+<pre><span class="kw">struct</span> <span class="ty">node</span>* <span class="fn">search</span>(<span class="kw">struct</span> <span class="ty">node</span> *head, <span class="ty">int</span> value) {
+    <span class="kw">if</span> (head == <span class="kw">NULL</span>) <span class="kw">return</span> <span class="kw">NULL</span>;       <span class="cm">// base case: not found</span>
+    <span class="kw">if</span> (head->data == value) <span class="kw">return</span> head; <span class="cm">// base case: found!</span>
+    <span class="kw">return</span> <span class="fn">search</span>(head->next, value);    <span class="cm">// recurse on the rest</span>
+}</pre>
+
+  <!-- ── Python Tutor: Recursive Search ── -->
+  <div class="pt-wrap">
+    <div class="pt-lbl">▶ Python Tutor — search(head, 3) on [1 → 2 → 3 → NULL] &nbsp;·&nbsp; step through with Next → to see heap, call stack, and pointer changes</div>
+    <iframe src="https://pythontutor.com/iframe-embed.html#code=%23include%20%3Cstdio.h%3E%0A%23include%20%3Cstdlib.h%3E%0A%0Astruct%20node%20%7B%0A%20%20%20%20int%20data%3B%0A%20%20%20%20struct%20node%20*next%3B%0A%7D%3B%0A%0Astruct%20node*%20search(struct%20node%20*head%2C%20int%20value)%20%7B%0A%20%20%20%20if%20(head%20%3D%3D%20NULL)%20return%20NULL%3B%0A%20%20%20%20if%20(head-%3Edata%20%3D%3D%20value)%20return%20head%3B%0A%20%20%20%20return%20search(head-%3Enext%2C%20value)%3B%0A%7D%0A%0Aint%20main()%20%7B%0A%20%20%20%20struct%20node%20*n3%20%3D%20malloc(sizeof(struct%20node))%3B%20n3-%3Edata%20%3D%203%3B%20n3-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20struct%20node%20*n2%20%3D%20malloc(sizeof(struct%20node))%3B%20n2-%3Edata%20%3D%202%3B%20n2-%3Enext%20%3D%20n3%3B%0A%20%20%20%20struct%20node%20*n1%20%3D%20malloc(sizeof(struct%20node))%3B%20n1-%3Edata%20%3D%201%3B%20n1-%3Enext%20%3D%20n2%3B%0A%20%20%20%20struct%20node%20*result%20%3D%20search(n1%2C%203)%3B%0A%20%20%20%20if%20(result)%20printf(%22Found%3A%20%25d%5Cn%22%2C%20result-%3Edata)%3B%0A%20%20%20%20else%20printf(%22Not%20found%5Cn%22)%3B%0A%20%20%20%20return%200%3B%0A%7D&cumulative=false&curInstr=0&heapPrimitives=nevernest&mode=display&origin=opt-frontend.js&py=c_gcc9.3.0&rawInputLstJSON=%5B%5D&textReferences=false"
+      height="500" allowfullscreen></iframe>
+  </div>
+
+  <h3>Recursive Insert at End</h3>
+  <p>The idea: if the list is empty, the new node IS the list. Otherwise, the new node should be attached at the end of the sub-list starting from <code>head->next</code>.</p>
+
+<pre><span class="ty">Node</span>* <span class="fn">insertRear</span>(<span class="ty">Node</span>* l, <span class="ty">int</span> data) {
+    <span class="kw">if</span> (l == <span class="kw">NULL</span>) {                     <span class="cm">// reached end, create node</span>
+        <span class="ty">Node</span> *n = <span class="fn">createNode</span>(data);
+        <span class="kw">return</span> n;
+    }
+    l->next = <span class="fn">insertRear</span>(l->next, data); <span class="cm">// attach to rest of list</span>
+    <span class="kw">return</span> l;
+}</pre>
+
+  <!-- ── Python Tutor: insertRear ── -->
+  <div class="pt-wrap">
+    <div class="pt-lbl">▶ Python Tutor — insertRear(head, 4) on [1 → 2 → 3 → NULL] &nbsp;·&nbsp; watch each frame return l to rewire the chain on the way back up</div>
+    <iframe src="https://pythontutor.com/iframe-embed.html#code=%23include%20%3Cstdio.h%3E%0A%23include%20%3Cstdlib.h%3E%0A%0Astruct%20node%20%7B%0A%20%20%20%20int%20data%3B%0A%20%20%20%20struct%20node%20*next%3B%0A%7D%3B%0A%0Astruct%20node*%20createNode(int%20data)%20%7B%0A%20%20%20%20struct%20node%20*n%20%3D%20malloc(sizeof(struct%20node))%3B%0A%20%20%20%20n-%3Edata%20%3D%20data%3B%0A%20%20%20%20n-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20return%20n%3B%0A%7D%0A%0Astruct%20node*%20insertRear(struct%20node%20*l%2C%20int%20data)%20%7B%0A%20%20%20%20if%20(l%20%3D%3D%20NULL)%20%7B%0A%20%20%20%20%20%20%20%20struct%20node%20*n%20%3D%20createNode(data)%3B%0A%20%20%20%20%20%20%20%20return%20n%3B%0A%20%20%20%20%7D%0A%20%20%20%20l-%3Enext%20%3D%20insertRear(l-%3Enext%2C%20data)%3B%0A%20%20%20%20return%20l%3B%0A%7D%0A%0Aint%20main()%20%7B%0A%20%20%20%20struct%20node%20*n3%20%3D%20malloc(sizeof(struct%20node))%3B%20n3-%3Edata%20%3D%203%3B%20n3-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20struct%20node%20*n2%20%3D%20malloc(sizeof(struct%20node))%3B%20n2-%3Edata%20%3D%202%3B%20n2-%3Enext%20%3D%20n3%3B%0A%20%20%20%20struct%20node%20*n1%20%3D%20malloc(sizeof(struct%20node))%3B%20n1-%3Edata%20%3D%201%3B%20n1-%3Enext%20%3D%20n2%3B%0A%20%20%20%20struct%20node%20*head%20%3D%20insertRear(n1%2C%204)%3B%0A%20%20%20%20struct%20node%20*cur%20%3D%20head%3B%0A%20%20%20%20while%20(cur)%20%7B%20printf(%22%25d%20%22%2C%20cur-%3Edata)%3B%20cur%20%3D%20cur-%3Enext%3B%20%7D%0A%20%20%20%20printf(%22%5Cn%22)%3B%0A%20%20%20%20return%200%3B%0A%7D&cumulative=false&curInstr=0&heapPrimitives=nevernest&mode=display&origin=opt-frontend.js&py=c_gcc9.3.0&rawInputLstJSON=%5B%5D&textReferences=false"
+      height="500" allowfullscreen></iframe>
+  </div>
+
+  <h3>Recursive Remove First Occurrence</h3>
+<pre><span class="ty">Node</span>* <span class="fn">removeFirst</span>(<span class="ty">Node</span>* head, <span class="ty">int</span> x) {
+    <span class="kw">if</span> (head == <span class="kw">NULL</span>) <span class="kw">return</span> <span class="kw">NULL</span>;
+    <span class="kw">if</span> (head->data == x) {
+        <span class="ty">Node</span>* tmp = head->next;
+        <span class="fn">free</span>(head);
+        <span class="kw">return</span> tmp;            <span class="cm">// skip this node</span>
+    }
+    head->next = <span class="fn">removeFirst</span>(head->next, x);
+    <span class="kw">return</span> head;
+}</pre>
+
+  <!-- ── Python Tutor: removeFirst ── -->
+  <div class="pt-wrap">
+    <div class="pt-lbl">▶ Python Tutor — removeFirst(head, 2) on [1 → 2 → 3 → NULL] &nbsp;·&nbsp; watch pointer surgery happen on the heap</div>
+    <iframe src="https://pythontutor.com/iframe-embed.html#code=%23include%20%3Cstdio.h%3E%0A%23include%20%3Cstdlib.h%3E%0A%0Astruct%20node%20%7B%0A%20%20%20%20int%20data%3B%0A%20%20%20%20struct%20node%20*next%3B%0A%7D%3B%0A%0Astruct%20node*%20removeFirst(struct%20node%20*head%2C%20int%20x)%20%7B%0A%20%20%20%20if%20(head%20%3D%3D%20NULL)%20return%20NULL%3B%0A%20%20%20%20if%20(head-%3Edata%20%3D%3D%20x)%20%7B%0A%20%20%20%20%20%20%20%20struct%20node%20*tmp%20%3D%20head-%3Enext%3B%0A%20%20%20%20%20%20%20%20free(head)%3B%0A%20%20%20%20%20%20%20%20return%20tmp%3B%0A%20%20%20%20%7D%0A%20%20%20%20head-%3Enext%20%3D%20removeFirst(head-%3Enext%2C%20x)%3B%0A%20%20%20%20return%20head%3B%0A%7D%0A%0Aint%20main()%20%7B%0A%20%20%20%20struct%20node%20*n3%20%3D%20malloc(sizeof(struct%20node))%3B%20n3-%3Edata%20%3D%203%3B%20n3-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20struct%20node%20*n2%20%3D%20malloc(sizeof(struct%20node))%3B%20n2-%3Edata%20%3D%202%3B%20n2-%3Enext%20%3D%20n3%3B%0A%20%20%20%20struct%20node%20*n1%20%3D%20malloc(sizeof(struct%20node))%3B%20n1-%3Edata%20%3D%201%3B%20n1-%3Enext%20%3D%20n2%3B%0A%20%20%20%20struct%20node%20*head%20%3D%20removeFirst(n1%2C%202)%3B%0A%20%20%20%20struct%20node%20*cur%20%3D%20head%3B%0A%20%20%20%20while%20(cur)%20%7B%20printf(%22%25d%20%22%2C%20cur-%3Edata)%3B%20cur%20%3D%20cur-%3Enext%3B%20%7D%0A%20%20%20%20printf(%22%5Cn%22)%3B%0A%20%20%20%20return%200%3B%0A%7D&cumulative=false&curInstr=0&heapPrimitives=nevernest&mode=display&origin=opt-frontend.js&py=c_gcc9.3.0&rawInputLstJSON=%5B%5D&textReferences=false"
+      height="500" allowfullscreen></iframe>
+  </div>
+
+  <h3>Recursive Remove ALL Occurrences</h3>
+<pre><span class="ty">Node</span>* <span class="fn">removeAll</span>(<span class="ty">Node</span>* l, <span class="ty">int</span> data) {
+    <span class="kw">if</span> (l == <span class="kw">NULL</span>) <span class="kw">return</span> <span class="kw">NULL</span>;
+    <span class="kw">if</span> (l->data == data)
+        <span class="kw">return</span> <span class="fn">removeAll</span>(l->next, data); <span class="cm">// skip this, continue</span>
+    <span class="kw">else</span> {
+        l->next = <span class="fn">removeAll</span>(l->next, data);
+        <span class="kw">return</span> l;
+    }
+}</pre>
+
+  <!-- ── Python Tutor: removeAll ── -->
+  <div class="pt-wrap">
+    <div class="pt-lbl">▶ Python Tutor — removeAll(head, 2) on [1 → 2 → 2 → 3 → NULL] &nbsp;·&nbsp; both 2s get skipped; watch how consecutive matches cascade through the recursion</div>
+    <iframe src="https://pythontutor.com/iframe-embed.html#code=%23include%20%3Cstdio.h%3E%0A%23include%20%3Cstdlib.h%3E%0A%0Astruct%20node%20%7B%0A%20%20%20%20int%20data%3B%0A%20%20%20%20struct%20node%20*next%3B%0A%7D%3B%0A%0Astruct%20node*%20removeAll(struct%20node%20*l%2C%20int%20data)%20%7B%0A%20%20%20%20if%20(l%20%3D%3D%20NULL)%20return%20NULL%3B%0A%20%20%20%20if%20(l-%3Edata%20%3D%3D%20data)%0A%20%20%20%20%20%20%20%20return%20removeAll(l-%3Enext%2C%20data)%3B%0A%20%20%20%20else%20%7B%0A%20%20%20%20%20%20%20%20l-%3Enext%20%3D%20removeAll(l-%3Enext%2C%20data)%3B%0A%20%20%20%20%20%20%20%20return%20l%3B%0A%20%20%20%20%7D%0A%7D%0A%0Aint%20main()%20%7B%0A%20%20%20%20struct%20node%20*n4%20%3D%20malloc(sizeof(struct%20node))%3B%20n4-%3Edata%20%3D%203%3B%20n4-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20struct%20node%20*n3%20%3D%20malloc(sizeof(struct%20node))%3B%20n3-%3Edata%20%3D%202%3B%20n3-%3Enext%20%3D%20n4%3B%0A%20%20%20%20struct%20node%20*n2%20%3D%20malloc(sizeof(struct%20node))%3B%20n2-%3Edata%20%3D%202%3B%20n2-%3Enext%20%3D%20n3%3B%0A%20%20%20%20struct%20node%20*n1%20%3D%20malloc(sizeof(struct%20node))%3B%20n1-%3Edata%20%3D%201%3B%20n1-%3Enext%20%3D%20n2%3B%0A%20%20%20%20struct%20node%20*head%20%3D%20removeAll(n1%2C%202)%3B%0A%20%20%20%20struct%20node%20*cur%20%3D%20head%3B%0A%20%20%20%20while%20(cur)%20%7B%20printf(%22%25d%20%22%2C%20cur-%3Edata)%3B%20cur%20%3D%20cur-%3Enext%3B%20%7D%0A%20%20%20%20printf(%22%5Cn%22)%3B%0A%20%20%20%20return%200%3B%0A%7D&cumulative=false&curInstr=0&heapPrimitives=nevernest&mode=display&origin=opt-frontend.js&py=c_gcc9.3.0&rawInputLstJSON=%5B%5D&textReferences=false"
+      height="500" allowfullscreen></iframe>
+  </div>
+
+  <h4 style="margin-top:36px">Pre-order vs Post-order: Where you place the "work" matters</h4>
+
+  <!-- ── Python Tutor: printForward (pre-order) ── -->
+  <div class="pt-wrap">
+    <div class="pt-lbl">▶ Python Tutor — printForward(head) · print BEFORE recursing → output: 1 2 3</div>
+    <iframe src="https://pythontutor.com/iframe-embed.html#code=%23include%20%3Cstdio.h%3E%0A%23include%20%3Cstdlib.h%3E%0A%0Astruct%20node%20%7B%0A%20%20%20%20int%20data%3B%0A%20%20%20%20struct%20node%20*next%3B%0A%7D%3B%0A%0Avoid%20printForward(struct%20node%20*head)%20%7B%0A%20%20%20%20if%20(head%20%3D%3D%20NULL)%20return%3B%0A%20%20%20%20printf(%22%25d%20%22%2C%20head-%3Edata)%3B%0A%20%20%20%20printForward(head-%3Enext)%3B%0A%7D%0A%0Aint%20main()%20%7B%0A%20%20%20%20struct%20node%20*n3%20%3D%20malloc(sizeof(struct%20node))%3B%20n3-%3Edata%20%3D%203%3B%20n3-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20struct%20node%20*n2%20%3D%20malloc(sizeof(struct%20node))%3B%20n2-%3Edata%20%3D%202%3B%20n2-%3Enext%20%3D%20n3%3B%0A%20%20%20%20struct%20node%20*n1%20%3D%20malloc(sizeof(struct%20node))%3B%20n1-%3Edata%20%3D%201%3B%20n1-%3Enext%20%3D%20n2%3B%0A%20%20%20%20printForward(n1)%3B%0A%20%20%20%20printf(%22%5Cn%22)%3B%0A%20%20%20%20return%200%3B%0A%7D&cumulative=false&curInstr=0&heapPrimitives=nevernest&mode=display&origin=opt-frontend.js&py=c_gcc9.3.0&rawInputLstJSON=%5B%5D&textReferences=false"
+      height="500" allowfullscreen></iframe>
+  </div>
+
+  <!-- ── Python Tutor: printReverse (post-order) ── -->
+  <div class="pt-wrap">
+    <div class="pt-lbl">▶ Python Tutor — printReverse(head) · recurse FIRST, then print → output: 3 2 1 &nbsp;·&nbsp; watch the stack unwind to reverse the order</div>
+    <iframe src="https://pythontutor.com/iframe-embed.html#code=%23include%20%3Cstdio.h%3E%0A%23include%20%3Cstdlib.h%3E%0A%0Astruct%20node%20%7B%0A%20%20%20%20int%20data%3B%0A%20%20%20%20struct%20node%20*next%3B%0A%7D%3B%0A%0Avoid%20printReverse(struct%20node%20*head)%20%7B%0A%20%20%20%20if%20(head%20%3D%3D%20NULL)%20return%3B%0A%20%20%20%20printReverse(head-%3Enext)%3B%0A%20%20%20%20printf(%22%25d%20%22%2C%20head-%3Edata)%3B%0A%7D%0A%0Aint%20main()%20%7B%0A%20%20%20%20struct%20node%20*n3%20%3D%20malloc(sizeof(struct%20node))%3B%20n3-%3Edata%20%3D%203%3B%20n3-%3Enext%20%3D%20NULL%3B%0A%20%20%20%20struct%20node%20*n2%20%3D%20malloc(sizeof(struct%20node))%3B%20n2-%3Edata%20%3D%202%3B%20n2-%3Enext%20%3D%20n3%3B%0A%20%20%20%20struct%20node%20*n1%20%3D%20malloc(sizeof(struct%20node))%3B%20n1-%3Edata%20%3D%201%3B%20n1-%3Enext%20%3D%20n2%3B%0A%20%20%20%20printReverse(n1)%3B%0A%20%20%20%20printf(%22%5Cn%22)%3B%0A%20%20%20%20return%200%3B%0A%7D&cumulative=false&curInstr=0&heapPrimitives=nevernest&mode=display&origin=opt-frontend.js&py=c_gcc9.3.0&rawInputLstJSON=%5B%5D&textReferences=false"
+      height="500" allowfullscreen></iframe>
+  </div>
+
+  <div class="callout callout-magic">
+    <div class="callout-key">✦ The magic recursion pattern</div>
+    Recursion on linked lists works because <code>head->next</code> is a smaller linked list of the same type. Whatever your function does to a full list, it can do to this smaller list too. The base case is always: what happens when the list is empty (head == NULL)?
+  </div>
+
+</div>
+
+
+<!-- ═══════════════ S8: REVERSE ═══════════════ -->
+<div class="section" id="s8">
+  <div class="section-label">Section 08</div>
+  <h2>Reversing a Linked List</h2>
+
+  <p>This is one of the most famous linked list problems. All arrow directions must flip.</p>
+
+  <div class="diagram"><span class="cm">Before:</span> head → [4] → [3] → [5] → [7] → [2] → NULL
+<span class="cm">After:</span>  head → [2] → [7] → [5] → [3] → [4] → NULL</div>
+
+  <h3>Iterative Reversal — 3 Pointer Technique</h3>
+  <p>Use three pointers: <code>prev</code>, <code>current</code>, <code>next</code>. Walk through the list, reversing one arrow at a time.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div>Start: <code>prev = NULL</code>, <code>current = head</code>, <code>next = head->next</code>.</div></div>
+    <div class="step"><div class="step-num">2</div><div>Reverse current arrow: <code>current->next = prev</code></div></div>
+    <div class="step"><div class="step-num">3</div><div>Shift all 3 pointers forward: <code>prev = current</code>, <code>current = next</code>, <code>next = next->next</code></div></div>
+    <div class="step"><div class="step-num">4</div><div>Repeat until current is NULL. Then <code>head = prev</code>.</div></div>
+  </div>
+
+  <div class="diagram"><span class="cm">Step by step on [1] → [2] → [3] → NULL:</span>
+
+<span class="hl2">Initially:</span>  prev=NULL, curr=[1], next=[2]
+
+<span class="hl">Step 1:</span>  curr->next = NULL   → NULL ← [1]   [2] → [3] → NULL
+         prev=[1], curr=[2], next=[3]
+
+<span class="hl">Step 2:</span>  curr->next = [1]    → NULL ← [1] ← [2]   [3] → NULL
+         prev=[2], curr=[3], next=NULL
+
+<span class="hl">Step 3:</span>  curr->next = [2]    → NULL ← [1] ← [2] ← [3]
+         prev=[3], curr=NULL  → STOP
+
+<span class="hl3">head = prev = [3]</span>   ∴ head → [3] → [2] → [1] → NULL ✓</div>
+
+<pre><span class="ty">Node</span>* <span class="fn">reverseIterative</span>(<span class="ty">Node</span> *head) {
+    <span class="kw">if</span> (head == <span class="kw">NULL</span> || head->next == <span class="kw">NULL</span>) <span class="kw">return</span> head;
+
+    <span class="ty">Node</span>* prevP    = <span class="kw">NULL</span>;
+    <span class="ty">Node</span>* currentP = head;
+    <span class="ty">Node</span>* nextP    = head->next;
+
+    <span class="kw">while</span> (currentP) {
+        currentP->next = prevP;            <span class="cm">// reverse the arrow</span>
+        prevP    = currentP;               <span class="cm">// shift prev forward</span>
+        currentP = nextP;                  <span class="cm">// shift current forward</span>
+        <span class="kw">if</span> (nextP) nextP = nextP->next;   <span class="cm">// shift next forward</span>
+    }
+    <span class="kw">return</span> prevP;  <span class="cm">// prevP is now the new head</span>
+}</pre>
+
+  <h3>Recursive Reversal</h3>
+  <p><strong>Idea:</strong> Let recursion reverse the tail first, then fix the head's arrow.</p>
+
+<pre><span class="ty">Node</span>* <span class="fn">reverseRecursive</span>(<span class="ty">Node</span> *head) {
+    <span class="kw">if</span> (head == <span class="kw">NULL</span> || head->next == <span class="kw">NULL</span>) <span class="kw">return</span> head;
+
+    <span class="ty">Node</span> *n = <span class="fn">reverseRecursive</span>(head->next); <span class="cm">// reverse the rest</span>
+
+    head->next->next = head;  <span class="cm">// the old second node now points BACK to head</span>
+    head->next = <span class="kw">NULL</span>;        <span class="cm">// head's old forward link becomes NULL</span>
+
+    <span class="kw">return</span> n;                 <span class="cm">// n is the new head (last node of original)</span>
+}</pre>
+
+  <div class="callout callout-magic">
+    <div class="callout-key">✦ The magic of head->next->next = head</div>
+    When recursion returns, head is still pointing forward (old direction). <code>head->next</code> is the node right after head. By doing <code>head->next->next = head</code>, you're making that node point BACK to the current head. This reverses the arrow one step. Then <code>head->next = NULL</code> removes the old forward link.
+  </div>
+</div>
+
+
+<!-- ═══════════════ S9: CLL ═══════════════ -->
+<div class="section" id="s9">
+  <div class="section-label">Section 09</div>
+  <h2>Circular Linked List (CLL)</h2>
+
+  <p>In a CLL, the last node's <code>next</code> pointer does NOT point to NULL. It points <strong>back to the head</strong>. The list forms a circle.</p>
+
+  <div class="diagram"><span class="hl2">head</span>
+  │
+  ▼
+┌────┬────┐     ┌────┬────┐     ┌────┬────┐     ┌────┬────┐
+│  4 │  ●─┼────>│ 15 │  ●─┼────>│  7 │  ●─┼────>│ 40 │  ●─┼──┐
+└────┴────┘     └────┴────┘     └────┴────┘     └────┴────┘  │
+  ↑                                                            │
+  └────────────────────────────────────────────────────────────┘
+                    last node's next = head (not NULL!)</div>
+
+  <h3>Why CLL?</h3>
+  <ul>
+    <li>Round-robin scheduling (OS: give each process a time slot, then loop back)</li>
+    <li>Multiplayer board games (player 1 → 2 → 3 → 4 → 1 → ...)</li>
+    <li>Any situation where you continuously cycle through items</li>
+  </ul>
+
+  <h3>Finding Length of CLL</h3>
+  <p><strong>Problem:</strong> You cannot check for NULL to stop — there is no NULL. You must stop when you come back to head.</p>
+  <p><strong>Key trick:</strong> Use a <code>do-while</code> loop so you move at least once before checking.</p>
+
+<pre><span class="ty">int</span> <span class="fn">lengthCLL</span>(<span class="kw">struct</span> <span class="ty">node</span> *head) {
+    <span class="kw">if</span> (head == <span class="kw">NULL</span>) <span class="kw">return</span> <span class="nu">0</span>;
+    <span class="ty">int</span> result = <span class="nu">0</span>;
+    <span class="kw">struct</span> <span class="ty">node</span> *current = head;
+    <span class="kw">do</span> {
+        current = current->next;
+        result++;
+    } <span class="kw">while</span> (current != head);  <span class="cm">// stop when back at head</span>
+    <span class="kw">return</span> result;
+}</pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-key">⚠ Why do-while and not while?</div>
+    If you use <code>while(current != head)</code> at the start, the condition is immediately false (current IS head) and you'd return 0. You must move first, then check. That's what <code>do-while</code> does.
+  </div>
+
+  <h3>Print CLL</h3>
+<pre><span class="kw">void</span> <span class="fn">printCLL</span>(<span class="ty">Node</span>* front) {
+    <span class="kw">for</span> (<span class="ty">Node</span> *curr = front; curr != front; curr = curr->next)
+        <span class="fn">printf</span>(<span class="st">"%d "</span>, curr->data);
+    <span class="cm">// wait — this never prints! Same bug as while loop</span>
+    <span class="cm">// Fix: use do-while or use: curr != NULL && curr != front</span>
+}</pre>
+
+  <h3>Insert at End of CLL</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div>Create new node. Set its <code>next = NULL</code>.</div></div>
+    <div class="step"><div class="step-num">2</div><div>Walk to the last node (the one where <code>current->next == head</code>).</div></div>
+    <div class="step"><div class="step-num">3</div><div>Set <code>newNode->next = head</code> (new node completes the circle).</div></div>
+    <div class="step"><div class="step-num">4</div><div>Set <code>current->next = newNode</code> (old last node points to new node).</div></div>
+  </div>
+
+  <h3>Insert at Beginning of CLL</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div>Create new node.</div></div>
+    <div class="step"><div class="step-num">2</div><div>Walk to last node (where <code>current->next == head</code>).</div></div>
+    <div class="step"><div class="step-num">3</div><div>Set <code>newNode->next = head</code>.</div></div>
+    <div class="step"><div class="step-num">4</div><div>Set <code>current->next = newNode</code> (last node now points to new node).</div></div>
+    <div class="step"><div class="step-num">5</div><div>Set <code>head = newNode</code> (update head).</div></div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-key">Key difference from SLL</div>
+    In SLL, inserting at beginning is O(1) — just update head and next.<br>
+    In CLL, inserting at beginning is O(n) — you MUST also update the last node's pointer (otherwise the circle is broken). You must walk to the end to fix it.
+  </div>
+</div>
+
+
+<!-- ═══════════════ S10: DLL ═══════════════ -->
+<div class="section" id="s10">
+  <div class="section-label">Section 10</div>
+  <h2>Doubly Linked List (DLL)</h2>
+
+  <p>Each node has THREE parts: <code>prev</code> pointer (to previous node), <code>data</code>, and <code>next</code> pointer (to next node).</p>
+
+  <div class="diagram">NULL ←── ┌────┬────┬────┐ ←──── ┌────┬────┬────┐ ←──── ┌────┬────┬────┐ ──→ NULL
+         │prev│ 3  │next│ ─────→ │prev│ 7  │next│ ─────→ │prev│ 5  │next│
+         └────┴────┴────┘        └────┴────┴────┘        └────┴────┴────┘
+           ↑
+          head</div>
+
+  <p>DLL allows O(1) traversal in BOTH directions. This is used for:</p>
+  <ul>
+    <li>Music players (previous song in O(1))</li>
+    <li>Browser history (go back and forward fast)</li>
+    <li>LRU Cache implementation</li>
+  </ul>
+
+<pre><span class="kw">struct</span> <span class="ty">node</span> {
+    <span class="kw">struct</span> <span class="ty">node</span> *prev;   <span class="cm">// points to previous node</span>
+    <span class="ty">int</span> data;
+    <span class="kw">struct</span> <span class="ty">node</span> *next;   <span class="cm">// points to next node</span>
+};</pre>
+
+  <h3>Insert at End of DLL</h3>
+<pre><span class="kw">void</span> <span class="fn">insertEndDLL</span>(<span class="kw">struct</span> <span class="ty">node</span> **head, <span class="ty">int</span> val) {
+    <span class="kw">struct</span> <span class="ty">node</span> *newNode = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">struct</span> <span class="ty">node</span>));
+    newNode->value = val;
+    newNode->next  = <span class="kw">NULL</span>;
+    newNode->prev  = <span class="kw">NULL</span>;
+
+    <span class="kw">if</span> (*head == <span class="kw">NULL</span>) { *head = newNode; <span class="kw">return</span>; }
+
+    <span class="kw">struct</span> <span class="ty">node</span> *current = *head;
+    <span class="kw">while</span> (current->next != <span class="kw">NULL</span>)
+        current = current->next;
+
+    current->next  = newNode;   <span class="cm">// old last → new node</span>
+    newNode->prev  = current;   <span class="cm">// new node ← old last</span>
+}</pre>
+
+  <h3>Delete a Node in DLL (O(1) with pointer)</h3>
+  <p>If you already have a pointer to the node, deletion is O(1) because you can find both neighbors directly via <code>prev</code> and <code>next</code>.</p>
+
+  <div class="diagram"><span class="cm">Delete middle node M:</span>
+... [A] ←→ [<span class="hl">M</span>] ←→ [B] ...
+
+M->prev->next = M->next    <span class="cm">// A now skips M and points to B</span>
+M->next->prev = M->prev    <span class="cm">// B now points back to A</span>
+free(M)                     <span class="cm">// done! O(1)</span></div>
+</div>
+
+
+<!-- ═══════════════ S11: COMPLEXITY ═══════════════ -->
+<div class="section" id="s11">
+  <div class="section-label">Section 11</div>
+  <h2>Complexity Summary</h2>
+
+  <table class="ctable">
+    <tr>
+      <th>Operation</th>
+      <th>SLL</th>
+      <th>DLL</th>
+      <th>CLL</th>
+      <th>Array</th>
+    </tr>
+    <tr>
+      <td>Access by index</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="good">O(1)</td>
+    </tr>
+    <tr>
+      <td>Insert at front</td>
+      <td class="good">O(1)</td>
+      <td class="good">O(1)</td>
+      <td class="bad">O(n)*</td>
+      <td class="bad">O(n)</td>
+    </tr>
+    <tr>
+      <td>Insert at end</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="good">O(1) amortized</td>
+    </tr>
+    <tr>
+      <td>Delete at front</td>
+      <td class="good">O(1)</td>
+      <td class="good">O(1)</td>
+      <td class="bad">O(n)*</td>
+      <td class="bad">O(n)</td>
+    </tr>
+    <tr>
+      <td>Delete given pointer</td>
+      <td class="bad">O(n)</td>
+      <td class="good">O(1)</td>
+      <td class="bad">O(n)</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>Search (unsorted)</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+      <td class="bad">O(n)</td>
+    </tr>
+    <tr>
+      <td>Reverse traversal</td>
+      <td class="bad">Not possible</td>
+      <td class="good">O(n)</td>
+      <td class="bad">Not possible</td>
+      <td class="good">O(n)</td>
+    </tr>
+  </table>
+  <p style="font-size:12px; color: var(--text-dim);">* CLL insert/delete at front requires O(n) to find the last node to update the circular link.</p>
+</div>
+
+
+<!-- ═══════════════ PRO SECTION ═══════════════ -->
+<div class="section" id="pro">
+  <div class="section-label">Section 12 — The Mental Game</div>
+  <div class="pro-section">
+    <h2>🧠 Pro Thinking — How to Become an Expert</h2>
+    <p style="color:var(--text-dim); margin-bottom:24px;">This section rewires how you think about linked list problems. Read it, internalize it, and you will crack problems you have never seen before.</p>
+
+    <!-- MENTAL MODELS -->
+    <h3>Mental Models to Internalize</h3>
+
+    <div class="mental-model">
+      <div class="mm-title">🔗 Model 1: "The Chain of Trust"</div>
+      <p>Every operation depends on the integrity of the chain. If you lose a pointer, you lose all nodes after it. <strong>Before any operation, ask: "Will I break the chain? What do I save first?"</strong></p>
+      <p>Rule: When you want to change a <code>->next</code> pointer, ALWAYS save the original value first if you will need it later. This is why we always create a <code>temp</code>.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">👁️ Model 2: "Two Eyes on the List"</div>
+      <p>Many problems need TWO pointers moving at different speeds (Slow &amp; Fast pointers). This is how you solve: detect a cycle, find the middle, find the Nth node from the end — all without knowing the length.</p>
+      <div class="diagram" style="font-size:12px;"><span class="cm">Find middle (Slow moves 1 step, Fast moves 2 steps):</span>
+Slow: [1] → [2] → [3]
+Fast: [1] →  →   [3] →  →   [5] ← Fast is NULL, Slow is middle</div>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">📐 Model 3: "Order Matters Critically"</div>
+      <p>The order in which you set pointers is everything. A wrong order breaks the chain permanently.</p>
+      <p><strong>Insert after position P:</strong> FIRST set <code>newNode->next = P->next</code>. THEN set <code>P->next = newNode</code>. If reversed, you lose all nodes after P.</p>
+      <p><strong>Delete node N:</strong> FIRST bypass it (<code>prev->next = N->next</code>). THEN <code>free(N)</code>. Never free first.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">🔄 Model 4: "Recursion = Delegate to the Rest"</div>
+      <p>For recursive problems: <strong>"Handle the head, delegate the rest."</strong><br>
+      What do I do with <code>head</code> right now? → simple logic.<br>
+      What about everything after head? → recursive call on <code>head->next</code>.<br>
+      What if list is empty? → your base case (return NULL or 0).</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">🔃 Model 5: "Reversing = Re-aiming Every Arrow"</div>
+      <p>When reversing, visualize every arrow (next pointer) flipping direction. You need 3 pointers because: you need to know where you came from (prev), where you are (current), and where you are going (next) — so you don't get lost when you flip the current arrow.</p>
+    </div>
+
+    <!-- PATTERNS -->
+    <h3>Common Problem Patterns</h3>
+
+    <table>
+      <tr>
+        <th>Problem Type</th>
+        <th>Pattern / Technique</th>
+      </tr>
+      <tr>
+        <td>Find middle node</td>
+        <td>Slow/Fast pointer (tortoise &amp; hare)</td>
+      </tr>
+      <tr>
+        <td>Detect cycle</td>
+        <td>Slow/Fast pointer — if they meet, cycle exists</td>
+      </tr>
+      <tr>
+        <td>Find Nth from end</td>
+        <td>Two pointers, N apart. Move together until first hits NULL.</td>
+      </tr>
+      <tr>
+        <td>Reverse a list</td>
+        <td>3-pointer iterative OR recursive (head->next->next = head)</td>
+      </tr>
+      <tr>
+        <td>Merge two sorted lists</td>
+        <td>Compare heads, pick smaller, recurse on rest</td>
+      </tr>
+      <tr>
+        <td>Remove duplicates</td>
+        <td>Track current; if current->next == current, skip it</td>
+      </tr>
+      <tr>
+        <td>Check palindrome</td>
+        <td>Find middle, reverse second half, compare with first half</td>
+      </tr>
+      <tr>
+        <td>Flatten nested list</td>
+        <td>Recursion: flatten sub-list, attach, continue</td>
+      </tr>
+    </table>
+
+    <!-- EDGE CASE CHECKLIST -->
+    <h3>Edge Case Checklist — Never Miss These</h3>
+    <p>Before submitting any linked list solution, verify your code handles:</p>
+
+    <div class="card">
+      <div class="card-title">Edge Cases to Always Check</div>
+      <ul style="font-size:14px;">
+        <li>✓ <strong>Empty list</strong> — <code>head == NULL</code>. What happens?</li>
+        <li>✓ <strong>Single node</strong> — <code>head->next == NULL</code>. Many algorithms break here.</li>
+        <li>✓ <strong>Two nodes</strong> — minimal case for algorithms that look two steps ahead.</li>
+        <li>✓ <strong>All same values</strong> — for delete/remove operations.</li>
+        <li>✓ <strong>Target at beginning or end</strong> — many solutions forget these edge positions.</li>
+        <li>✓ <strong>Memory leaks</strong> — always call <code>free()</code> on deleted nodes.</li>
+        <li>✓ <strong>CLL empty check</strong> — <code>head == NULL</code> needed before do-while.</li>
+      </ul>
+    </div>
+
+    <!-- HOW TO THINK ABOUT ANY PROBLEM -->
+    <h3>How to Approach Any Linked List Problem</h3>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div><strong>Draw it.</strong> Always draw the list as boxes and arrows. Draw the before and after state you want. Never code before drawing. Most bugs come from skipping this step.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div><strong>Identify what pointers you need.</strong> Do you need one pointer? Two? A prev and current? Write them down before coding.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div><strong>Decide the order of pointer changes.</strong> Write the steps in English first: "First save X, then point A to B, then update head." Order matters critically.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div><strong>Test on a 3-4 node list by hand.</strong> Trace through your code mentally with a small example. Catch bugs before running.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div><strong>Test edge cases.</strong> Run your mental trace with: empty list, 1 node, 2 nodes, target at beginning, target at end.</div>
+      </div>
+    </div>
+
+    <!-- KEY INSIGHTS -->
+    <h3>Key Insights That Separate Beginners from Experts</h3>
+
+    <div class="mental-model">
+      <div class="mm-title">💡 Insight 1: Linked lists shine at FRONT operations</div>
+      <p>Insert/delete at front is O(1) — the fastest possible. If your problem needs a queue (FIFO) or stack (LIFO), think linked list. Array-based stacks/queues require shifting or resizing.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">💡 Insight 2: The "dummy head" trick</div>
+      <p>Many problems have ugly edge cases for the first node. Create a dummy node before head: <code>struct node dummy; dummy.next = head;</code>. Now all nodes including the first are treated uniformly. Remove dummy at the end.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">💡 Insight 3: Returning the head from recursive functions</div>
+      <p>When your function modifies the list recursively, always return the (possibly new) head. The pattern is: <code>head->next = recursive_call(head->next); return head;</code>. This chains the modifications correctly without needing a double pointer.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">💡 Insight 4: CLL and DLL are just SLL with extra pointers</div>
+      <p>Don't think of them as completely different. CLL = SLL where last->next = head instead of NULL. DLL = SLL where each node also has a prev pointer. Every new pointer means extra work to keep it consistent — but also new capabilities.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-title">💡 Insight 5: When in doubt, count your pointer operations</div>
+      <p>If you change K pointers in an insert, check all K are still valid after each change. If any pointer assignment could leave a node unreachable, you have a bug. Think of it like renaming a street — you must update ALL signs that reference it.</p>
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <h3>Quick Reference Patterns</h3>
+<pre style="font-size:12px;"><span class="cm">// Empty check:</span>
+<span class="kw">if</span> (head == <span class="kw">NULL</span>) ...
+
+<span class="cm">// Single node check:</span>
+<span class="kw">if</span> (head->next == <span class="kw">NULL</span>) ...
+
+<span class="cm">// Walk to last node (SLL):</span>
+<span class="kw">while</span> (current->next != <span class="kw">NULL</span>) current = current->next;
+
+<span class="cm">// Walk to last node (CLL):</span>
+<span class="kw">while</span> (current->next != head) current = current->next;
+
+<span class="cm">// Walk to 2nd-to-last (for delete last):</span>
+<span class="kw">while</span> (current->next->next != <span class="kw">NULL</span>) current = current->next;
+
+<span class="cm">// Slow/Fast pointer setup:</span>
+<span class="ty">Node</span> *slow = head, *fast = head;
+<span class="kw">while</span> (fast && fast->next) {
+    slow = slow->next;
+    fast = fast->next->next;
+} <span class="cm">// slow is now at middle</span>
+
+<span class="cm">// Standard recursive template:</span>
+<span class="ty">ReturnType</span> <span class="fn">func</span>(<span class="ty">Node</span> *head) {
+    <span class="kw">if</span> (head == <span class="kw">NULL</span>) <span class="kw">return</span> BASE_CASE;
+    <span class="cm">// do something with head</span>
+    <span class="fn">func</span>(head->next);
+}</pre>
+
+    <div class="callout callout-tip" style="margin-top:20px;">
+      <div class="callout-key">Final Advice</div>
+      The best way to become a pro is to implement all operations from scratch, on paper, without looking at notes. Then verify. The act of making mistakes and fixing them builds the intuition that no amount of reading can give you. Every pointer bug you fix is a lesson you will never forget.
+    </div>
+
+  </div><!-- end pro-section -->
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById('mode-toggle');
+    function apply(mode) {
+      if (mode === 'light') {
+        document.body.classList.add('light');
+        btn.textContent = '☾ Dark';
+      } else {
+        document.body.classList.remove('light');
+        btn.textContent = '☀ Light';
+      }
+    }
+    apply(localStorage.getItem('theme') || 'dark');
+    btn.addEventListener('click', function () {
+      var next = document.body.classList.contains('light') ? 'dark' : 'light';
+      localStorage.setItem('theme', next);
+      apply(next);
+    });
+  })();
+</script>
+</body>
+</html>

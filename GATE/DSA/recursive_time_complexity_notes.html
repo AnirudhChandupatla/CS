@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Complexity of Recursive Programs</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Fraunces:ital,wght@0,300;0,600;0,900;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1e28;
+    --card: #1e2332;
+    --border: #2a3050;
+    --accent1: #f5a623; /* orange - main */
+    --accent2: #7eb8f7; /* blue */
+    --accent3: #a8edaa; /* green */
+    --accent4: #f07a7a; /* red */
+    --accent5: #c9a6f5; /* purple */
+    --text: #e8eaf0;
+    --text2: #9ba3bf;
+    --text3: #5e6680;
+    --code-bg: #111420;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  /* ───── LAYOUT ───── */
+  .page-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  /* ───── HEADER ───── */
+  .site-header {
+    padding: 60px 0 40px;
+    text-align: center;
+    position: relative;
+  }
+  .site-header::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent1), transparent);
+    margin-top: 40px;
+  }
+  .site-header .tag {
+    display: inline-block;
+    background: rgba(245,166,35,0.12);
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--accent1);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 3px;
+    margin-bottom: 18px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .site-header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    line-height: 1.1;
+    color: #fff;
+  }
+  .site-header h1 span { color: var(--accent1); }
+  .site-header .subtitle {
+    color: var(--text2);
+    margin-top: 14px;
+    font-size: 15px;
+  }
+
+  /* ───── NAV PILLS ───── */
+  .topic-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 30px 0 10px;
+  }
+  .topic-nav a {
+    text-decoration: none;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    transition: all .2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .topic-nav a:hover {
+    border-color: var(--accent1);
+    color: var(--accent1);
+    background: rgba(245,166,35,0.07);
+  }
+
+  /* ───── SECTION ───── */
+  .section {
+    margin-top: 64px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent1);
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.25);
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 600;
+    color: #fff;
+  }
+  .section-header h2 .dim { color: var(--text2); font-weight: 300; font-style: italic; }
+
+  /* ───── CARDS ───── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+  .card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--accent2);
+    margin-bottom: 14px;
+  }
+  .card h4 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  p { margin-bottom: 12px; color: var(--text); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--accent1); font-weight: 500; }
+  em { color: var(--accent3); font-style: normal; }
+
+  /* ───── HIGHLIGHT BOX ───── */
+  .highlight {
+    border-left: 3px solid var(--accent1);
+    background: rgba(245,166,35,0.06);
+    padding: 16px 20px;
+    border-radius: 0 10px 10px 0;
+    margin: 16px 0;
+  }
+  .highlight.blue { border-color: var(--accent2); background: rgba(126,184,247,0.06); }
+  .highlight.green { border-color: var(--accent3); background: rgba(168,237,170,0.06); }
+  .highlight.red { border-color: var(--accent4); background: rgba(240,122,122,0.06); }
+  .highlight.purple { border-color: var(--accent5); background: rgba(201,166,245,0.06); }
+
+  /* ───── CODE BLOCKS ───── */
+  pre, code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+  code {
+    background: rgba(255,255,255,0.07);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent3);
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .kw { color: var(--accent2); }
+  .cm { color: var(--text3); font-style: italic; }
+  .num { color: var(--accent1); }
+  .fn { color: var(--accent3); }
+  .op { color: var(--accent4); }
+  .str { color: #f0c67a; }
+
+  /* ───── MATH ───── */
+  .math-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 2;
+  }
+  .math-block .eq { color: var(--accent1); }
+  .math-block .step { color: var(--text2); font-size: 12px; margin-left: 8px; }
+  .math-block .result { color: var(--accent3); font-weight: 600; }
+  .math-block .comment { color: var(--text3); font-style: italic; }
+  .math-inline { color: var(--accent1); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+  /* ───── EXAMPLE BLOCK ───── */
+  .example {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .example-header {
+    background: rgba(126,184,247,0.08);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .example-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .example-title {
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .example-body { padding: 20px 22px; }
+
+  /* ───── STEP LIST ───── */
+  .steps { list-style: none; padding: 0; }
+  .steps li {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(42,48,80,0.5);
+    font-size: 15px;
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    min-width: 26px; height: 26px;
+    background: rgba(245,166,35,0.15);
+    color: var(--accent1);
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content { flex: 1; }
+  .step-why {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  /* ───── TREE VISUAL ───── */
+  .tree-svg-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    padding: 8px 0;
+  }
+
+  /* ───── TABLE ───── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .data-table th {
+    background: rgba(245,166,35,0.12);
+    color: var(--accent1);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(42,48,80,0.4);
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--accent2); font-size: 13px; }
+  .data-table .yes { color: var(--accent3); }
+  .data-table .no { color: var(--accent4); }
+
+  /* ───── COMPLEXITY BADGE ───── */
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .badge.o { background: rgba(168,237,170,0.12); color: var(--accent3); border: 1px solid rgba(168,237,170,0.2); }
+  .badge.theta { background: rgba(126,184,247,0.12); color: var(--accent2); border: 1px solid rgba(126,184,247,0.2); }
+  .badge.omega { background: rgba(245,166,35,0.12); color: var(--accent1); border: 1px solid rgba(245,166,35,0.2); }
+
+  /* ───── MASTER THEOREM CASES ───── */
+  .mt-cases {
+    display: grid;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .mt-case {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .mt-case-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--accent1);
+    border-radius: 6px;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .mt-case:nth-child(2) .mt-case-num { background: var(--accent2); color: var(--bg); }
+  .mt-case:nth-child(3) .mt-case-num { background: var(--accent3); color: var(--bg); }
+  .mt-case-content { flex: 1; }
+  .mt-case-condition { color: var(--text2); font-size: 14px; margin-bottom: 6px; }
+  .mt-case-condition code { font-size: 13px; }
+  .mt-case-result { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }
+  .mt-case:nth-child(1) .mt-case-result { color: var(--accent1); }
+  .mt-case:nth-child(2) .mt-case-result { color: var(--accent2); }
+  .mt-case:nth-child(3) .mt-case-result { color: var(--accent3); }
+  .mt-case-why { font-size: 12px; color: var(--text3); margin-top: 5px; font-style: italic; }
+
+  /* ───── QUICK REVISION ───── */
+  #quick-notes {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(8,10,16,0.97);
+    overflow-y: auto;
+    padding: 40px 24px;
+    animation: fadeIn .2s ease;
+  }
+  #quick-notes.open { display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .qn-wrap { max-width: 800px; margin: 0 auto; }
+  .qn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .qn-header h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent1);
+  }
+  .qn-close {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    transition: all .2s;
+  }
+  .qn-close:hover { border-color: var(--accent4); color: var(--accent4); }
+  .qn-section { margin-bottom: 28px; }
+  .qn-section h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .qn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .qn-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .qn-item .qn-key {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent2);
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  .qn-item .qn-val {
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .qn-rule {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .qn-rule .dot {
+    color: var(--accent1);
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ───── FLOAT BUTTON ───── */
+  .fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--accent1);
+    color: var(--bg);
+    border: none;
+    border-radius: 50px;
+    padding: 14px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(245,166,35,0.4);
+    transition: all .2s;
+    z-index: 900;
+    letter-spacing: 0.5px;
+  }
+  .fab:hover { transform: translateY(-2px); box-shadow: 0 6px 32px rgba(245,166,35,0.5); }
+
+  /* ───── COMPARISON TABLE ───── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .compare-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+  }
+  .compare-card .cc-title {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .compare-card:nth-child(1) .cc-title { color: var(--accent1); }
+  .compare-card:nth-child(2) .cc-title { color: var(--accent2); }
+  .compare-card:nth-child(3) .cc-title { color: var(--accent3); }
+  .compare-card .cc-list {
+    list-style: none;
+    font-size: 13px;
+    color: var(--text2);
+    text-align: left;
+    line-height: 1.9;
+  }
+  .compare-card .cc-list li::before { content: "→ "; color: var(--text3); }
+  @media (max-width: 600px) {
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ───── WARNING / TIP ───── */
+  .tip { background: rgba(168,237,170,0.06); border: 1px solid rgba(168,237,170,0.2); border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 14px; }
+  .tip::before { content: "💡 Tip: "; color: var(--accent3); font-weight: 600; }
+  .warn { background: rgba(240,122,122,0.06); border: 1px solid rgba(240,122,122,0.2); border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 14px; }
+  .warn::before { content: "⚠️ Watch out: "; color: var(--accent4); font-weight: 600; }
+
+  /* ───── VISUAL: RECURSION TREE ───── */
+  .rtree-wrap { overflow-x: auto; margin: 16px 0; }
+
+  /* ───── DIVIDER ───── */
+  .divider { height: 1px; background: var(--border); margin: 48px 0; opacity: 0.4; }
+
+  /* ───── OVERVIEW MAP ───── */
+  .overview-map {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 30px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .overview-map svg { max-width: 100%; height: auto; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ══════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════ -->
+  <header class="site-header">
+    <div class="tag">GO Classes · Sachin Mittal</div>
+    <h1>Time Complexity of<br><span>Recursive Programs</span></h1>
+    <p class="subtitle">Deep study notes · Iteration Method · Recursion Tree · Master Theorem</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       TOPIC NAV
+  ══════════════════════════════════════════════ -->
+  <nav class="topic-nav">
+    <a href="#s0">10K Overview</a>
+    <a href="#s1">Why &amp; What</a>
+    <a href="#s2">Recurrence Relations</a>
+    <a href="#s3">Iteration Method</a>
+    <a href="#s4">Recursion Tree</a>
+    <a href="#s5">Master Theorem</a>
+    <a href="#s6">Examples Bank</a>
+    <a href="#s7">Limitations</a>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 0 — 10K OVERVIEW MAP
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s0">
+    <div class="section-header">
+      <div class="section-num">00</div>
+      <h2>10,000-Feet <span class="dim">Overview</span></h2>
+    </div>
+
+    <div class="overview-map">
+      <svg viewBox="0 0 820 340" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+        <!-- center node -->
+        <ellipse cx="410" cy="170" rx="90" ry="42" fill="rgba(245,166,35,0.15)" stroke="#f5a623" stroke-width="1.5"/>
+        <text x="410" y="165" text-anchor="middle" fill="#f5a623" font-size="12" font-weight="700">T(n) = ?</text>
+        <text x="410" y="182" text-anchor="middle" fill="#9ba3bf" font-size="10">Find Time Taken</text>
+
+        <!-- step 1: write recurrence -->
+        <rect x="30" y="60" width="160" height="52" rx="10" fill="rgba(126,184,247,0.1)" stroke="#7eb8f7" stroke-width="1.2"/>
+        <text x="110" y="81" text-anchor="middle" fill="#7eb8f7" font-size="11" font-weight="600">1. Write Recurrence</text>
+        <text x="110" y="97" text-anchor="middle" fill="#9ba3bf" font-size="10">Read code → T(n)=T(n/2)+1</text>
+        <line x1="190" y1="86" x2="320" y2="155" stroke="#7eb8f7" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- step 2: solve -->
+        <rect x="30" y="160" width="160" height="52" rx="10" fill="rgba(245,166,35,0.08)" stroke="#f5a623" stroke-width="1.2"/>
+        <text x="110" y="181" text-anchor="middle" fill="#f5a623" font-size="11" font-weight="600">2. Solve It</text>
+        <text x="110" y="197" text-anchor="middle" fill="#9ba3bf" font-size="10">3 methods below</text>
+        <line x1="190" y1="186" x2="320" y2="175" stroke="#f5a623" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- step 3: answer -->
+        <rect x="30" y="260" width="160" height="52" rx="10" fill="rgba(168,237,170,0.08)" stroke="#a8edaa" stroke-width="1.2"/>
+        <text x="110" y="281" text-anchor="middle" fill="#a8edaa" font-size="11" font-weight="600">3. Answer</text>
+        <text x="110" y="297" text-anchor="middle" fill="#9ba3bf" font-size="10">Θ(n log n) etc.</text>
+        <line x1="190" y1="286" x2="320" y2="195" stroke="#a8edaa" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- method 1 -->
+        <rect x="620" y="40" width="170" height="62" rx="10" fill="rgba(201,166,245,0.1)" stroke="#c9a6f5" stroke-width="1.2"/>
+        <text x="705" y="65" text-anchor="middle" fill="#c9a6f5" font-size="11" font-weight="600">Iteration Method</text>
+        <text x="705" y="82" text-anchor="middle" fill="#9ba3bf" font-size="10">Expand → pattern → stop</text>
+        <line x1="500" y1="155" x2="620" y2="72" stroke="#c9a6f5" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- method 2 -->
+        <rect x="620" y="145" width="170" height="62" rx="10" fill="rgba(240,122,122,0.1)" stroke="#f07a7a" stroke-width="1.2"/>
+        <text x="705" y="170" text-anchor="middle" fill="#f07a7a" font-size="11" font-weight="600">Recursion Tree</text>
+        <text x="705" y="187" text-anchor="middle" fill="#9ba3bf" font-size="10">Draw tree → sum levels</text>
+        <line x1="500" y1="170" x2="620" y2="176" stroke="#f07a7a" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- method 3 -->
+        <rect x="620" y="250" width="170" height="62" rx="10" fill="rgba(126,184,247,0.1)" stroke="#7eb8f7" stroke-width="1.2"/>
+        <text x="705" y="275" text-anchor="middle" fill="#7eb8f7" font-size="11" font-weight="600">Master Theorem</text>
+        <text x="705" y="292" text-anchor="middle" fill="#9ba3bf" font-size="10">Quick formula (3 cases)</text>
+        <line x1="500" y1="185" x2="620" y2="270" stroke="#7eb8f7" stroke-width="1" stroke-dasharray="4"/>
+      </svg>
+    </div>
+
+    <div class="card">
+      <h3>How topics connect &amp; flow into each other</h3>
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-content">
+            You have a <strong>recursive program</strong>. You want to know: is it fast or slow for big inputs?
+            <div class="step-why">Problem: manual timing won't work — depends on hardware.</div>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-content">
+            Read the code, express it as a <strong>recurrence relation</strong> — a math equation that describes how T(n) depends on smaller inputs.
+            <div class="step-why">Key insight (Knuth 1970s): use the scientific method, not a clock.</div>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Solve the recurrence</strong> using one of 3 methods — choose based on what's easiest for the given form.
+            <div class="step-why">All 3 methods give the same answer; they just approach it differently.</div>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-content">
+            Get a <strong>closed-form answer</strong> like Θ(n log n) — a single simple formula without recursion.
+            <div class="step-why">Now you can compare algorithms and pick the best one.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 1 — WHY & WHAT
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2>Why Study <span class="dim">Time Complexity?</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>The Problem</h3>
+      <p>When a program runs, two questions arise:</p>
+      <div class="highlight blue">"Why is my program so <strong>slow</strong>?" → <strong>Time Complexity</strong></div>
+      <div class="highlight">"Why does it run out of <strong>memory</strong>?" → <em>Space Complexity (very easy, not focus here)</em></div>
+      <p>We cannot just use a stopwatch — the time depends on your specific computer, current load, etc. We need a <strong>mathematical method</strong> that works for any machine.</p>
+      <p>The <strong>key insight</strong> (Knuth, 1970s): Use the <em>scientific method</em> — model the program mathematically and analyze the model.</p>
+    </div>
+
+    <div class="card">
+      <h3>Why Recursive Programs Are Tricky</h3>
+      <p>For a simple loop like <code>for(i=0; i&lt;n; i++)</code>, counting steps is straightforward. But recursive programs call themselves with a <em>smaller input</em>, so the time T(n) depends on T(smaller n). That self-referential nature needs a special math tool.</p>
+      <div class="highlight red">A <strong>recurrence relation</strong> is that special tool — an equation where T(n) is defined in terms of T(smaller).</div>
+    </div>
+
+    <div class="card">
+      <h3>Space vs Time</h3>
+      <table class="data-table">
+        <tr><th>Aspect</th><th>Space Complexity</th><th>Time Complexity</th></tr>
+        <tr><td>How easy?</td><td class="yes">Very easy</td><td>Medium — needs methods</td></tr>
+        <tr><td>How to find?</td><td>Count what you store</td><td>Recurrence → solve</td></tr>
+        <tr><td>Example</td><td>2 arrays = O(n)</td><td>T(n) = T(n/2)+1 → O(log n)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 2 — RECURRENCE RELATIONS
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2>Writing <span class="dim">Recurrence Relations</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>What is a Recurrence Relation?</h3>
+      <p>It is a <strong>math equation</strong> that says: "the time to solve problem of size n = time to solve smaller subproblems + extra work done now."</p>
+      <div class="math-block">
+<span class="eq">T(n) = T(n-1) + 1</span>   <span class="comment">← call myself with n-1, then do 1 unit of work</span>
+<span class="eq">T(n) = T(n/2) + 1</span>   <span class="comment">← call myself with n/2, then do 1 unit of work</span>
+<span class="eq">T(n) = 2T(n/2) + n</span>  <span class="comment">← call myself TWICE with n/2, then do n work (Merge Sort!)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step-by-Step: How to Write a Recurrence from Code</h3>
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-content">
+            Look at the recursive call(s). What input is passed? → This tells you <strong>T(what)</strong>.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-content">
+            Count how many recursive calls are made. → This is the <strong>multiplier</strong> in front.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-content">
+            Count work done <em>outside</em> the recursion (comparisons, loops, assignments). → This is the <strong>extra term</strong>.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-content">
+            Write the base case: T(1) = 1 or T(0) = 1 — when recursion stops.
+          </div>
+        </li>
+      </ul>
+
+      <h4>Example A — Simple Linear Recursion</h4>
+      <pre><code><span class="fn">fun</span>(<span class="kw">n</span>) {
+  <span class="kw">if</span> (n &lt;= 1) <span class="kw">return</span> <span class="num">1</span>;      <span class="cm">// base case: T(1) = 1</span>
+  <span class="kw">else return</span> <span class="fn">fun</span>(n/2);       <span class="cm">// 1 call with n/2, no extra work</span>
+}</code></pre>
+      <div class="math-block">
+<span class="eq">T(n) = T(n/2) + 1</span>,  T(1) = 1
+      </div>
+
+      <h4>Example B — Accumulator Recursion</h4>
+      <pre><code><span class="fn">A</span>(<span class="kw">n</span>) {
+  <span class="kw">if</span> (n &lt;= 1) <span class="kw">return</span> <span class="num">1</span>;
+  <span class="kw">else return</span> A(n-1) + n;     <span class="cm">// 1 call with n-1, plus 1 unit (the +n)</span>
+}</code></pre>
+      <div class="math-block">
+<span class="eq">T(n) = T(n-1) + 1</span>,  T(1) = 1
+<span class="comment">// Note: the "+n" inside A(n-1)+n is just 1 operation, not n operations</span>
+      </div>
+
+      <h4>Example C — Two Recursive Calls</h4>
+      <pre><code><span class="fn">fun</span>(<span class="kw">n</span>) {
+  <span class="fn">fun</span>(n/2);          <span class="cm">// call 1</span>
+  <span class="fn">fun</span>(n/2);          <span class="cm">// call 2  → 2 calls, each with n/2</span>
+  <span class="cm">// no extra loop</span>   <span class="cm">// extra work = 1</span>
+}</code></pre>
+      <div class="math-block">
+<span class="eq">T(n) = 2T(n/2) + 1</span>
+      </div>
+
+      <div class="tip">The "+n" in A(n-1)+n is just ONE arithmetic operation. Don't confuse the mathematical value with the count of operations.</div>
+    </div>
+
+    <div class="card">
+      <h3>The Objective</h3>
+      <p>Given a recurrence like <span class="math-inline">T(n) = T(n/2) + 1</span>, find a <strong>closed-form expression</strong> (no T on the right side). That closed form tells us exactly how the algorithm scales with input size n.</p>
+      <div class="highlight blue">We are doing <em>approximation</em>, not exact discrete math. So n·log(n) + n ≈ n·log(n) (ignore smaller terms).</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 3 — ITERATION METHOD
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2>Iteration Method <span class="dim">(Repeated Substitution)</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>Purpose &amp; Big Idea</h3>
+      <p><strong>Goal:</strong> Turn a recurrence into a simple formula by substituting the same recurrence into itself, over and over, until a pattern appears.</p>
+      <p><strong>The magic idea:</strong> Keep expanding T(smaller) using the same rule, and you'll see a pattern after 2–3 steps. Generalize that pattern to the k-th step, then find k by setting the base case.</p>
+    </div>
+
+    <div class="card">
+      <h3>How to Do It — 4 Steps</h3>
+      <ul class="steps">
+        <li><div class="step-num">1</div><div class="step-content">Expand T(n) once using the given rule. <div class="step-why">Substitute the recurrence into itself one time.</div></div></li>
+        <li><div class="step-num">2</div><div class="step-content">Expand again (expand the inner T). <div class="step-why">Now you have T(n-2) or T(n/4) etc. — one more level.</div></div></li>
+        <li><div class="step-num">3</div><div class="step-content">Observe the pattern after 2–3 steps → write it for general step k. <div class="step-why">Don't add terms — observe the series!</div></div></li>
+        <li><div class="step-num">4</div><div class="step-content">Find k by setting the argument equal to the base case value (1 or 0). <div class="step-why">This tells you when the recursion stops.</div></div></li>
+      </ul>
+    </div>
+
+    <!-- ── EXAMPLE 1 ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 1</span>
+        <span class="example-title">Easy — T(n) = T(n−1) + 1, T(1) = 1</span>
+      </div>
+      <div class="example-body">
+        <p><strong>This code:</strong> a function that calls itself with n-1 and does 1 unit of work each time.</p>
+        <div class="math-block">
+<span class="comment">Step 1: Write the recurrence</span>
+T(n) = T(n-1) + 1          <span class="comment">← original</span>
+
+<span class="comment">Step 2: Expand T(n-1) using the same rule: T(n-1) = T(n-2)+1</span>
+T(n) = [T(n-2) + 1] + 1 = T(n-2) + 2
+
+<span class="comment">Step 3: Expand T(n-2) → T(n-3)+1</span>
+T(n) = T(n-3) + 3
+
+<span class="comment">Step 4: See the pattern! After k expansions:</span>
+T(n) = T(n-k) + k
+
+<span class="comment">Step 5: Stop when argument = 1 → n-k = 1 → k = n-1</span>
+T(n) = T(1) + (n-1) = 1 + n - 1 = <span class="result">n = Θ(n)</span>
+        </div>
+        <div class="tip">The argument of T decreases by 1 each step → k = n−1 steps total → linear time.</div>
+      </div>
+    </div>
+
+    <!-- ── EXAMPLE 2 ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 2</span>
+        <span class="example-title">Medium — T(n) = T(n−1) + n, T(1) = 1</span>
+      </div>
+      <div class="example-body">
+        <p>Like Example 1, but the extra work is n (not 1). This is like adding 1+2+3+...+n.</p>
+        <div class="math-block">
+T(n) = T(n-1) + n
+     = T(n-2) + (n-1) + n          <span class="comment">← expand T(n-1)</span>
+     = T(n-3) + (n-2) + (n-1) + n  <span class="comment">← expand T(n-2)</span>
+     ...
+     = T(n-k) + (n-k+1) + ... + n
+
+<span class="comment">Stop when n-k = 1 → k = n-1:</span>
+T(n) = T(1) + 2 + 3 + ... + n
+     = 1 + (2+3+...+n)
+     = n(n+1)/2 = <span class="result">Θ(n²)</span>
+        </div>
+        <div class="highlight green">Key observation: the extra terms form the arithmetic series 1+2+3+...+n = n(n+1)/2.</div>
+      </div>
+    </div>
+
+    <!-- ── EXAMPLE 3 ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 3</span>
+        <span class="example-title">Medium — T(n) = T(n/2) + n, T(1) = 1</span>
+      </div>
+      <div class="example-body">
+        <p>The argument halves each step. Extra work is n (a decreasing geometric series).</p>
+        <div class="math-block">
+T(n) = T(n/2) + n
+     = T(n/4) + n/2 + n         <span class="comment">← expand T(n/2) = T(n/4) + n/2</span>
+     = T(n/8) + n/4 + n/2 + n
+     ...
+     = T(n/2ᵏ) + n[1 + 1/2 + 1/4 + ... + 1/2ᵏ⁻¹]
+
+<span class="comment">Stop when n/2ᵏ = 1 → 2ᵏ = n → k = log₂n</span>
+Sum = n · [geometric series with r=1/2] = n · 2(1 - 1/n) ≈ 2n - 1 = <span class="result">O(n)</span>
+
+<span class="comment">The series 1 + 1/2 + 1/4 + ... → 2 (constant), so T(n) = O(n)</span>
+        </div>
+        <div class="highlight red">Magic: even though we call T(n/2), the decreasing geometric series sums to a constant → total is just O(n)!</div>
+      </div>
+    </div>
+
+    <!-- ── EXAMPLE 4 ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 4</span>
+        <span class="example-title">Hard — T(n) = 2T(n/2) + n·log n</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+T(n) = 2T(n/2) + n·log n
+     = 2[2T(n/4) + (n/2)·log(n/2)] + n·log n
+     = 4T(n/4) + 2·(n/2)·log(n/2) + n·log n
+     = 4T(n/4) + n·log(n/2) + n·log n
+
+<span class="comment">After k steps: T(n) = 2ᵏ·T(n/2ᵏ) + n[log(n/2ᵏ⁻¹)+...+log n]</span>
+<span class="comment">When k=log n: n·(something involving log²n)</span>
+Result: <span class="result">Θ(n log² n)</span>
+        </div>
+        <div class="warn">This one is tricky. The iteration method can get messy. Recursion Tree is cleaner here.</div>
+      </div>
+    </div>
+
+    <!-- ── EXAMPLE 5 (Merge Sort) ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 5 — Classic</span>
+        <span class="example-title">T(n) = 2T(n/2) + n (Merge Sort)</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+T(n) = 2T(n/2) + n
+     = 2[2T(n/4) + n/2] + n  = 4T(n/4) + n + n
+     = 4[2T(n/8) + n/4] + n + n = 8T(n/8) + n + n + n
+     ...
+     = 2ⁱ·T(n/2ⁱ) + i·n
+
+<span class="comment">Stop when n/2ⁱ = 1 → i = log n:</span>
+T(n) = n·T(1) + n·log n = n + n·log n = <span class="result">Θ(n log n)</span>
+        </div>
+        <div class="highlight green">Each level contributes exactly n work. There are log n levels. Total = n log n.</div>
+      </div>
+    </div>
+
+    <!-- ── SQRT EXAMPLE ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 6 — Tricky</span>
+        <span class="example-title">T(n) = √n · T(√n) + n</span>
+      </div>
+      <div class="example-body">
+        <p>The argument is √n and there are √n calls. The trick: <strong>substitute n = 2<sup>m</sup></strong> to simplify.</p>
+        <div class="math-block">
+<span class="comment">Let n = 2ᵐ, so √n = 2^(m/2), and define S(m) = T(2ᵐ)/2ᵐ</span>
+<span class="comment">After substitution: S(m) = S(m/2) + 1 → Θ(log m)</span>
+<span class="comment">Back-substitute: m = log n, so S(log n) = Θ(log log n)</span>
+T(n) = n · S(m) ≈ n · Θ(log log n) = <span class="result">Θ(n log log n)</span>
+        </div>
+        <div class="tip">When T(n) involves √n as both multiplier and argument, substitute n = 2^m to convert it into a simpler recurrence.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Useful Series for Summation</h3>
+      <div class="math-block">
+Arithmetic:  1 + 2 + 3 + ... + n = n(n+1)/2 = Θ(n²)
+Geometric (r &lt; 1): 1 + r + r² + ... → 1/(1-r) = constant = Θ(1)
+Geometric (r = 1): each term same → Θ(n) terms
+Geometric (r &gt; 1): last term dominates → Θ(rⁿ)
+
+Shortcut rule for 1 + c + c² + ... + cⁿ:
+  if c &lt; 1 → Θ(1)    ← first term dominates
+  if c = 1 → Θ(n)    ← all terms equal
+  if c &gt; 1 → Θ(cⁿ)   ← last term dominates
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 4 — RECURSION TREE
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <h2>Recursion Tree <span class="dim">Method</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>Purpose &amp; Big Idea</h3>
+      <p>Instead of algebra, <strong>draw a tree</strong>. Each node is a subproblem. The cost of each node is the work done at that level (excluding recursive calls). Sum all node costs = T(n).</p>
+      <p>This method is <em>visual</em> and great for getting bounds (lower and upper), especially when branches have unequal sizes.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step-by-Step Process</h3>
+      <ul class="steps">
+        <li><div class="step-num">1</div><div class="step-content">Draw the root node with cost = the non-recursive part of T(n). Example: T(n) = T(n/5) + T(4n/5) + n → root cost is n.<div class="step-why">The root is the "current" call — it does n work before passing to children.</div></div></li>
+        <li><div class="step-num">2</div><div class="step-content">Draw children: one child for each recursive call. Label each child with the <em>argument</em> it receives (n/5 and 4n/5).<div class="step-why">Children represent the recursive calls.</div></div></li>
+        <li><div class="step-num">3</div><div class="step-content">At each child node, write its cost = (non-recursive part of T at that smaller input).<div class="step-why">Each level's costs come from substituting the argument into f(n).</div></div></li>
+        <li><div class="step-num">4</div><div class="step-content">Repeat until leaves. Leaves have cost T(1) = 1.<div class="step-why">Base case is where recursion stops.</div></div></li>
+        <li><div class="step-num">5</div><div class="step-content">Sum all costs row by row (level by level). Then sum across levels.<div class="step-why">Total cost = sum of all work done at all levels.</div></div></li>
+      </ul>
+    </div>
+
+    <!-- ── EXAMPLE: T(n) = T(n/5) + T(4n/5) + n ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 7 — Unequal Branches</span>
+        <span class="example-title">T(n) = T(n/5) + T(4n/5) + n</span>
+      </div>
+      <div class="example-body">
+        <p>Two branches of different sizes: one shrinks fast (n/5), one shrinks slow (4n/5). This gives a <em>different depth</em> on left vs right.</p>
+
+        <div class="rtree-wrap">
+          <svg viewBox="0 0 720 350" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="12">
+            <!-- level 0 -->
+            <circle cx="360" cy="30" r="20" fill="rgba(245,166,35,0.2)" stroke="#f5a623" stroke-width="1.5"/>
+            <text x="360" y="34" text-anchor="middle" fill="#f5a623" font-size="11">n</text>
+            <text x="560" y="34" text-anchor="middle" fill="#9ba3bf" font-size="11">cost = n</text>
+
+            <!-- edges L1 -->
+            <line x1="345" y1="48" x2="200" y2="95" stroke="#5e6680" stroke-width="1"/>
+            <line x1="375" y1="48" x2="520" y2="95" stroke="#5e6680" stroke-width="1"/>
+
+            <!-- level 1 -->
+            <circle cx="200" cy="110" r="22" fill="rgba(126,184,247,0.12)" stroke="#7eb8f7" stroke-width="1.2"/>
+            <text x="200" y="107" text-anchor="middle" fill="#7eb8f7" font-size="10">n/5</text>
+            <circle cx="520" cy="110" r="22" fill="rgba(240,122,122,0.12)" stroke="#f07a7a" stroke-width="1.2"/>
+            <text x="520" y="107" text-anchor="middle" fill="#f07a7a" font-size="10">4n/5</text>
+            <text x="660" y="115" text-anchor="middle" fill="#9ba3bf" font-size="11">cost = n/5 + 4n/5 = n</text>
+
+            <!-- edges L2 left-->
+            <line x1="183" y1="128" x2="110" y2="178" stroke="#5e6680" stroke-width="1"/>
+            <line x1="217" y1="128" x2="290" y2="178" stroke="#5e6680" stroke-width="1"/>
+            <!-- edges L2 right-->
+            <line x1="503" y1="128" x2="430" y2="178" stroke="#5e6680" stroke-width="1"/>
+            <line x1="537" y1="128" x2="610" y2="178" stroke="#5e6680" stroke-width="1"/>
+
+            <!-- level 2 -->
+            <circle cx="110" cy="193" r="19" fill="rgba(126,184,247,0.08)" stroke="#7eb8f7" stroke-width="1"/>
+            <text x="110" y="197" text-anchor="middle" fill="#7eb8f7" font-size="9">n/25</text>
+            <circle cx="290" cy="193" r="19" fill="rgba(201,166,245,0.08)" stroke="#c9a6f5" stroke-width="1"/>
+            <text x="290" y="197" text-anchor="middle" fill="#c9a6f5" font-size="9">4n/25</text>
+            <circle cx="430" cy="193" r="19" fill="rgba(201,166,245,0.08)" stroke="#c9a6f5" stroke-width="1"/>
+            <text x="430" y="197" text-anchor="middle" fill="#c9a6f5" font-size="9">4n/25</text>
+            <circle cx="610" cy="193" r="19" fill="rgba(240,122,122,0.08)" stroke="#f07a7a" stroke-width="1"/>
+            <text x="610" y="197" text-anchor="middle" fill="#f07a7a" font-size="9">16n/25</text>
+            <text x="660" y="197" text-anchor="middle" fill="#9ba3bf" font-size="11">cost ≈ n</text>
+
+            <!-- dots for more levels -->
+            <text x="110" y="235" text-anchor="middle" fill="#5e6680" font-size="16">⋮</text>
+            <text x="360" y="235" text-anchor="middle" fill="#5e6680" font-size="16">⋮</text>
+            <text x="610" y="235" text-anchor="middle" fill="#5e6680" font-size="16">⋮</text>
+
+            <!-- depth labels -->
+            <text x="20" y="34" fill="#9ba3bf" font-size="10">lvl 0</text>
+            <text x="20" y="115" fill="#9ba3bf" font-size="10">lvl 1</text>
+            <text x="20" y="197" fill="#9ba3bf" font-size="10">lvl 2</text>
+
+            <!-- annotations -->
+            <text x="50" y="290" fill="#7eb8f7" font-size="10">Shortest path (left): log₅n levels</text>
+            <text x="50" y="308" fill="#f07a7a" font-size="10">Longest path (right): log₅/₄ n levels</text>
+            <text x="50" y="326" fill="#a8edaa" font-size="10">Each level sums to ~n → T(n) = Θ(n log n)</text>
+          </svg>
+        </div>
+
+        <div class="math-block">
+<span class="comment">Level 0: n</span>
+<span class="comment">Level 1: n/5 + 4n/5 = n</span>
+<span class="comment">Level 2: (n/5)² + 2·(n/5)(4n/5) + (4n/5)² = n</span>
+<span class="comment">→ Every level sums to exactly n!</span>
+
+Lower bound (shortest branch = log₅ n levels):   T(n) ≥ n·log₅ n   = Ω(n·log n)
+Upper bound (longest branch = log₅/₄ n levels):  T(n) ≤ n·log_{5/4} n = O(n·log n)
+
+Since lower = upper (both are n·logn with different constants):
+<span class="result">T(n) = Θ(n log n)</span>
+        </div>
+        <div class="tip">When every level sums to the same value (n in this case), the total is n × (number of levels). The number of levels is log(n) in some base.</div>
+      </div>
+    </div>
+
+    <!-- ── T(n) = T(n/3) + T(2n/3) + n ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 8 — Asymmetric</span>
+        <span class="example-title">T(n) = T(n/3) + T(2n/3) + n</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+Level costs: n → n → n → ... (each level sums to n)
+Shortest branch depth: log₃ n (the n/3 branch hits 1 faster)
+Longest branch depth: log_{3/2} n (the 2n/3 branch)
+
+Lower bound: n · log₃ n → Ω(n log n)
+Upper bound: n · log_{3/2} n → O(n log n)
+
+<span class="result">T(n) = Θ(n log n)</span>  (same big-picture answer, different constants)
+        </div>
+      </div>
+    </div>
+
+    <!-- ── T(n-1) + T(n-2) ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 9 — Fibonacci-like</span>
+        <span class="example-title">T(n) = T(n−1) + T(n−2) + 1</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+Tree depth: n levels (argument decreases by 1 each step)
+Nodes at level k: 2ᵏ potential nodes (binary tree)
+BUT: right branch (n-2) is shallower than left (n-1)
+
+Lower bound (right branch, depth ~n/2):  sum = 2⁰+2¹+...+2^(n/2) = 2^(n/2)
+Upper bound (left branch, depth n):      sum = 2⁰+2¹+...+2ⁿ     = 2ⁿ
+
+→ T(n) = Ω(2^(n/2)) and T(n) = O(2ⁿ)
+→ Θ cannot be determined simply  (Θ = actual ≈ φⁿ where φ = golden ratio ≈ 1.618)
+
+Key insight: <span class="result">T(n) = Θ(2^(n/2)) ≤ T(n) ≤ O(2ⁿ)</span>
+        </div>
+        <div class="highlight red"><strong>Important:</strong> Θ cannot tighten the bound here to Θ — only Ω and O. This shows a limitation of the tree method for some recurrences.</div>
+      </div>
+    </div>
+
+    <!-- ── T(n) = T(n/2)+T(n/3)+T(n/4)+1 ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Example 10 — Three Branches</span>
+        <span class="example-title">T(n) = T(n/2) + T(n/3) + T(n/4) + 1</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+<span class="comment">Level 0 cost: 1  (root)</span>
+<span class="comment">Level 1: 3 nodes → cost 3</span>
+<span class="comment">Level 2: up to 9 nodes → cost changes per branch...</span>
+
+Lower bound (fastest-dying branch = n/2 path only): 
+  depth ≈ log₂ n, right branch never survives → ~log₂ n levels with 1 node each
+  → Ω(log n)  ... but we have 3 branches → Ω(n) approximately
+
+Upper bound (slowest-dying branch = n/2 path, but 3ᵏ nodes at level k):
+  depth = log₂ n, 3ᵏ nodes → 3^(log₂ n) = n^(log₂ 3) ≈ n^1.58
+  → O(n^1.58)
+
+<span class="result">T(n) = Θ(n) approximately [practical answer: sub-linear to linear]</span>
+        </div>
+        <div class="tip">The three-branch case is complex. The key is that n/2+n/3+n/4 = 13n/12 > n, but only barely. The answer is close to linear.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Recursion Tree — When to Use</h3>
+      <div class="compare-grid">
+        <div class="compare-card">
+          <div class="cc-title">Best For</div>
+          <ul class="cc-list">
+            <li>Unequal split recurrences</li>
+            <li>Multiple recursive calls</li>
+            <li>Getting intuition/bounds</li>
+            <li>When algebra gets messy</li>
+          </ul>
+        </div>
+        <div class="compare-card">
+          <div class="cc-title">Gives You</div>
+          <ul class="cc-list">
+            <li>Lower bound Ω</li>
+            <li>Upper bound O</li>
+            <li>Sometimes exact Θ</li>
+            <li>Visual understanding</li>
+          </ul>
+        </div>
+        <div class="compare-card">
+          <div class="cc-title">Limitation</div>
+          <ul class="cc-list">
+            <li>Can be complex to draw</li>
+            <li>Only bounds, not always Θ</li>
+            <li>Needs careful summing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 5 — MASTER THEOREM
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <h2>Master Theorem <span class="dim">— The Quick Formula</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>Purpose</h3>
+      <p>The Master Theorem is a <strong>"lookup table"</strong> for recurrences of the specific form <span class="math-inline">T(n) = aT(n/b) + f(n)</span>. Instead of doing algebra, you just compare f(n) with n^(log_b a) and apply the matching case.</p>
+      <div class="highlight">Applies <strong>only</strong> when: a ≥ 1 (integer), b &gt; 1, and f(n) is an asymptotically positive function.</div>
+    </div>
+
+    <div class="card">
+      <h3>The 3 Cases</h3>
+      <p>The "battle" is between: <span class="math-inline">f(n)</span> (work done at current level) vs <span class="math-inline">n^(log_b a)</span> (total work done at leaf level).</p>
+
+      <div class="mt-cases">
+        <div class="mt-case">
+          <div class="mt-case-num">1</div>
+          <div class="mt-case-content">
+            <div class="mt-case-condition">If <code>f(n) = O(n^(log_b(a) − ε))</code> for some ε &gt; 0</div>
+            <div class="mt-case-result">T(n) = Θ(n^(log_b a))</div>
+            <div class="mt-case-why">f(n) is polynomially SMALLER than n^(log_b a) → leaves dominate → answer is leaf cost</div>
+          </div>
+        </div>
+        <div class="mt-case">
+          <div class="mt-case-num">2</div>
+          <div class="mt-case-content">
+            <div class="mt-case-condition">If <code>f(n) = Θ(n^(log_b a))</code> (polynomially equal)</div>
+            <div class="mt-case-result">T(n) = Θ(n^(log_b a) · log n)</div>
+            <div class="mt-case-why">Both tied → each level costs the same → multiply by number of levels (log n)</div>
+          </div>
+        </div>
+        <div class="mt-case">
+          <div class="mt-case-num">3</div>
+          <div class="mt-case-content">
+            <div class="mt-case-condition">If <code>f(n) = Ω(n^(log_b(a) + ε))</code> for some ε &gt; 0</div>
+            <div class="mt-case-result">T(n) = Θ(f(n))</div>
+            <div class="mt-case-why">f(n) is polynomially LARGER than n^(log_b a) → root dominates → answer is root cost</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>What Does "Polynomially Greater" Mean?</h3>
+      <p>This is the key nuance! "Polynomially greater" means there exists ε &gt; 0 such that <span class="math-inline">f(n) / n^(log_b a) → ∞</span> fast enough.</p>
+      <table class="data-table">
+        <tr><th>Comparison</th><th>Polynomially Greater?</th><th>Reason</th></tr>
+        <tr><td>n³ vs n²</td><td class="yes">YES</td><td>n³/n² = n → ∞ polynomially</td></tr>
+        <tr><td>n³ log n vs n²</td><td class="yes">YES</td><td>n³ log n / n² = n log n → ∞</td></tr>
+        <tr><td>n² log n vs n²</td><td class="no">NO</td><td>n² log n / n² = log n → ∞ but NOT polynomial</td></tr>
+        <tr><td>n log n vs n</td><td class="no">NO</td><td>log n grows too slowly — NOT a polynomial factor</td></tr>
+        <tr><td>2ⁿ vs n^k</td><td class="yes">YES</td><td>exponential always beats polynomial</td></tr>
+        <tr><td>n^0.5 vs n</td><td class="no">NO</td><td>n^0.5 / n = n^(-0.5) → 0, so n^0.5 is SMALLER, not larger</td></tr>
+      </table>
+      <div class="warn">n² log n is NOT polynomially greater than n². The log factor is too slow. Master Theorem CANNOT be applied when the difference is only a log factor!</div>
+    </div>
+
+    <!-- ── MASTER THEOREM EXAMPLES ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Master Theorem Examples</span>
+        <span class="example-title">Various Cases</span>
+      </div>
+      <div class="example-body">
+
+        <h4 style="color:var(--accent1);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E1: T(n) = 9T(n/3) + n  →  Case 1</h4>
+        <div class="math-block">
+a=9, b=3, f(n)=n
+n^(log₃9) = n^(log₃3²) = n² 
+f(n) = n  vs  n² → f is polynomially SMALLER  (n < n², since n/n² = 1/n → 0)
+→ Case 1: <span class="result">T(n) = Θ(n²)</span>
+        </div>
+
+        <h4 style="color:var(--accent2);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E2: T(n) = 4T(n/2) + n²  →  Case 2</h4>
+        <div class="math-block">
+a=4, b=2, f(n)=n²
+n^(log₂4) = n²
+f(n) = n²  =  n^(log₂4) → EQUAL (polynomially equal)
+→ Case 2: <span class="result">T(n) = Θ(n² log n)</span>
+        </div>
+
+        <h4 style="color:var(--accent3);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E3: T(n) = 3T(n/4) + n·log n  →  Case 3</h4>
+        <div class="math-block">
+a=3, b=4, f(n)=n·log n
+n^(log₄3) = n^0.79...
+f(n) = n·log n  vs  n^0.79  → f is polynomially LARGER (n > n^0.79)
+→ Case 3: <span class="result">T(n) = Θ(n log n)</span>
+        </div>
+
+        <h4 style="color:var(--accent1);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E4: T(n) = 8T(n/2) + n²  →  Case 1</h4>
+        <div class="math-block">
+a=8, b=2, f(n)=n²
+n^(log₂8) = n³
+f(n) = n²  vs  n³  → f is polynomially SMALLER
+→ Case 1: <span class="result">T(n) = Θ(n³)</span>
+        </div>
+
+        <h4 style="color:var(--accent4);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E5: T(n) = 2T(n/2) + n·log n  →  CANNOT APPLY</h4>
+        <div class="math-block">
+a=2, b=2, f(n)=n·log n
+n^(log₂2) = n¹ = n
+f(n) = n·log n  vs  n  → difference is log n factor
+log n is NOT a polynomial difference (no ε > 0 such that n·log n = Ω(n^(1+ε)))
+→ <span class="result">Master Theorem CANNOT be applied!</span>  Use Iteration or Tree method.
+<span class="comment">// Answer by iteration: Θ(n log² n)</span>
+        </div>
+
+        <h4 style="color:var(--accent4);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E6: T(n) = T(n/2) + 2ⁿ  →  Case 3</h4>
+        <div class="math-block">
+a=1, b=2, f(n)=2ⁿ
+n^(log₂1) = n⁰ = 1
+f(n) = 2ⁿ  vs  1 → 2ⁿ is exponentially/polynomially LARGER
+→ Case 3: <span class="result">T(n) = Θ(2ⁿ)</span>
+        </div>
+
+        <h4 style="color:var(--accent2);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E7: T(n) = T(n/2) + √n  →  Case 3</h4>
+        <div class="math-block">
+a=1, b=2, f(n)=√n = n^0.5
+n^(log₂1) = n⁰ = 1
+f(n) = n^0.5  vs  1 → polynomially LARGER (ε=0.5)
+→ Case 3: <span class="result">T(n) = Θ(√n)</span>
+        </div>
+
+        <h4 style="color:var(--accent5);font-family:'JetBrains Mono',monospace;font-size:13px;margin:16px 0 8px;">E8 (Tricky): T(n) = 2T(n/3) + (lg n)²  →  Case 1</h4>
+        <div class="math-block">
+a=2, b=3, f(n)=(log n)²
+n^(log₃2) = n^0.631
+f(n) = (log n)²  vs  n^0.631
+Is (log n)² polynomially smaller than n^0.631?
+→ Yes! n^0.631 grows much faster than (log n)² for large n.
+   (log n)² / n^0.631 → 0 as n→∞, and there's more than log difference
+→ Case 1: <span class="result">T(n) = Θ(n^(log₃2)) = Θ(n^0.631)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Master Theorem — Visual Decision Tree</h3>
+      <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" font-family="DM Sans,sans-serif" style="max-width:100%;display:block;margin:0 auto">
+        <!-- Start -->
+        <rect x="250" y="10" width="200" height="40" rx="8" fill="rgba(245,166,35,0.12)" stroke="#f5a623" stroke-width="1.5"/>
+        <text x="350" y="35" text-anchor="middle" fill="#f5a623" font-size="13" font-weight="600">T(n)=aT(n/b)+f(n)</text>
+
+        <!-- Compare node -->
+        <rect x="220" y="80" width="260" height="40" rx="8" fill="rgba(30,35,50,1)" stroke="#2a3050" stroke-width="1.2"/>
+        <text x="350" y="105" text-anchor="middle" fill="#9ba3bf" font-size="12">Compare f(n) vs n^(log_b a)</text>
+        <line x1="350" y1="50" x2="350" y2="80" stroke="#5e6680" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- Case 1 -->
+        <rect x="30" y="165" width="160" height="55" rx="8" fill="rgba(245,166,35,0.08)" stroke="#f5a623" stroke-width="1.2"/>
+        <text x="110" y="188" text-anchor="middle" fill="#f5a623" font-size="11" font-weight="600">f &lt; n^log_ba</text>
+        <text x="110" y="206" text-anchor="middle" fill="#a8edaa" font-size="12">Θ(n^log_b a)</text>
+        <line x1="250" y1="100" x2="110" y2="165" stroke="#f5a623" stroke-width="1" stroke-dasharray="4"/>
+        <text x="165" y="140" fill="#9ba3bf" font-size="10">poly smaller</text>
+
+        <!-- Case 2 -->
+        <rect x="270" y="165" width="160" height="55" rx="8" fill="rgba(126,184,247,0.08)" stroke="#7eb8f7" stroke-width="1.2"/>
+        <text x="350" y="188" text-anchor="middle" fill="#7eb8f7" font-size="11" font-weight="600">f = n^log_ba</text>
+        <text x="350" y="206" text-anchor="middle" fill="#a8edaa" font-size="12">Θ(n^log_b a · log n)</text>
+        <line x1="350" y1="120" x2="350" y2="165" stroke="#7eb8f7" stroke-width="1" stroke-dasharray="4"/>
+        <text x="360" y="145" fill="#9ba3bf" font-size="10">equal</text>
+
+        <!-- Case 3 -->
+        <rect x="510" y="165" width="160" height="55" rx="8" fill="rgba(168,237,170,0.08)" stroke="#a8edaa" stroke-width="1.2"/>
+        <text x="590" y="188" text-anchor="middle" fill="#a8edaa" font-size="11" font-weight="600">f &gt; n^log_ba</text>
+        <text x="590" y="206" text-anchor="middle" fill="#a8edaa" font-size="12">Θ(f(n))</text>
+        <line x1="450" y1="100" x2="590" y2="165" stroke="#a8edaa" stroke-width="1" stroke-dasharray="4"/>
+        <text x="525" y="140" fill="#9ba3bf" font-size="10">poly larger</text>
+
+        <!-- Cannot apply -->
+        <rect x="210" y="250" width="280" height="28" rx="6" fill="rgba(240,122,122,0.08)" stroke="#f07a7a" stroke-width="1"/>
+        <text x="350" y="268" text-anchor="middle" fill="#f07a7a" font-size="11">If difference is only log: Cannot Apply!</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 6 — EXTRA EXAMPLES (HARD)
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <h2>Examples Bank <span class="dim">— Hard &amp; Tricky</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>Method Comparison — Which to Use When?</h3>
+      <table class="data-table">
+        <tr><th>Recurrence Form</th><th>Best Method</th><th>Why</th></tr>
+        <tr><td>T(n) = T(n−1) + f(n)</td><td>Iteration</td><td>Simple telescoping, easy series</td></tr>
+        <tr><td>T(n) = aT(n/b) + f(n)</td><td>Master Theorem</td><td>Direct lookup, fastest</td></tr>
+        <tr><td>T(n) = T(n/5)+T(4n/5)+f</td><td>Recursion Tree</td><td>Unequal splits — tree shows bounds</td></tr>
+        <tr><td>T(n) = T(n−1)+T(n−2)+1</td><td>Recursion Tree</td><td>Can't use Master (not same subproblem size)</td></tr>
+        <tr><td>T(n) = 2T(n/2)+n log n</td><td>Iteration/Tree</td><td>Master can't apply (log gap issue)</td></tr>
+        <tr><td>T(n) = √n·T(√n)+n</td><td>Iteration (with substitution)</td><td>Change variable n=2^m</td></tr>
+      </table>
+    </div>
+
+    <!-- ── HARD: T(n) = T(n/2) + T(n/3) + ... ── -->
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Hard Example A</span>
+        <span class="example-title">T(n) = 7T(n/2) + n²  vs  T(n) = 8T(n/2) + n²</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+<span class="comment">--- First: T(n) = 7T(n/2) + n² ---</span>
+a=7, b=2 → n^(log₂7) = n^2.807...
+f(n) = n²  vs  n^2.807 → f is poly SMALLER (ε ≈ 0.807)
+→ Case 1: <span class="result">T(n) = Θ(n^(log₂7)) ≈ Θ(n^2.807)</span>  ← Strassen's Algorithm!
+
+<span class="comment">--- Second: T(n) = 8T(n/2) + n² ---</span>
+a=8, b=2 → n^(log₂8) = n³
+f(n) = n²  vs  n³  → f is poly SMALLER
+→ Case 1: <span class="result">T(n) = Θ(n³)</span>
+        </div>
+        <div class="highlight green">This is exactly why Strassen's algorithm (7 multiplications instead of 8) is faster: 7 → n^2.807 vs 8 → n^3. A tiny reduction in recursive calls makes a HUGE difference!</div>
+      </div>
+    </div>
+
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Hard Example B</span>
+        <span class="example-title">T(n) = 4T(n/2) + n³ log n  — tricky case 3 check</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+a=4, b=2 → n^(log₂4) = n²
+f(n) = n³ log n  vs  n²  → Is n³ log n polynomially greater than n²?
+
+n³ log n / n² = n log n → ∞ as n→∞
+But is it POLYNOMIAL? We need n³ log n = Ω(n^(2+ε)) for some ε > 0
+Try ε = 0.5: n^2.5 vs n³ log n → n³ log n / n^2.5 = n^0.5 log n → ∞ ✓
+So yes, n³ log n is polynomially greater than n^2 (ε = 0.5 works since n³ &gt; n^2.5)
+→ Case 3: <span class="result">T(n) = Θ(n³ log n)</span>
+
+Note: n³ log n is poly greater because n³ alone is already poly greater.
+The extra log n doesn't affect the comparison — n³ IS poly > n².
+        </div>
+      </div>
+    </div>
+
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Hard Example C — GATE-style</span>
+        <span class="example-title">T(n) = 2T(n/3) + (log n)²  — Case 1 with tricky comparison</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+a=2, b=3 → n^(log₃2) ≈ n^0.631
+f(n) = (log n)²
+
+Is (log n)² polynomially smaller than n^0.631?
+(log n)² / n^0.631 → 0 as n→∞  ✓  (log grows much slower than any n^ε)
+Specifically, (log n)² = O(n^(0.631 - ε)) for any small ε > 0 ✓
+→ Case 1: <span class="result">T(n) = Θ(n^0.631) = Θ(n^(log₃2))</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">Substitution Trick</span>
+        <span class="example-title">T(n) = √2 · T(n/2) + √n</span>
+      </div>
+      <div class="example-body">
+        <p>This looks strange: a = √2 is not an integer. But Master Theorem still works for real a ≥ 1.</p>
+        <div class="math-block">
+a = √2, b = 2
+n^(log₂√2) = n^(1/2) = √n
+f(n) = √n = n^(1/2)
+f(n) = Θ(n^(log_b a)) → both equal!
+→ Case 2: <span class="result">T(n) = Θ(√n · log n)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="example">
+      <div class="example-header">
+        <span class="example-label">MIT Classic</span>
+        <span class="example-title">Binary Search: T(n) = T(n/2) + 1</span>
+      </div>
+      <div class="example-body">
+        <div class="math-block">
+<span class="comment">Method 1 — Iteration:</span>
+T(n) = T(n/2) + 1
+     = T(n/4) + 1 + 1  = T(n/4) + 2
+     = T(n/8) + 3
+     ...
+     = T(n/2ᵏ) + k
+Stop when n/2ᵏ = 1 → k = log₂ n
+T(n) = T(1) + log₂ n = 1 + log n = <span class="result">Θ(log n)</span>
+
+<span class="comment">Method 2 — Master Theorem:</span>
+a=1, b=2 → n^(log₂1) = n⁰ = 1
+f(n) = 1 = Θ(1) = Θ(n^(log₂1)) → Case 2
+T(n) = Θ(n⁰ · log n) = Θ(log n) ✓
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 7 — LIMITATIONS
+  ══════════════════════════════════════════════ -->
+  <section class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <h2>Limitations <span class="dim">&amp; What Comes Next</span></h2>
+    </div>
+
+    <div class="card">
+      <h3>Limitations of Each Method</h3>
+      <table class="data-table">
+        <tr><th>Method</th><th>Limitation</th><th>When It Fails</th></tr>
+        <tr>
+          <td>Iteration</td>
+          <td>Can get algebraically complex</td>
+          <td>Multiple recursive calls with unequal sizes</td>
+        </tr>
+        <tr>
+          <td>Recursion Tree</td>
+          <td>Only gives bounds; might not tighten to Θ</td>
+          <td>Fibonacci-like recurrences with decreasing arguments</td>
+        </tr>
+        <tr>
+          <td>Master Theorem</td>
+          <td>Only works for <em>exact form</em> T(n)=aT(n/b)+f(n)</td>
+          <td>Unequal splits like T(n/3)+T(2n/3); when difference is only log factor</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Master Theorem — Cannot Apply Cases</h3>
+      <div class="warn">These are common traps in exams!</div>
+      <ul class="steps">
+        <li><div class="step-num">✗</div><div class="step-content"><strong>T(n) = 2T(n/2) + n log n</strong> — f(n) = n log n is NOT polynomially greater than n (difference is only log n). Use iteration → Θ(n log²n).</div></li>
+        <li><div class="step-num">✗</div><div class="step-content"><strong>T(n) = 4T(n/2) + n² log n</strong> — n² log n is NOT polynomially greater than n² (difference is only log n). Iteration → Θ(n² log²n).</div></li>
+        <li><div class="step-num">✗</div><div class="step-content"><strong>T(n) = T(n/3) + T(2n/3) + n</strong> — Two different subproblem sizes. Use Recursion Tree → Θ(n log n).</div></li>
+        <li><div class="step-num">✗</div><div class="step-content"><strong>T(n) = T(n-1) + 1</strong> — Subproblem decreases by subtraction, not division. Master Theorem needs division.</div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Impact: Why This Matters</h3>
+      <p>Knowing time complexity lets you:</p>
+      <div class="highlight green">Compare algorithms: Merge Sort O(n log n) is always better than Bubble Sort O(n²) for large n.</div>
+      <div class="highlight blue">Design better algorithms: Strassen reduces 8 multiplications to 7 → from O(n³) to O(n^2.807).</div>
+      <div class="highlight">Predict if your code will finish in time before you even run it.</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+</div> <!-- end page-wrap -->
+
+<!-- ══════════════════════════════════════════════
+     QUICK NOTES PANEL
+══════════════════════════════════════════════ -->
+<div id="quick-notes">
+  <div class="qn-wrap">
+    <div class="qn-header">
+      <h2>⚡ Quick Revision Notes</h2>
+      <button class="qn-close" onclick="document.getElementById('quick-notes').classList.remove('open')">✕ Close</button>
+    </div>
+
+    <div class="qn-section">
+      <h3>Core Idea</h3>
+      <div class="qn-rule"><div class="dot">●</div><div>A recursive program's time is expressed as a recurrence: T(n) = [recursive calls] + [work done outside]</div></div>
+      <div class="qn-rule"><div class="dot">●</div><div>Goal: find closed-form (no T on right side). Three methods: Iteration, Tree, Master Theorem.</div></div>
+      <div class="qn-rule"><div class="dot">●</div><div>We care about asymptotic (large n) behavior — constants and smaller terms ignored.</div></div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Writing Recurrences</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><div class="qn-key">fun(n/2)</div><div class="qn-val">T(n) = T(n/2) + 1</div></div>
+        <div class="qn-item"><div class="qn-key">fun(n-1)</div><div class="qn-val">T(n) = T(n-1) + 1</div></div>
+        <div class="qn-item"><div class="qn-key">2 calls fun(n/2)</div><div class="qn-val">T(n) = 2T(n/2) + work</div></div>
+        <div class="qn-item"><div class="qn-key">A(n-1)+n</div><div class="qn-val">T(n) = T(n-1) + 1 (not +n!)</div></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Iteration Method — Key Steps</h3>
+      <div class="qn-rule"><div class="dot">1</div><div>Expand T(n) 2–3 times. Find the k-th step pattern.</div></div>
+      <div class="qn-rule"><div class="dot">2</div><div>Set argument = 1 to find k (stopping point).</div></div>
+      <div class="qn-rule"><div class="dot">3</div><div>Sum the series. Use arithmetic/geometric series formulas.</div></div>
+      <div class="qn-rule"><div class="dot">⚠</div><div>Don't add terms too early — observe the pattern first!</div></div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Series Shortcuts</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><div class="qn-key">1+2+...+n</div><div class="qn-val">Θ(n²)</div></div>
+        <div class="qn-item"><div class="qn-key">1+1/2+1/4+...</div><div class="qn-val">Θ(1) — geometric r&lt;1</div></div>
+        <div class="qn-item"><div class="qn-key">Σcⁱ, c&lt;1</div><div class="qn-val">Θ(1)</div></div>
+        <div class="qn-item"><div class="qn-key">Σcⁱ, c=1</div><div class="qn-val">Θ(n)</div></div>
+        <div class="qn-item"><div class="qn-key">Σcⁱ, c&gt;1</div><div class="qn-val">Θ(cⁿ)</div></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Recursion Tree Method</h3>
+      <div class="qn-rule"><div class="dot">●</div><div>Root cost = f(n). Children = subproblems. Each node cost = its f(argument).</div></div>
+      <div class="qn-rule"><div class="dot">●</div><div>Sum each level. If all levels = n → total = n × (number of levels).</div></div>
+      <div class="qn-rule"><div class="dot">●</div><div>Depth = log of n in base matching how fast argument shrinks.</div></div>
+      <div class="qn-rule"><div class="dot">●</div><div>For unequal splits: short branch = lower bound, long branch = upper bound.</div></div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Master Theorem — T(n) = aT(n/b) + f(n)</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><div class="qn-key">Compare pivot</div><div class="qn-val">n^(log_b a)</div></div>
+        <div class="qn-item"><div class="qn-key">f poly smaller</div><div class="qn-val">→ Θ(n^log_b a)</div></div>
+        <div class="qn-item"><div class="qn-key">f = pivot</div><div class="qn-val">→ Θ(n^log_b a · log n)</div></div>
+        <div class="qn-item"><div class="qn-key">f poly larger</div><div class="qn-val">→ Θ(f(n))</div></div>
+        <div class="qn-item"><div class="qn-key">f = n²log n, pivot = n²</div><div class="qn-val">CANNOT APPLY (only log diff)</div></div>
+        <div class="qn-item"><div class="qn-key">log_b a formula</div><div class="qn-val">log₃9=2, log₂8=3, log₂4=2</div></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Classic Results to Memorize</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><div class="qn-key">T(n)=T(n/2)+1</div><div class="qn-val">Θ(log n) — Binary Search</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=T(n-1)+1</div><div class="qn-val">Θ(n)</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=T(n-1)+n</div><div class="qn-val">Θ(n²)</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=T(n/2)+n</div><div class="qn-val">Θ(n) — geometric sum</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=2T(n/2)+n</div><div class="qn-val">Θ(n log n) — Merge Sort</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=7T(n/2)+n²</div><div class="qn-val">Θ(n^2.807) — Strassen</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=2T(n/2)+n log n</div><div class="qn-val">Θ(n log²n) — Master fails</div></div>
+        <div class="qn-item"><div class="qn-key">T(n)=T(n-1)+T(n-2)+1</div><div class="qn-val">Θ(φⁿ) — Fibonacci</div></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Key Warnings</h3>
+      <div class="qn-rule"><div class="dot">⚠</div><div>n log n is NOT polynomially greater than n. The Master Theorem requires polynomial difference (at least n^ε for some ε > 0).</div></div>
+      <div class="qn-rule"><div class="dot">⚠</div><div>T(n) = A(n-1)+n means A calls itself with (n-1) and then does +n after. The recurrence is T(n)=T(n-1)+1 — the return value complexity, not the value itself.</div></div>
+      <div class="qn-rule"><div class="dot">⚠</div><div>Master Theorem needs b > 1 (subproblem must be strictly smaller). T(n) = 2T(n) + 1 is invalid.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Float Button -->
+<button class="fab" onclick="document.getElementById('quick-notes').classList.add('open')">⚡ Quick Revision</button>
+
+<script>
+  // Keyboard shortcut: Esc to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.getElementById('quick-notes').classList.remove('open');
+  });
+</script>
+</body>
+</html>

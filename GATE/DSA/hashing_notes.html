@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hashing — Complete Study Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0C0F18;--surface:#141824;--card:#1B2233;--border:#2A3350;
+  --text:#E2E8F0;--muted:#7A8BAD;--amber:#F0A500;--amber-dim:#7A5200;
+  --blue:#60A5FA;--green:#34D399;--red:#F87171;--purple:#A78BFA;
+  --code-bg:#0D1525;--sidebar:240px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.75;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+nav{position:fixed;top:0;left:0;width:var(--sidebar);height:100vh;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:20px 0;z-index:100;display:flex;flex-direction:column}
+.nav-logo{padding:8px 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.nav-logo h2{font-family:'Fraunces',serif;font-size:16px;color:var(--amber);font-weight:600;line-height:1.3}
+.nav-logo span{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+nav a{display:block;padding:6px 20px;color:var(--muted);text-decoration:none;font-size:12.5px;font-weight:500;border-left:2px solid transparent;transition:all .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav a:hover,nav a.active{color:var(--amber);border-left-color:var(--amber);background:rgba(240,165,0,.06)}
+.nav-group{padding:12px 20px 4px;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--border);font-weight:600;font-family:'JetBrains Mono',monospace}
+
+/* MAIN */
+main{margin-left:var(--sidebar);flex:1;padding:60px 64px;max-width:calc(var(--sidebar) + 1000px)}
+section{margin-bottom:100px;scroll-margin-top:32px}
+
+/* TYPOGRAPHY */
+h1{font-family:'Fraunces',serif;font-size:42px;font-weight:800;line-height:1.15;color:var(--text);margin-bottom:12px}
+h2{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--text);margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--amber);margin:32px 0 12px}
+h4{font-size:14px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin:24px 0 8px}
+p{margin-bottom:14px;color:#C8D5E8}
+p:last-child{margin-bottom:0}
+strong{color:var(--text);font-weight:600}
+em{color:var(--amber);font-style:normal}
+
+/* PILLS & TAGS */
+.tag{display:inline-block;background:rgba(240,165,0,.1);color:var(--amber);border:1px solid rgba(240,165,0,.3);border-radius:4px;font-size:11px;padding:1px 8px;font-family:'JetBrains Mono',monospace;font-weight:500}
+.tag.blue{background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.3)}
+.tag.green{background:rgba(52,211,153,.1);color:var(--green);border-color:rgba(52,211,153,.3)}
+.tag.red{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3)}
+
+/* CALLOUT BOXES */
+.callout{border-radius:8px;padding:18px 22px;margin:24px 0;border-left:3px solid}
+.callout.insight{background:rgba(240,165,0,.07);border-color:var(--amber)}
+.callout.insight strong{color:var(--amber)}
+.callout.info{background:rgba(96,165,250,.07);border-color:var(--blue)}
+.callout.info strong{color:var(--blue)}
+.callout.warn{background:rgba(248,113,113,.07);border-color:var(--red)}
+.callout.warn strong{color:var(--red)}
+.callout.success{background:rgba(52,211,153,.07);border-color:var(--green)}
+.callout.success strong{color:var(--green)}
+.callout-title{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px;display:block;font-family:'JetBrains Mono',monospace}
+
+/* CODE */
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:20px 22px;overflow-x:auto;margin:18px 0;position:relative}
+code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8}
+:not(pre)>code{background:var(--code-bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:12.5px;color:var(--blue)}
+.kw{color:#C792EA}.fn{color:#82AAFF}.cm{color:#546E7A;font-style:italic}.str{color:#C3E88D}.num{color:#F78C6C}.op{color:#89DDFF}.var{color:var(--text)}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+th{background:var(--card);color:var(--amber);font-weight:600;padding:10px 14px;text-align:left;border-bottom:2px solid var(--amber-dim);font-family:'JetBrains Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:#C8D5E8}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* FORMULA BOX */
+.formula{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:14px 20px;margin:14px 0;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--green);text-align:center}
+.formula small{color:var(--muted);font-size:11px;display:block;margin-top:4px}
+
+/* STEP LIST */
+.steps{list-style:none;margin:16px 0;counter-reset:steps}
+.steps li{counter-increment:steps;display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.steps li::before{content:counter(steps);min-width:26px;height:26px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);font-weight:700;flex-shrink:0;margin-top:1px}
+.steps li .step-body{flex:1}
+.steps li .step-label{font-weight:600;color:var(--text);display:block;margin-bottom:2px}
+
+/* COMPARISON */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.compare-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px}
+.compare-card.bad{border-top:2px solid var(--red)}
+.compare-card.good{border-top:2px solid var(--green)}
+.compare-card h5{font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.compare-card.bad h5{color:var(--red)}
+.compare-card.good h5{color:var(--green)}
+
+/* INTERACTIVE DEMO */
+.demo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin:28px 0}
+.demo-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--amber);font-weight:700;margin-bottom:16px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
+.demo-title::before{content:"";width:6px;height:6px;background:var(--amber);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.demo-controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center}
+.demo-controls label{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.demo-controls input[type=number],.demo-controls input[type=text],.demo-controls select{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;width:100px}
+.demo-controls input:focus,.demo-controls select:focus{outline:none;border-color:var(--amber)}
+.demo-controls select{width:auto}
+.btn{background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.4);border-radius:6px;padding:6px 16px;color:var(--amber);font-size:13px;cursor:pointer;font-weight:600;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif}
+.btn:hover{background:rgba(240,165,0,.25)}
+.btn.sm{padding:4px 12px;font-size:12px}
+.btn.blue{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.35);color:var(--blue)}
+.btn.blue:hover{background:rgba(96,165,250,.22)}
+.btn.red{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.35);color:var(--red)}
+
+/* HASH TABLE VISUAL */
+.ht-visual{display:flex;gap:0;font-family:'JetBrains Mono',monospace;font-size:13px;flex-wrap:wrap;margin:12px 0}
+.ht-slot{border:1px solid var(--border);min-width:54px;padding:6px 10px;text-align:center;background:var(--code-bg);position:relative;transition:all .3s;cursor:default;font-size:12px}
+.ht-slot:first-child{border-radius:6px 0 0 6px}
+.ht-slot:last-child{border-radius:0 6px 6px 0}
+.ht-slot .idx{color:var(--muted);font-size:10px;display:block}
+.ht-slot .val{color:var(--text);font-weight:500;min-height:16px}
+.ht-slot.active{background:rgba(240,165,0,.2);border-color:var(--amber)}
+.ht-slot.collide{background:rgba(248,113,113,.15);border-color:var(--red);animation:shake .3s ease}
+.ht-slot.empty{color:var(--border)}
+.ht-slot.tomb{color:var(--muted);background:rgba(255,255,255,.03)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+/* CHAIN VISUAL */
+.chain-container{display:flex;align-items:center;gap:4px;margin:4px 0;min-height:32px;flex-wrap:wrap}
+.chain-slot{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);position:relative;display:flex;align-items:center;gap:6px}
+.chain-arrow{color:var(--muted);font-size:16px}
+.chain-null{color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace}
+
+/* PROOF BLOCK */
+.proof{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin:20px 0}
+.proof-title{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:12px;font-family:'JetBrains Mono',monospace;font-weight:700}
+.proof p,.proof li{font-size:14px;color:#B0C4DE}
+.proof .math{font-family:'JetBrains Mono',monospace;color:var(--green);display:block;margin:8px 0;padding-left:16px;border-left:2px solid var(--border);font-size:13px}
+
+/* SECTION HEADER */
+.sec-header{margin-bottom:32px}
+.sec-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);letter-spacing:.1em;font-weight:500;margin-bottom:8px;display:block}
+.sec-sub{color:var(--muted);font-size:16px;max-width:680px;line-height:1.6;margin-top:8px}
+
+/* OVERVIEW FLOW */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:24px 0}
+.flow-node{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+.flow-node.amber{border-color:var(--amber);color:var(--amber);background:rgba(240,165,0,.08)}
+.flow-node.blue{border-color:var(--blue);color:var(--blue);background:rgba(96,165,250,.08)}
+.flow-node.green{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.08)}
+.flow-node.red{border-color:var(--red);color:var(--red);background:rgba(248,113,113,.08)}
+.flow-arrow{color:var(--muted);font-size:18px}
+
+/* THEOREM */
+.theorem{border:1px solid var(--purple);border-radius:8px;padding:20px 24px;margin:24px 0;background:rgba(167,139,250,.05)}
+.theorem-name{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:block}
+.theorem-body{font-size:15px;color:#C8D5E8;line-height:1.7}
+.theorem-body .highlight{color:var(--text);font-weight:600}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:40px 0;opacity:.5}
+
+/* PERF GRID */
+.perf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:20px 0}
+.perf-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+.perf-card .metric{font-family:'Fraunces',serif;font-size:28px;font-weight:800;color:var(--amber)}
+.perf-card .label{font-size:12px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+/* CANVAS */
+canvas{border-radius:8px;border:1px solid var(--border);background:var(--code-bg);display:block;width:100%}
+
+/* LOG */
+#chain-log,#probe-log{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;max-height:140px;overflow-y:auto;margin-top:10px;color:var(--muted);line-height:1.7}
+#chain-log span,#probe-log span{display:block}
+.log-ok{color:var(--green)}
+.log-col{color:var(--red)}
+.log-probe{color:var(--amber)}
+.log-info{color:var(--blue)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* SECTION INTRO */
+.section-intro{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:36px;border-top:3px solid var(--amber)}
+.section-intro p{color:var(--muted);font-size:14px;line-height:1.7;margin:0}
+.section-intro strong{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <h2>Hashing</h2>
+    <span>Complete Study Notes</span>
+  </div>
+  <div class="nav-group">Overview</div>
+  <a href="#overview">🗺 10K Feet View</a>
+  <div class="nav-group">Foundations</div>
+  <a href="#dat">Direct Address Table</a>
+  <a href="#hashfn">Hash Functions</a>
+  <a href="#collisions">Collisions</a>
+  <div class="nav-group">Resolution</div>
+  <a href="#chaining">Separate Chaining</a>
+  <a href="#open">Open Addressing</a>
+  <a href="#linear">└ Linear Probing</a>
+  <a href="#quadratic">└ Quadratic Probing</a>
+  <a href="#double">└ Double Hashing</a>
+  <a href="#probecount">└ Probe Comparison</a>
+  <div class="nav-group">Analysis</div>
+  <a href="#chaining-analysis">Chaining Analysis</a>
+  <a href="#oa-analysis">OA Analysis</a>
+  <div class="nav-group">Probability</div>
+  <a href="#bernoulli">Bernoulli in Hashing</a>
+  <a href="#binomial">Binomial in Hashing</a>
+  <a href="#hash-probs">3 Classic Questions</a>
+  <div class="nav-group">Examples</div>
+  <a href="#probe-seq-worked">Probe Sequence</a>
+  <a href="#chaining-ex">Chaining: Worked</a>
+  <a href="#lp-ex">Linear Probing: Worked</a>
+  <a href="#clustering-viz">Clustering Viz</a>
+  <a href="#tombstone-ex">Tombstone Problem</a>
+  <a href="#qp-ex">Quadratic: Worked</a>
+  <a href="#dh-ex">Double Hash: Worked</a>
+  <div class="nav-group">Quick Revision</div>
+  <a href="#short-notes" id="sn-nav-link" style="color:var(--amber);font-weight:700;letter-spacing:.01em">⚡ Short Notes</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════ SECTION: OVERVIEW -->
+<section id="overview">
+<div class="sec-header">
+  <span class="sec-num">00 — OVERVIEW</span>
+  <h1>The Big Picture of Hashing</h1>
+  <p class="sec-sub">How every concept connects — from the naive solution to the complete system.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>The core story:</strong> We need to store and retrieve data instantly (O(1)). Arrays give O(1) — but only if we use the key directly as an index. That only works when keys are small, integer, and dense. Hashing is the art of making any key behave like such an index — by compressing it into a small integer — while carefully managing the inevitable collisions.</p>
+</div>
+
+<h3>Concept Flow — How Each Idea Leads to the Next</h3>
+<div class="flow">
+  <div class="flow-node amber">Array (O(1) access)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node">Direct Address Table</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node red">3 Limitations</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node blue">Hash Function: k%m</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node red">Collisions (Unavoidable)</div>
+</div>
+<div class="flow" style="margin-top:4px">
+  <div class="flow-arrow" style="margin-left:0">↙ Resolution Strategy 1</div>
+  <div class="flow-node green">Separate Chaining</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node">α = n/m (load factor)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node green">O(1+α) avg search</div>
+</div>
+<div class="flow" style="margin-top:4px">
+  <div class="flow-arrow" style="margin-left:0">↙ Resolution Strategy 2</div>
+  <div class="flow-node amber">Open Addressing</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node">Linear → Quadratic → Double</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node green">O(1/(1-α)) avg</div>
+</div>
+<div class="flow" style="margin-top:4px">
+  <div class="flow-arrow" style="margin-left:0">↙ Analysis Tool</div>
+  <div class="flow-node blue">Bernoulli RV</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node blue">Binomial RV</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-node blue">E[items/slot]=α, E[collisions]=n(n-1)/2m</div>
+</div>
+
+<h3>When to Use Hashing</h3>
+<p>Choose hashing when <em>order doesn't matter</em> and <em>relationship between keys doesn't matter</em>. If you need ordering, a BST is better. If insertion order matters, use a queue/stack.</p>
+<table>
+  <tr><th>Structure</th><th>Best for</th><th>Search</th><th>Order preserved?</th></tr>
+  <tr><td>Hash Table</td><td>Fast key lookup</td><td><code>O(1) avg</code></td><td>No</td></tr>
+  <tr><td>Balanced BST</td><td>Ordered data, range queries</td><td><code>O(log n)</code></td><td>Yes (sorted)</td></tr>
+  <tr><td>Queue/Stack</td><td>FIFO/LIFO processing</td><td><code>O(n)</code></td><td>Yes (insertion)</td></tr>
+</table>
+
+<div class="callout insight">
+  <span class="callout-title">🔑 Key Insight</span>
+  Worst-case hashing is O(n) — just like a linked list. But <strong>we don't use hashing for worst case</strong>. The worst case (all keys colliding into one slot) essentially never happens in practice, just like the worst case of Randomised QuickSort choosing the worst pivot every time.
+</div>
+
+<h3>Real-World Uses</h3>
+<div class="compare" style="grid-template-columns:repeat(3,1fr)">
+  <div class="compare-card" style="border-top-color:var(--amber)">
+    <h5 style="color:var(--amber)">Compilers</h5>
+    <p style="font-size:13px;color:var(--muted)">Is <code>int</code> a keyword or a variable name? Hash table lookup in O(1).</p>
+  </div>
+  <div class="compare-card" style="border-top-color:var(--blue)">
+    <h5 style="color:var(--blue)">File Systems</h5>
+    <p style="font-size:13px;color:var(--muted)">Human path <code>C:/users/desktop</code> → sector number via hash.</p>
+  </div>
+  <div class="compare-card" style="border-top-color:var(--green)">
+    <h5 style="color:var(--green)">Python dict</h5>
+    <p style="font-size:13px;color:var(--muted)">Every Python dictionary is a hash table. 40–60% of Python programs use one.</p>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: DAT -->
+<section id="dat">
+<div class="sec-header">
+  <span class="sec-num">01 — FOUNDATIONS</span>
+  <h1>Direct Address Table</h1>
+  <p class="sec-sub">The simplest possible hashing — just an array. Understanding its limitations is what motivates everything else.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>Problem to solve:</strong> Store data for bus services numbered 0–999. We need O(1) insert, delete, and search. <strong>Idea:</strong> Use the bus number directly as the array index.</p>
+</div>
+
+<h3>How It Works</h3>
+<p>A Direct Address Table is just an array where the <em>key itself is the index</em>. No computation needed.</p>
+<pre><code><span class="cm"># a[] is the table (array of size max_key)</span>
+<span class="kw">def</span> <span class="fn">insert</span>(<span class="var">key</span>, <span class="var">data</span>):
+    <span class="var">a</span>[<span class="var">key</span>] = <span class="var">data</span>        <span class="cm"># O(1) — direct index</span>
+
+<span class="kw">def</span> <span class="fn">delete</span>(<span class="var">key</span>):
+    <span class="var">a</span>[<span class="var">key</span>] = <span class="num">None</span>       <span class="cm"># O(1) — just nullify</span>
+
+<span class="kw">def</span> <span class="fn">find</span>(<span class="var">key</span>):
+    <span class="kw">return</span> <span class="var">a</span>[<span class="var">key</span>]        <span class="cm"># O(1) — direct access</span>
+</code></pre>
+
+<p>Bus number 2? → <code>a[2]</code>. Bus number 998? → <code>a[998]</code>. Instantly. No searching, no looping.</p>
+
+<h3>Why It Breaks — 3 Limitations</h3>
+
+<div class="steps">
+  <li>
+    <div class="step-body">
+      <span class="step-label">Keys must be non-negative integers</span>
+      <p>What if your key is <code>"Sachin"</code> or <code>"151A"</code>? You cannot use a string as an array index directly. You first have to <em>convert</em> it to an integer (called pre-hashing). This is solvable but annoying.</p>
+    </div>
+  </li>
+  <li>
+    <div class="step-body">
+      <span class="step-label">Range of keys must be small</span>
+      <p>Suppose keys are phone numbers (10 digits → 10⁹ possibilities). To store just 100 phone numbers, your array needs 1,000,000,000 slots. That is billions of wasted memory locations. IPv4 addresses? 2³² = 4 billion slots for maybe 100 active connections.</p>
+      <div class="compare">
+        <div class="compare-card bad"><h5>❌ DAT for phone numbers</h5><p style="font-size:13px;color:var(--muted)">Array size: <strong>1,000,000,000</strong><br>Actual items: 100<br>Waste: 99.999990%</p></div>
+        <div class="compare-card good"><h5>✅ Hash table instead</h5><p style="font-size:13px;color:var(--muted)">Array size: ~130<br>Actual items: 100<br>Load: ~77%</p></div>
+      </div>
+    </div>
+  </li>
+  <li>
+    <div class="step-body">
+      <span class="step-label">Keys must be dense (continuous, few gaps)</span>
+      <p>If keys are 1, 500, 10000, your array needs 10001 slots but uses only 3. The memory for indices 2–499 and 501–9999 is wasted. A hash table compresses these sparse keys into a compact space.</p>
+    </div>
+  </li>
+</div>
+
+<div class="callout info">
+  <span class="callout-title">💡 The Bridge to Hashing</span>
+  Hashing overcomes these limits with <strong>two ideas</strong>: (1) convert non-integer keys to integers first (pre-hashing), then (2) compress large integers into a small range using a <em>hash function</em>. The hash function is the core innovation.
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: HASH FN -->
+<section id="hashfn">
+<div class="sec-header">
+  <span class="sec-num">02 — HASH FUNCTIONS</span>
+  <h1>Hash Functions</h1>
+  <p class="sec-sub">The core of hashing: deterministically map any key to a small index. Small choices here have big consequences.</p>
+</div>
+
+<h3>Formal Setup</h3>
+<div class="compare" style="grid-template-columns:repeat(3,1fr)">
+  <div class="compare-card"><h5>Universe of Keys (U)</h5><p style="font-size:13px;color:var(--muted)">All possible keys. E.g. all 10-digit phone numbers = 10⁹ possibilities. Usually huge.</p></div>
+  <div class="compare-card"><h5 style="color:var(--amber)">Actual Keys (K)</h5><p style="font-size:13px;color:var(--muted)">Keys you'll actually use. E.g. only 100 phone numbers. <em>We never know K exactly — we approximate.</em></p></div>
+  <div class="compare-card"><h5 style="color:var(--blue)">Hash Table (T)</h5><p style="font-size:13px;color:var(--muted)">Array with m slots (0 to m−1). The hash function maps every key to one of these m slots.</p></div>
+</div>
+<div class="formula">h : U → {0, 1, ..., m−1}<br><small>The hash function maps any key from the universe to one slot in the table</small></div>
+<p>We map from <em>U</em> (not K) because the hash function must handle any future key generically, not just today's known keys.</p>
+
+<h3>The Division Method (Most Common)</h3>
+<div class="formula">h(k) = k % m<br><small>Map key k into a table of m slots</small></div>
+<p><strong>Example:</strong> Table size m = 997</p>
+<div class="ht-visual" id="div-demo-slots" style="margin:8px 0"></div>
+<p style="font-size:13px;color:var(--muted)">66,752,378 % 997 = <span style="color:var(--amber);font-family:JetBrains Mono,monospace">237</span>&nbsp;&nbsp;|&nbsp;&nbsp;68,744,483 % 997 = <span style="color:var(--blue);font-family:JetBrains Mono,monospace">336</span></p>
+
+<div class="demo">
+  <div class="demo-title">Hash Function Explorer</div>
+  <div class="demo-controls">
+    <label>Key (k):</label>
+    <input type="number" id="hf-k" value="66752378" min="0">
+    <label>Table size (m):</label>
+    <input type="number" id="hf-m" value="10" min="1" max="20">
+    <button class="btn" onclick="runHashDemo()">Compute h(k)</button>
+  </div>
+  <div id="hf-table" style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:10px"></div>
+  <div id="hf-result" style="font-family:JetBrains Mono,monospace;font-size:14px;color:var(--muted)">Enter a key and table size above.</div>
+</div>
+
+<h3>How to Choose m (Table Size) — Critical!</h3>
+<p>The choice of m dramatically affects how well the hash function distributes keys.</p>
+
+<h4>❌ Bad Choice: m = 2ⁿ (power of two)</h4>
+<div class="proof">
+  <p class="proof-title">Why power of 2 is bad</p>
+  <p>When m = 2ⁿ, computing <code>k mod m</code> is identical to extracting only the last n bits of k in binary.</p>
+  <p class="math">Example: k = 1011000111011010 (binary), m = 2⁶</p>
+  <p class="math">k mod 2⁶  =  last 6 bits  =  011010  (ignores the first 10 bits!)</p>
+  <p>Two keys that differ only in high bits will have the same hash. The hash function sees only a fraction of the key — violating property #1 (must depend on every bit).</p>
+  <p class="math">33 mod 4  =  33 mod 2²  =  take last 2 bits of 33  =  01  =  1</p>
+  <p class="math">57 mod 4  =  take last 2 bits of 57  =  01  =  1  (different key, same hash!)</p>
+</div>
+
+<h4>❌ Bad Choice: m = 10ⁿ</h4>
+<p>Hash = last n decimal digits of k. Keys <code>973</code> and <code>1293</code> both hash to <code>3</code> if m=10. Same problem — only partial key used.</p>
+
+<h4>✅ Good Choice: Prime number close to a power of two</h4>
+<div class="callout insight">
+  <span class="callout-title">🧠 Why Prime Works</span>
+  A prime number shares <strong>no common factor</strong> with any key. This ensures the hash function doesn't "favor" certain slots due to shared divisibility patterns. For example, m=997 (prime near 2¹⁰=1024) works far better than m=1024 for most key distributions.
+</div>
+
+<h3>3 Properties Every Good Hash Function Must Have</h3>
+<div class="steps">
+  <li>
+    <div class="step-body">
+      <span class="step-label">Depends on every bit of k</span>
+      <p>The hash should change if any bit of the key changes. A function that only looks at the last 3 bits will map 8 different high-value keys to the same slot.</p>
+      <div class="compare">
+        <div class="compare-card bad"><h5>❌ Bad</h5><code style="font-size:12px">h(k) = lowest 3 bits of k<br>h(1010010100010) = 2<br>h(0001001000010) = 2  ← collision!</code></div>
+        <div class="compare-card good"><h5>✅ Better</h5><code style="font-size:12px">h(k) = sum of all bits of k<br>h(1010010100010) = 6<br>Different keys → different sums</code></div>
+      </div>
+    </div>
+  </li>
+  <li>
+    <div class="step-body">
+      <span class="step-label">Spreads values uniformly across all m buckets</span>
+      <p>No bucket should be "favored." All m slots should receive approximately the same number of keys.</p>
+      <div class="compare">
+        <div class="compare-card bad"><h5>❌ Bad (m=263 table)</h5><code style="font-size:12px">h(k) = k mod 2<br>→ only values 0 or 1<br>→ 261 slots never used!</code></div>
+        <div class="compare-card good"><h5>✅ Better</h5><code style="font-size:12px">h(k) = k mod 263<br>→ values 0..262<br>→ all slots can receive keys</code></div>
+      </div>
+    </div>
+  </li>
+  <li>
+    <div class="step-body">
+      <span class="step-label">Efficient to compute — O(1)</span>
+      <p>The whole point of hashing is speed. If computing h(k) itself takes O(n) time, we've gained nothing. The hash function must be a simple, fast computation — like a mod operation.</p>
+      <div class="compare">
+        <div class="compare-card bad"><h5>❌ Bad</h5><code style="font-size:12px">h(k) = solution to PDE<br>*$^% with parameter k<br>→ computationally expensive</code></div>
+        <div class="compare-card good"><h5>✅ Good</h5><code style="font-size:12px">h(k) = k mod 263<br>→ single division operation<br>→ truly O(1)</code></div>
+      </div>
+    </div>
+  </li>
+</div>
+
+<h3>Simple Uniform Hashing — The Ideal</h3>
+<div class="theorem">
+  <span class="theorem-name">Definition</span>
+  <div class="theorem-body">
+    Any given key is <span class="highlight">equally likely to hash into any of the m slots</span>, independently of where any other key hashed.
+    <div style="font-family:JetBrains Mono,monospace;font-size:14px;color:var(--green);padding:12px 16px;background:var(--code-bg);border-radius:6px;margin:12px 0">Pr[h(x) = i] = 1/m &nbsp;&nbsp; for ALL keys x and ALL slot indices i</div>
+    Each of the m slots has probability 1/m of receiving any given key. This is the theoretical assumption used in all our average-case analysis. In practice, <em>universal hashing</em> (a variant like <code>(a·k + b) mod p mod m</code>) provably achieves this.
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: COLLISIONS -->
+<section id="collisions">
+<div class="sec-header">
+  <span class="sec-num">03 — THE CORE PROBLEM</span>
+  <h1>Collisions</h1>
+  <p class="sec-sub">Two different keys mapping to the same slot. Not a bug — a mathematical certainty.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>The unavoidable reality:</strong> Since |U| (all possible keys) is always much larger than m (table size), by the <em>Pigeonhole Principle</em>, there must always exist two different keys that hash to the same slot. A well-designed hash function <em>minimizes</em> collisions but can never eliminate them. <strong>We need a resolution strategy.</strong></p>
+</div>
+
+<div class="formula">Since |U| &gt; m &nbsp;&rarr;&nbsp; at least two keys share the same hash value<br><small>Pigeonhole Principle: m pigeons into fewer holes ⟹ some hole has ≥ 2</small></div>
+
+<h3>Two Resolution Families</h3>
+<div class="callout warn">
+  <span class="callout-title">⚠️ Terminology Confusion — Know This!</span>
+  These terms are used inconsistently across textbooks. Here's the cheat sheet:
+</div>
+<table>
+  <tr><th>Common Name</th><th>Also Called</th><th>Core Idea</th></tr>
+  <tr><td><strong>Separate Chaining</strong></td><td>Open Hashing, Closed Addressing</td><td>Colliding keys stored in external linked lists</td></tr>
+  <tr><td><strong>Open Addressing</strong></td><td>Closed Hashing</td><td>Colliding keys stored inside the table — probe for another slot</td></tr>
+</table>
+<p>We will use: <em>Separate Chaining</em> and <em>Open Addressing</em> — these are the clearest names.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: CHAINING -->
+<section id="chaining">
+<div class="sec-header">
+  <span class="sec-num">04 — RESOLUTION STRATEGY 1</span>
+  <h1>Separate Chaining</h1>
+  <p class="sec-sub">Let every slot hold a linked list. Multiple keys at the same slot → they form a chain. Simple, flexible, robust.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>Core idea:</strong> When two keys map to the same slot, don't panic — just append to a linked list at that slot. The slot holds the head of the list. Each new collision = new node in the list. <em>The list can grow arbitrarily — no table size constraint on n.</em></p>
+</div>
+
+<h3>Visualized Example</h3>
+<p>Insert <code>10, 22, 107, 12, 42</code> with <code>h(k) = k mod 10</code></p>
+<div id="chain-static" style="font-family:JetBrains Mono,monospace;font-size:13px"></div>
+
+<h3>Code: Insert, Search, Delete</h3>
+<pre><code><span class="cm"># Hash table using chaining — each slot is a list</span>
+<span class="var">table</span> = [[] <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="var">m</span>)]   <span class="cm"># m slots, each is a list</span>
+
+<span class="kw">def</span> <span class="fn">insert</span>(<span class="var">key</span>, <span class="var">value</span>):
+    <span class="var">slot</span> = <span class="var">key</span> % <span class="var">m</span>                  <span class="cm"># compute hash → O(1)</span>
+    <span class="kw">for</span> <span class="var">k</span>, <span class="var">v</span> <span class="kw">in</span> <span class="var">table</span>[<span class="var">slot</span>]:        <span class="cm"># check key doesn't exist</span>
+        <span class="kw">if</span> <span class="var">k</span> == <span class="var">key</span>: <span class="kw">return</span>           <span class="cm"># already present, skip</span>
+    <span class="var">table</span>[<span class="var">slot</span>].<span class="fn">append</span>((<span class="var">key</span>, <span class="var">value</span>)) <span class="cm"># add to chain → O(1) amortized</span>
+
+<span class="kw">def</span> <span class="fn">search</span>(<span class="var">key</span>):
+    <span class="var">slot</span> = <span class="var">key</span> % <span class="var">m</span>
+    <span class="kw">for</span> <span class="var">k</span>, <span class="var">v</span> <span class="kw">in</span> <span class="var">table</span>[<span class="var">slot</span>]:        <span class="cm"># traverse chain at this slot</span>
+        <span class="kw">if</span> <span class="var">k</span> == <span class="var">key</span>: <span class="kw">return</span> <span class="var">v</span>
+    <span class="kw">return</span> <span class="num">None</span>                       <span class="cm"># not found</span>
+
+<span class="kw">def</span> <span class="fn">delete</span>(<span class="var">key</span>):
+    <span class="var">slot</span> = <span class="var">key</span> % <span class="var">m</span>
+    <span class="var">table</span>[<span class="var">slot</span>] = [(<span class="var">k</span>,<span class="var">v</span>) <span class="kw">for</span> <span class="var">k</span>,<span class="var">v</span> <span class="kw">in</span> <span class="var">table</span>[<span class="var">slot</span>] <span class="kw">if</span> <span class="var">k</span> != <span class="var">key</span>]
+</code></pre>
+
+<h3>Interactive Chaining Demo</h3>
+<div class="demo">
+  <div class="demo-title">Separate Chaining Visualizer</div>
+  <div class="demo-controls">
+    <label>Insert key:</label>
+    <input type="number" id="chain-key" value="22" min="0" max="999">
+    <label>Table size m:</label>
+    <input type="number" id="chain-m" value="10" min="3" max="15">
+    <button class="btn" onclick="chainInsert()">Insert</button>
+    <button class="btn red sm" onclick="chainReset()">Reset</button>
+  </div>
+  <div id="chain-vis" style="margin-top:8px"></div>
+  <div id="chain-log"></div>
+</div>
+
+<h3>Load Factor α — The Key Metric</h3>
+<div class="formula">α = n / m &nbsp;&nbsp; (n = items stored, m = table slots)<br><small>In chaining: α is the AVERAGE number of items per chain. Can be &gt; 1.</small></div>
+<p>If n=1000 items and m=100 slots, then α=10 — each chain has <em>on average</em> 10 items. The load factor directly controls performance.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: CHAINING ANALYSIS -->
+<section id="chaining-analysis">
+<div class="sec-header">
+  <span class="sec-num">05 — AVERAGE CASE ANALYSIS</span>
+  <h1>Chaining Analysis</h1>
+  <p class="sec-sub">How fast is chaining on average? The theorems and proofs — including the ingenious "go back in time" trick.</p>
+</div>
+
+<div class="callout warn">
+  <span class="callout-title">⚠️ Important Clarification — Are Keys Unique?</span>
+  <strong>Yes — all n keys in the hash table are distinct (unique).</strong> There are no duplicates. When we say "n items in the table", n is the count of unique keys. Insert always checks if key exists first (unsuccessful search) before adding.
+</div>
+
+<div class="callout info">
+  <span class="callout-title">📌 Assumption</span>
+  All analysis uses <strong>Simple Uniform Hashing</strong>: every key is equally likely (prob 1/m) to land in any slot, independently of other keys.
+</div>
+
+<h3>Theorem 11.1 — Unsuccessful Search</h3>
+<div class="theorem">
+  <span class="theorem-name">Theorem 11.1 (CLRS)</span>
+  <div class="theorem-body">
+    In a hash table using chaining, an <span class="highlight">unsuccessful search</span> takes average-case time <span class="highlight">Θ(1 + α)</span>, assuming simple uniform hashing.
+  </div>
+</div>
+
+<h4>Intuition (Why 1 + α?)</h4>
+<div class="steps">
+  <li>
+    <div class="step-body">
+      <span class="step-label">Go to slot h(k)</span>
+      <p>Computing h(k) = k % m takes O(1). This is the "1" in "1 + α".</p>
+    </div>
+  </li>
+  <li>
+    <div class="step-body">
+      <span class="step-label">Traverse the entire chain</span>
+      <p><em>Unsuccessful</em> search means the key is NOT there. You must go all the way to the end of the chain to confirm this. You cannot stop early. Average chain length = α. So you traverse α nodes.</p>
+    </div>
+  </li>
+  <li>
+    <div class="step-body">
+      <span class="step-label">Total: 1 (compute hash) + α (traverse chain) = 1 + α</span>
+      <p>When is this O(1)? Only when α is a constant. α = n/m. If we ensure m = Θ(n) (table size proportional to items), then α = constant, and search is O(1).</p>
+    </div>
+  </li>
+</div>
+
+<div class="formula">If m = Θ(n) → α = n/m = constant → Unsuccessful search = O(1)</div>
+
+<h3>Theorem 11.2 — Successful Search</h3>
+<div class="theorem">
+  <span class="theorem-name">Theorem 11.2 (CLRS)</span>
+  <div class="theorem-body">
+    In a hash table using chaining, a <span class="highlight">successful search</span> takes average-case time <span class="highlight">Θ(1 + α)</span> (specifically 1 + α/2), assuming simple uniform hashing.
+  </div>
+</div>
+
+<h4>The Brilliant "Go Back in Time" Logical Trick</h4>
+<div class="callout insight">
+  <span class="callout-title">🎩 The Key Insight (Almost Magic)</span>
+  The cost of <em>successfully</em> searching for item i (when the table has n items) is the <em>same</em> as the cost of <em>unsuccessfully</em> searching for item i when it was <em>first inserted</em> (when the table had only i−1 items). Why? Because inserting follows exactly the same steps: search first (unsuccessfully), then add.
+</div>
+
+<div class="proof">
+  <p class="proof-title">Full Proof — Successful Search in Chaining</p>
+  <p><strong>Goal:</strong> Find the average time to successfully search for the i-th item, given n total items in the table.</p>
+  <p>We claim these three situations take <em>identical time</em>:</p>
+  <p class="math">(A) Successfully search for item i, with n items in table</p>
+  <p class="math">(B) ≡ Insert item i, with i−1 items in table (you follow the same path)</p>
+  <p class="math">(C) ≡ Unsuccessfully search for item i, with i−1 items in table</p>
+  <p><strong>Why (B) ≡ (C)?</strong> To insert item i, you first check it's not already present — that IS an unsuccessful search. So the insert cost = unsuccessful search cost.</p>
+  <p><strong>Cost of unsuccessful search with i−1 items:</strong></p>
+  <p class="math">= 1 + (i−1)/m &nbsp;&nbsp;&nbsp; (1 for hash computation + chain of avg length (i-1)/m)</p>
+  <p><strong>Average over all n items (for i = 1 to n):</strong></p>
+  <p class="math">Average successful search time</p>
+  <p class="math">= (1/n) · Σᵢ₌₁ⁿ [1 + (i−1)/m]</p>
+  <p class="math">= 1 + (1/n) · (1/m) · Σᵢ₌₀ⁿ⁻¹ i</p>
+  <p class="math">= 1 + (1/nm) · [n(n−1)/2]</p>
+  <p class="math">= 1 + (n−1)/(2m)</p>
+  <p class="math">≈ 1 + α/2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (since α = n/m)</p>
+  <p class="math">= Θ(1 + α) ✓</p>
+  <p><strong>Conclusion:</strong> If m = Θ(n) → α = constant → successful search = O(1).</p>
+</div>
+
+<h3>Summary Table</h3>
+<table>
+  <tr><th>Operation</th><th>Average Case</th><th>If m=Θ(n)</th><th>Worst Case</th></tr>
+  <tr><td>Search (unsuccessful)</td><td>Θ(1 + α)</td><td><span class="tag green">O(1)</span></td><td>O(n)</td></tr>
+  <tr><td>Search (successful)</td><td>Θ(1 + α)</td><td><span class="tag green">O(1)</span></td><td>O(n)</td></tr>
+  <tr><td>Insert</td><td>Θ(1 + α)</td><td><span class="tag green">O(1)</span></td><td>O(n)</td></tr>
+  <tr><td>Delete</td><td>Θ(1 + α)</td><td><span class="tag green">O(1)</span></td><td>O(n)</td></tr>
+</table>
+<div class="callout success">
+  <span class="callout-title">✅ Did Chaining Achieve the Goal?</span>
+  <strong>Yes, if we maintain m = Θ(n).</strong> By keeping the number of slots proportional to the number of items, α stays constant, and all operations are O(1) average. Chaining is reliable and works even when α &gt; 1 (you can keep inserting even when the table is "full").
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: OPEN ADDRESSING -->
+<section id="open">
+<div class="sec-header">
+  <span class="sec-num">06 — RESOLUTION STRATEGY 2</span>
+  <h1>Open Addressing</h1>
+  <p class="sec-sub">No external chains. Every key lives inside the table. When a slot is taken, systematically hunt for a free one — called <em>probing</em>.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>Fundamental constraint:</strong> Since all n items must fit in m slots, we always need n ≤ m → <strong>α ≤ 1 always</strong>. The table can "fill up" completely, after which no insertions are possible. This is the key tradeoff vs chaining.</p>
+</div>
+
+<div class="formula">Probe function: h : U × {0,1,...,m−1} → {0,1,...,m−1}<br><small>Takes (key, probe_number) → slot. Probe sequence must be a permutation of all m slots.</small></div>
+
+<p>The probe sequence for key k is <code>⟨h(k,0), h(k,1), ..., h(k,m−1)⟩</code> — a permutation of {0,...,m-1}. This guarantees that if a slot exists, we'll eventually find it.</p>
+
+<h4>General probing formula:</h4>
+<div class="formula">h(k, i) = (h′(k) + f(i)) mod m<br><small>Different choices of f(i) → different probing strategies</small></div>
+</section>
+
+<!-- LINEAR PROBING -->
+<section id="linear">
+<h2>6a — Linear Probing</h2>
+<div class="formula">f(i) = i &nbsp;&nbsp;→&nbsp;&nbsp; h(k, i) = (h′(k) + i) mod m<br><small>Try h′(k), then h′(k)+1, then h′(k)+2, ... wrapping around</small></div>
+
+<h3>Step-by-step: Insert 76, 93, 40, 47, 10, 55 (m=7, h=k%7)</h3>
+<div id="lp-static"></div>
+
+<h3>Interactive Linear Probing</h3>
+<div class="demo">
+  <div class="demo-title">Open Addressing — Probing Visualizer</div>
+  <div class="demo-controls">
+    <label>Mode:</label>
+    <select id="probe-mode"><option value="linear">Linear</option><option value="quadratic">Quadratic</option><option value="double">Double</option></select>
+    <label>Table size m:</label>
+    <input type="number" id="probe-m" value="7" min="5" max="13">
+    <label>Insert key:</label>
+    <input type="number" id="probe-key" value="47" min="0" max="999">
+    <button class="btn" onclick="probeInsert()">Insert</button>
+    <button class="btn sm blue" onclick="probeSearch()">Search</button>
+    <button class="btn red sm" onclick="probeReset()">Reset</button>
+  </div>
+  <div id="probe-vis"></div>
+  <div id="probe-log"></div>
+</div>
+
+<h3>Code: Insert, Search, Delete (with Tombstones!)</h3>
+<pre><code><span class="var">EMPTY</span> = <span class="num">None</span>
+<span class="var">TOMBSTONE</span> = <span class="str">"DELETED"</span>   <span class="cm"># marker for deleted slots</span>
+<span class="var">table</span> = [<span class="var">EMPTY</span>] * <span class="var">m</span>
+
+<span class="kw">def</span> <span class="fn">_hash</span>(<span class="var">key</span>, <span class="var">i</span>):
+    <span class="kw">return</span> (<span class="var">key</span> % <span class="var">m</span> + <span class="var">i</span>) % <span class="var">m</span>     <span class="cm"># linear probing</span>
+
+<span class="kw">def</span> <span class="fn">insert</span>(<span class="var">key</span>):
+    <span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="var">m</span>):
+        <span class="var">slot</span> = <span class="fn">_hash</span>(<span class="var">key</span>, <span class="var">i</span>)
+        <span class="kw">if</span> <span class="var">table</span>[<span class="var">slot</span>] <span class="kw">in</span> (<span class="var">EMPTY</span>, <span class="var">TOMBSTONE</span>):
+            <span class="var">table</span>[<span class="var">slot</span>] = <span class="var">key</span>       <span class="cm"># found a free slot → insert</span>
+            <span class="kw">return</span>
+    <span class="kw">raise</span> <span class="fn">Exception</span>(<span class="str">"Table full"</span>)
+
+<span class="kw">def</span> <span class="fn">search</span>(<span class="var">key</span>):
+    <span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="var">m</span>):
+        <span class="var">slot</span> = <span class="fn">_hash</span>(<span class="var">key</span>, <span class="var">i</span>)
+        <span class="kw">if</span> <span class="var">table</span>[<span class="var">slot</span>] == <span class="var">EMPTY</span>:   <span class="cm"># TRUE empty → stop, not found</span>
+            <span class="kw">return</span> <span class="num">False</span>
+        <span class="kw">if</span> <span class="var">table</span>[<span class="var">slot</span>] == <span class="var">key</span>:     <span class="cm"># found it</span>
+            <span class="kw">return</span> <span class="num">True</span>
+        <span class="cm"># if TOMBSTONE → keep going! (crucial difference)</span>
+    <span class="kw">return</span> <span class="num">False</span>
+
+<span class="kw">def</span> <span class="fn">delete</span>(<span class="var">key</span>):
+    <span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="var">m</span>):
+        <span class="var">slot</span> = <span class="fn">_hash</span>(<span class="var">key</span>, <span class="var">i</span>)
+        <span class="kw">if</span> <span class="var">table</span>[<span class="var">slot</span>] == <span class="var">EMPTY</span>: <span class="kw">return</span>   <span class="cm"># not found</span>
+        <span class="kw">if</span> <span class="var">table</span>[<span class="var">slot</span>] == <span class="var">key</span>:
+            <span class="var">table</span>[<span class="var">slot</span>] = <span class="var">TOMBSTONE</span>      <span class="cm"># ← MUST use tombstone, not None!</span>
+            <span class="kw">return</span>
+</code></pre>
+
+<h4>Why Tombstones? — The Deletion Problem</h4>
+<div class="callout warn">
+  <span class="callout-title">⚠️ Critical: Why You Cannot Just Set Slot to None on Delete</span>
+  <p>Suppose 76 is at slot 6. We insert 55 (also hashes to 6) → it gets placed at slot 1 (after probing past slot 6). Now we <strong>delete 76</strong> and set slot 6 to None. Later we search for 55: we hash to slot 6, find None, conclude "not found" — but 55 IS in slot 1!</p>
+  <p>The None breaks the probe chain. <strong>Tombstone = "I was deleted but keep probing past me".</strong></p>
+</div>
+
+<h4>Primary Clustering — Linear Probing's Problem</h4>
+<div class="callout warn">
+  <span class="callout-title">⚠️ Primary Clustering</span>
+  When h(k₁) = h(k₂) = h(k₃) = h(k₄), all four items probe the same sequence: same start, same next slots. They pile up in a consecutive cluster. Each new insertion landing near this cluster makes it longer. This is called a <strong>primary cluster</strong>. As clusters grow, performance degrades even for keys that don't originally hash there.
+</div>
+</section>
+
+<!-- QUADRATIC PROBING -->
+<section id="quadratic">
+<h2>6b — Quadratic Probing</h2>
+<div class="formula">f(i) = i² &nbsp;&nbsp;→&nbsp;&nbsp; h(k, i) = (h′(k) + c₁i + c₂i²) mod m &nbsp;&nbsp; (c₂ ≠ 0)<br><small>Probe jumps grow quadratically: try h′(k), h′(k)+1, h′(k)+4, h′(k)+9, ...</small></div>
+
+<h4>Solves: Primary Clustering</h4>
+<p>Keys at the same slot no longer probe consecutive locations. The quadratic jumps scatter them across the table.</p>
+
+<div class="callout warn">
+  <span class="callout-title">⚠️ Important — Always Use h′(k) as the Base</span>
+  If key k hashes to slot 5, the probe sequence is: 5+0², 5+1², 5+2², 5+3², ... Always from the original h′(k)=5. NEVER do 5+1²=6, then 6+2²=10. The formula is always (h′(k) + i²) mod m.
+</div>
+
+<h4>Creates: Secondary Clustering</h4>
+<div class="callout warn">
+  <span class="callout-title">⚠️ Secondary Clustering</span>
+  If h(k₁) = h(k₂) = 1, both follow the identical probe sequence: 1, 2, 5, 10, ... (1+0², 1+1², 1+4²). Different keys, same starting slot → same entire path. This is <strong>secondary clustering</strong> — invisible clusters based on probe path, not physical adjacency.
+</div>
+<p><strong>Why?</strong> In quadratic probing, f(i) = i² depends only on i, not on k. So if two keys start at the same slot (h(k₁,0) = h(k₂,0)), they will visit the exact same slots for all i.</p>
+
+<h4>Cycles in Quadratic Probing</h4>
+<p>The probe sequence may revisit slots, potentially missing empty ones that exist. However, this is <em>not a real problem</em> — with careful choices of c₁, c₂, and h′(k), cycles are eliminated. The guarantee can always be achieved.</p>
+</section>
+
+<!-- DOUBLE HASHING -->
+<section id="double">
+<h2>6c — Double Hashing</h2>
+<div class="formula">h(k, i) = (h₁(k) + i · h₂(k)) mod m<br><small>h₁ gives the initial slot. h₂ gives the step size — and it depends on the key!</small></div>
+
+<p>Probe sequence: <code>h₁(k), h₁(k)+h₂(k), h₁(k)+2h₂(k), ...</code></p>
+<p>Classic choice (CLRS): <code>h₁(k) = k mod m</code> and <code>h₂(k) = 1 + (k mod m′)</code> where m′ is slightly less than m.</p>
+
+<h4>Solves: Secondary Clustering</h4>
+<div class="callout success">
+  <span class="callout-title">✅ How Double Hashing Eliminates Secondary Clusters</span>
+  If h₁(k₁) = h₁(k₂) (same initial slot) BUT h₂(k₁) ≠ h₂(k₂), the step sizes differ → completely different probe paths!<br><br>
+  Linear probing: same start → same path<br>
+  Quadratic probing: same start → same path (f(i) doesn't use k)<br>
+  Double hashing: same start + different step → DIFFERENT paths ✓
+</div>
+<pre><code><span class="kw">def</span> <span class="fn">_hash</span>(<span class="var">key</span>, <span class="var">i</span>, <span class="var">m</span>):
+    <span class="var">m_prime</span> = <span class="var">m</span> - <span class="num">1</span>               <span class="cm"># choose prime slightly < m</span>
+    <span class="var">h1</span> = <span class="var">key</span> % <span class="var">m</span>
+    <span class="var">h2</span> = <span class="num">1</span> + (<span class="var">key</span> % <span class="var">m_prime</span>)      <span class="cm"># step size — key-dependent!</span>
+    <span class="kw">return</span> (<span class="var">h1</span> + <span class="var">i</span> * <span class="var">h2</span>) % <span class="var">m</span>
+</code></pre>
+</section>
+
+<!-- PROBE COMPARISON -->
+<section id="probecount">
+<h2>6d — Probe Sequence Comparison: m vs m² vs m!</h2>
+<p>The number of distinct probe sequences a method can generate tells us how close it gets to the ideal of <em>uniform hashing</em>.</p>
+
+<div class="proof">
+  <p class="proof-title">Counting Distinct Probe Sequences Per Key</p>
+  <p><strong>Linear Probing:</strong></p>
+  <p class="math">Probe sequence: h(k), h(k)+1, h(k)+2, ..., h(k)+m−1 &nbsp;&nbsp; (all mod m)</p>
+  <p class="math">h(k) can be 0, 1, ..., m−1 → m choices → m distinct sequences</p>
+  <p class="math">Once h(k) is fixed, all subsequent slots are determined. No further freedom.</p>
+  <p><strong>Quadratic Probing:</strong> Same analysis. h(k) determines everything → <strong>m sequences</strong>.</p>
+  <p><strong>Double Hashing:</strong></p>
+  <p class="math">h(k,i) = h₁(k) + i·h₂(k) &nbsp;&nbsp; (mod m)</p>
+  <p class="math">h₁(k): m possible values. h₂(k): m possible values.</p>
+  <p class="math">Together: m × m = m² (start, step) pairs → m² distinct sequences</p>
+  <p class="math">Once h₁ and h₂ fixed, subsequent slots are determined — no further freedom.</p>
+  <p><strong>Uniform Hashing (ideal):</strong></p>
+  <p class="math">Any permutation of {0,...,m-1} is a valid probe sequence.</p>
+  <p class="math">Total permutations = m! &nbsp;&nbsp; (e.g. m=10 → 3,628,800 sequences)</p>
+</div>
+
+<table>
+  <tr><th>Method</th><th>Sequences/Key</th><th>How Close to Ideal?</th><th>Cluster Problem</th></tr>
+  <tr><td>Linear Probing</td><td><span class="tag red">m</span></td><td>Very far from m!</td><td>Primary clusters</td></tr>
+  <tr><td>Quadratic Probing</td><td><span class="tag red">m</span></td><td>Very far from m!</td><td>Secondary clusters</td></tr>
+  <tr><td>Double Hashing</td><td><span class="tag amber">m²</span></td><td>Much closer to m!</td><td>Neither (in practice)</td></tr>
+  <tr><td>Uniform Hashing</td><td><span class="tag green">m!</span></td><td>The ideal (theoretical)</td><td>None</td></tr>
+</table>
+
+<div class="callout info">
+  <span class="callout-title">📚 Source (CLRS / MIT 6.006 / Stanford CS161)</span>
+  "Uniform hashing assumes each key's probe sequence is equally likely to be any of the m! permutations of {0,...,m-1}. Neither linear nor double hashing necessarily satisfies this criterion, but in practice, they often almost satisfy it for real-world input distributions." Double hashing with m² possible sequences is the best practical approximation of uniform hashing.
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: OA ANALYSIS -->
+<section id="oa-analysis">
+<div class="sec-header">
+  <span class="sec-num">07 — OPEN ADDRESSING ANALYSIS</span>
+  <h1>Open Addressing Analysis</h1>
+  <p class="sec-sub">How many probes does open addressing need on average? The geometric series derivation — and a beautiful reusable template.</p>
+</div>
+
+<div class="callout info">
+  <span class="callout-title">📌 Assumption</span>
+  Analysis is with respect to <strong>Uniform Hashing</strong> — not specifically linear or quadratic or double hashing. Any of the m! permutations is equally likely as a probe sequence. And since n ≤ m, α = n/m ≤ 1.
+</div>
+
+<h3>Theorem 11.6 — Unsuccessful Search</h3>
+<div class="theorem">
+  <span class="theorem-name">Theorem 11.6 (CLRS)</span>
+  <div class="theorem-body">
+    Given an open-address hash table with load factor α = n/m &lt; 1, the expected number of probes in an <span class="highlight">unsuccessful search</span> is at most <span class="highlight">1/(1−α)</span>, assuming uniform hashing.
+  </div>
+</div>
+
+<h4>Building the Intuition</h4>
+<p>Unsuccessful search = keep probing until we hit a <em>true empty slot</em>.</p>
+<ul style="margin:12px 0;padding-left:24px;color:#C8D5E8;line-height:2">
+  <li>P(hitting a filled slot) = n/m = α (filled/total)</li>
+  <li>P(hitting an empty slot) = 1 − α = (m−n)/m</li>
+  <li>We probe repeatedly until we hit empty. This is like: "how many coin tosses until heads, where P(heads) = 1−α?"</li>
+</ul>
+
+<div class="callout insight">
+  <span class="callout-title">🎯 Reusable Template (Works in Hashing, CN, Probability, everywhere)</span>
+  If the <strong>probability of success = p</strong>, then the <strong>expected number of attempts to get success = 1/p</strong>.<br><br>
+  Here: P(empty slot) = 1−α → E[probes] = 1/(1−α).
+</div>
+
+<h4>Full Derivation (Geometric Series Method)</h4>
+<div class="proof">
+  <p class="proof-title">Proof — Expected probes for unsuccessful search</p>
+  <p>Build a chart of (attempts, probability):</p>
+  <p class="math">Attempt 1: hit empty immediately → prob = (1−α)</p>
+  <p class="math">Attempt 2: hit filled, then empty → prob = α·(1−α)</p>
+  <p class="math">Attempt 3: hit filled twice, then empty → prob = α²·(1−α)</p>
+  <p class="math">Attempt k: prob = α^(k−1)·(1−α)</p>
+  <p>Expected number of attempts:</p>
+  <p class="math">E[X] = Σₖ₌₁^∞ k · α^(k−1) · (1−α)</p>
+  <p class="math">= (1−α) · Σₖ₌₁^∞ k · α^(k−1)</p>
+  <p>We need: S = Σₖ₌₁^∞ k · αᵏ⁻¹ = 1 + 2α + 3α² + 4α³ + ...</p>
+  <p><strong>AGP trick to find S:</strong></p>
+  <p class="math">S     = 1 + 2α + 3α² + 4α³ + ...</p>
+  <p class="math">α·S   =     α  + 2α² + 3α³ + ...</p>
+  <p class="math">S − αS = 1 + α  + α² + α³ + ... = 1/(1−α) &nbsp;&nbsp; (geometric series)</p>
+  <p class="math">S(1−α) = 1/(1−α)</p>
+  <p class="math">S = 1/(1−α)²</p>
+  <p>Therefore:</p>
+  <p class="math">E[X] = (1−α) · S = (1−α) · 1/(1−α)² = 1/(1−α) ✓</p>
+</div>
+
+<h4>Practical meaning at various load factors:</h4>
+<div class="perf-grid">
+  <div class="perf-card"><div class="metric">2</div><div class="label">probes at α=0.5<br>(50% full)</div></div>
+  <div class="perf-card"><div class="metric">5</div><div class="label">probes at α=0.8<br>(80% full)</div></div>
+  <div class="perf-card"><div class="metric">10</div><div class="label">probes at α=0.9<br>(90% full)</div></div>
+  <div class="perf-card"><div class="metric">∞</div><div class="label">probes at α=1<br>(100% full)</div></div>
+</div>
+
+<h3>Theorem 11.7 — Successful Search</h3>
+<div class="theorem">
+  <span class="theorem-name">Theorem 11.7 (CLRS)</span>
+  <div class="theorem-body">
+    Expected probes in a <span class="highlight">successful search</span> ≤ <span class="highlight">(1/α) · ln(1/(1−α))</span>, assuming uniform hashing.
+  </div>
+</div>
+
+<div class="proof">
+  <p class="proof-title">Derivation — Successful Search</p>
+  <p>Same "go back in time" trick as chaining:</p>
+  <p class="math">Successfully search for item i (with n items) ≡ Insert item i (when there were i−1 items)</p>
+  <p class="math">≡ Unsuccessfully search for item i with i−1 items in table</p>
+  <p>Cost of unsuccessful search with i−1 items: = 1/(1 − (i−1)/m) = m/(m−i+1)</p>
+  <p>Average over all n items:</p>
+  <p class="math">(1/n) · Σᵢ₌₁ⁿ m/(m−i+1)</p>
+  <p class="math">= (m/n) · Σₖ₌ₘ₋ₙ₊₁ᵐ 1/k &nbsp;&nbsp;&nbsp; (change of variable)</p>
+  <p class="math">≤ (1/α) · ∫ₘ₋ₙᵐ (1/x)dx &nbsp;&nbsp;&nbsp; (integral approximation)</p>
+  <p class="math">= (1/α) · [ln(m) − ln(m−n)]</p>
+  <p class="math">= (1/α) · ln(m/(m−n))</p>
+  <p class="math">= (1/α) · ln(1/(1−α)) ✓</p>
+</div>
+
+<h3>Final Comparison Table</h3>
+<table>
+  <tr><th>Method</th><th>Unsuccessful Search</th><th>Successful Search</th></tr>
+  <tr><td>Chaining</td><td>Θ(1 + α)</td><td>Θ(1 + α)</td></tr>
+  <tr><td>Open Addressing (uniform)</td><td>O(1/(1−α))</td><td>O((1/α)·ln(1/(1−α)))</td></tr>
+</table>
+<div class="callout info">
+  <span class="callout-title">📊 Key Graph Insight</span>
+  As α → 1 (table nearly full), open addressing performance explodes toward infinity (1/(1−α) → ∞). Chaining degrades gracefully (1+α grows linearly). This is why chaining is preferred when you don't control the load factor, and why open addressing tables are typically kept below α=0.7–0.75.
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: BERNOULLI -->
+<section id="bernoulli">
+<div class="sec-header">
+  <span class="sec-num">08 — PROBABILITY IN HASHING</span>
+  <h1>Bernoulli Random Variable in Hashing</h1>
+  <p class="sec-sub">The simplest probabilistic model — and the building block for all our hashing expectations.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>Why probability here?</strong> We want to calculate things like "how many items end up in slot 1?" or "how many collisions happen?" These are random outcomes. Bernoulli and Binomial RVs give us precise tools to answer them.</p>
+</div>
+
+<h3>What is a Bernoulli RV? (In Hashing Terms)</h3>
+<p>A Bernoulli RV takes exactly two values: <em>1 (success)</em> or <em>0 (failure)</em>.</p>
+<p><strong>In hashing:</strong> Let Xᵢ = 1 if item i maps to slot 1, else Xᵢ = 0.</p>
+<ul style="margin:12px 0;padding-left:24px;color:#C8D5E8;line-height:2">
+  <li>By uniform hashing: P(item maps to slot 1) = 1/m</li>
+  <li>So: P(Xᵢ = 1) = 1/m, P(Xᵢ = 0) = 1 − 1/m</li>
+</ul>
+
+<div class="formula">E[Xᵢ] = 1·(1/m) + 0·(1 − 1/m) = 1/m<br>Var[Xᵢ] = p(1−p) = (1/m)·(1 − 1/m)</div>
+<p>Where p = 1/m is the probability of success (item mapping to the target slot).</p>
+
+<div class="callout insight">
+  <span class="callout-title">🔑 Why Bernoulli is Perfect Here</span>
+  Each item either goes to slot 1 or it doesn't. Binary outcome. Independent across items (by uniform hashing assumption). This is exactly the Bernoulli scenario. The genius: instead of computing complex joint probabilities, we define one simple Bernoulli RV per item, then sum them using linearity of expectation.
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: BINOMIAL -->
+<section id="binomial">
+<h2>Binomial Random Variable in Hashing</h2>
+<p>A Binomial RV = sum of n independent Bernoulli RVs. It counts total successes in n trials.</p>
+<p><strong>In hashing:</strong> X = total items in slot 1 = X₁ + X₂ + ... + Xₙ (each Xᵢ is Bernoulli with p=1/m)</p>
+
+<div class="formula">P(X = k) = C(n,k) · pᵏ · (1−p)^(n−k)<br><small>k successes in n independent Bernoulli trials</small></div>
+
+<h4>Key Stats (derived from indicator RVs):</h4>
+<pre><code><span class="cm"># X = X₁ + X₂ + ... + Xₙ &nbsp;&nbsp; (n independent Bernoulli RVs, each p=1/m)</span>
+
+<span class="cm"># Expected value — uses LINEARITY OF EXPECTATION (no independence needed!)</span>
+<span class="var">E</span>[<span class="var">X</span>] = <span class="var">E</span>[<span class="var">X₁</span>] + <span class="var">E</span>[<span class="var">X₂</span>] + <span class="op">...</span> + <span class="var">E</span>[<span class="var">Xₙ</span>] = <span class="var">n</span> · (<span class="num">1</span>/<span class="var">m</span>) = <span class="var">n</span>/<span class="var">m</span>
+
+<span class="cm"># Variance — REQUIRES independence (which we have here)</span>
+<span class="var">Var</span>[<span class="var">X</span>] = <span class="var">n</span> · <span class="var">p</span> · (<span class="num">1</span>−<span class="var">p</span>) = <span class="var">n</span>/<span class="var">m</span> · (<span class="num">1</span> − <span class="num">1</span>/<span class="var">m</span>)
+</code></pre>
+
+<div class="callout insight">
+  <span class="callout-title">🧠 Linearity of Expectation — The Most Useful Trick</span>
+  E[X₁ + X₂ + ... + Xₙ] = E[X₁] + E[X₂] + ... + E[Xₙ] — <strong>always</strong>, even if X₁, X₂, ... are not independent. This is why we break complex hashing questions into simple Bernoulli indicator RVs and just sum expectations.
+</div>
+
+<h4>Binomial Example: Party Problem</h4>
+<p>30 people each accept an invitation independently with probability 1/3. X = number who accept.</p>
+<p><strong>Hashing lens:</strong> 30 "items" each randomly assigned to "accept" (slot) or "reject" (not in slot), with p=1/3. This is Binomial(n=30, p=1/3).</p>
+<pre><code><span class="cm"># Binomial(n=30, p=1/3)</span>
+<span class="var">E</span>[<span class="var">X</span>]   = <span class="var">n</span>·<span class="var">p</span>        = <span class="num">30</span> · <span class="num">1</span>/<span class="num">3</span> = <span class="num">10</span>
+<span class="var">Var</span>[<span class="var">X</span>] = <span class="var">n</span>·<span class="var">p</span>·(<span class="num">1</span>−<span class="var">p</span>) = <span class="num">30</span> · <span class="num">1</span>/<span class="num">3</span> · <span class="num">2</span>/<span class="num">3</span> = <span class="num">20</span>/<span class="num">3</span>
+<span class="var">E</span>[<span class="var">X</span>²]  = <span class="var">Var</span>[<span class="var">X</span>] + (<span class="var">E</span>[<span class="var">X</span>])² = <span class="num">20</span>/<span class="num">3</span> + <span class="num">100</span> = <span class="num">320</span>/<span class="num">3</span>
+<span class="var">E</span>[<span class="var">X</span>² − <span class="num">4</span><span class="var">X</span> + <span class="num">5</span>] = <span class="num">320</span>/<span class="num">3</span> − <span class="num">4</span>·<span class="num">10</span> + <span class="num">5</span> = <span class="num">215</span>/<span class="num">3</span>   <span class="cm"># by linearity</span>
+</code></pre>
+
+<h4>Dice Example</h4>
+<p>Fair die rolled 72,000 times. X₃ = times die shows 3. Think: 72,000 items hashed into 6 slots uniformly. Binomial(n=72000, p=1/6).</p>
+<pre><code><span class="var">E</span>[<span class="var">X₃</span>]   = <span class="num">72000</span> · <span class="num">1</span>/<span class="num">6</span> = <span class="num">12000</span>
+<span class="var">Var</span>[<span class="var">X₃</span>] = <span class="num">72000</span> · <span class="num">1</span>/<span class="num">6</span> · <span class="num">5</span>/<span class="num">6</span> = <span class="num">10000</span>
+<span class="cm"># Var[X₁+X₂]: X₁ and X₂ are NOT independent (one roll can't show both 1 and 2)</span>
+<span class="cm"># Use Var[A+B] = Var[A] + Var[B] + 2·Cov[A,B]</span>
+<span class="cm"># This requires Cov[X₁,X₂] = E[X₁X₂] - E[X₁]E[X₂] = 0 - (1/6)² = -1/36</span>
+</code></pre>
+</section>
+
+<!-- ═══════════════════════════════════════════════ SECTION: HASH PROBS -->
+<section id="hash-probs">
+<div class="sec-header">
+  <span class="sec-num">09 — APPLYING PROBABILITY TO HASHING</span>
+  <h1>3 Classic Hashing Questions</h1>
+  <p class="sec-sub">Expected items per slot, expected empty slots, expected collisions. All solved with indicator Bernoulli RVs.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>Setup:</strong> n items, m slots, uniform hashing (every item goes to each slot with probability 1/m). All items are distinct. We use indicator RVs: Xᵢ = 1 if [something], else 0. Then E[Xᵢ] = P(event). Then sum via linearity.</p>
+</div>
+
+<h3>Q1: Expected Items Per Slot</h3>
+<p><em>How many items do we expect to find in any given slot (say, slot 1)?</em></p>
+<div class="proof">
+  <p class="proof-title">Derivation</p>
+  <p>Let X = total items in slot 1. Define indicator Xᵢ = 1 if item i lands in slot 1, else 0.</p>
+  <p class="math">X = X₁ + X₂ + ... + Xₙ</p>
+  <p class="math">P(Xᵢ = 1) = 1/m &nbsp;&nbsp; (uniform hashing: any item equally likely to be in any slot)</p>
+  <p class="math">E[Xᵢ] = 1/m</p>
+  <p class="math">E[X] = E[X₁] + ... + E[Xₙ] = n · (1/m) = n/m = α</p>
+</div>
+<div class="callout success">
+  <span class="callout-title">✅ Hashing Meaning</span>
+  The <strong>load factor α = n/m IS the expected number of items per slot</strong>. This mathematically confirms our intuitive definition of α as "average chain length" in chaining. Not just an approximation — it's exact under uniform hashing.
+</div>
+
+<h3>Q2: Expected Number of Empty Slots</h3>
+<p><em>After inserting n items into m slots, how many slots remain empty on average?</em></p>
+<div class="proof">
+  <p class="proof-title">Derivation</p>
+  <p>Let Y = total empty slots. Define indicator Yᵢ = 1 if slot i is empty, else 0.</p>
+  <p class="math">Y = Y₁ + Y₂ + ... + Yₘ</p>
+  <p>P(slot i is empty after n insertions) = P(all n items avoided slot i):</p>
+  <p class="math">P(one item misses slot i) = (m−1)/m = 1 − 1/m</p>
+  <p class="math">P(all n items miss slot i) = (1 − 1/m)ⁿ</p>
+  <p class="math">E[Y] = m · (1 − 1/m)ⁿ</p>
+</div>
+<div class="callout insight">
+  <span class="callout-title">🧠 Surprising Result</span>
+  When n = m (table "full" by count): E[Y] = m·(1 − 1/m)^m ≈ m/e ≈ 0.368m. Even when you've inserted as many items as there are slots, <strong>~37% of slots are still empty!</strong> This explains why rehashing at α=0.7 is common — performance degrades fast beyond that, while many slots sit empty.
+</div>
+
+<h3>Q3: Expected Number of Collisions</h3>
+<p><em>In n insertions, how many collisions will happen on average?</em></p>
+<div class="proof">
+  <p class="proof-title">Derivation</p>
+  <p>Let Z = total collisions. Define indicator Zᵢ = 1 if the i-th insertion causes a collision.</p>
+  <p class="math">Z = Z₁ + Z₂ + ... + Zₙ</p>
+  <p>P(collision at i-th insertion) = P(item i lands in one of the i−1 already-filled slots):</p>
+  <p class="math">P(Z₁ = 1) = 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (table empty, can't collide)</p>
+  <p class="math">P(Z₂ = 1) = 1/m &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (1 filled slot out of m)</p>
+  <p class="math">P(Z₃ = 1) = 2/m &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (2 filled slots out of m)</p>
+  <p class="math">P(Zᵢ = 1) = (i−1)/m &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (i−1 filled slots out of m)</p>
+  <p class="math">E[Z] = 0 + 1/m + 2/m + ... + (n−1)/m</p>
+  <p class="math">= (1/m) · [0 + 1 + 2 + ... + (n−1)]</p>
+  <p class="math">= (1/m) · n(n−1)/2</p>
+  <p class="math">= n(n−1) / (2m)</p>
+</div>
+<div class="callout success">
+  <span class="callout-title">✅ Hashing Meaning</span>
+  With n=1000 items and m=997 slots: E[Z] = 1000·999/(2·997) ≈ 500. About 500 collisions in 1000 insertions! This confirms collisions are frequent and unavoidable — which is exactly why we need robust collision resolution strategies (chaining or open addressing).
+</div>
+
+<div class="divider"></div>
+<div class="callout success" style="margin-top:0">
+  <span class="callout-title">🎯 The Complete Picture</span>
+  Every formula we've derived connects back to the load factor α:<br>
+  • Expected items/slot = α &nbsp;|&nbsp; Expected empty slots = m·(1−1/m)ⁿ &nbsp;|&nbsp; Expected collisions = n(n−1)/(2m)<br>
+  • Chaining search time = Θ(1+α) &nbsp;|&nbsp; OA search time = O(1/(1−α))<br>
+  <strong>α is the single most important number in hash table performance. Keep it small (via m=Θ(n)) for O(1) everything.</strong>
+</div>
+</section>
+
+<script>
+// ── SIDEBAR ACTIVE STATE ────────────────────────────────────────────
+const sections=document.querySelectorAll("section[id]");
+const navLinks=document.querySelectorAll("nav a");
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){navLinks.forEach(l=>l.classList.remove("active"));const a=document.querySelector("nav a[href='#"+e.target.id+"']");if(a)a.classList.add("active")}});
+},{threshold:.3});
+sections.forEach(s=>obs.observe(s));
+
+// ── HASH FUNCTION DEMO ────────────────────────────────────────────
+function runHashDemo(){
+  const k=parseInt(document.getElementById("hf-k").value)||0;
+  const m=parseInt(document.getElementById("hf-m").value)||10;
+  const h=((k%m)+m)%m;
+  const cont=document.getElementById("hf-table");
+  cont.innerHTML="";
+  for(let i=0;i<m;i++){
+    const s=document.createElement("div");
+    s.className="ht-slot"+(i===h?" active":"");
+    s.style.minWidth="60px";
+    s.innerHTML=`<span class="idx">${i}</span><span class="val">${i===h?"← "+k:""}</span>`;
+    cont.appendChild(s);
+  }
+  document.getElementById("hf-result").innerHTML=
+    `<span style="color:var(--text)">${k}</span> <span style="color:var(--muted)">% ${m} =</span> <span style="color:var(--amber)">${h}</span>  →  slot <span style="color:var(--amber)">${h}</span> highlighted above`;
+}
+["hf-k","hf-m"].forEach(id=>document.getElementById(id).addEventListener("input",runHashDemo));
+runHashDemo();
+
+// ── CHAIN STATIC EXAMPLE ────────────────────────────────────────────
+(function(){
+  const keys=[10,22,107,12,42];const m=10;
+  const t={};keys.forEach(k=>{const s=k%m;if(!t[s])t[s]=[];t[s].push(k)});
+  const div=document.getElementById("chain-static");
+  let html='<div style="display:flex;flex-direction:column;gap:4px;font-family:JetBrains Mono,monospace;font-size:13px">';
+  for(let i=0;i<m;i++){
+    const items=t[i]||[];
+    const isBusy=items.length>0;
+    let row=`<div style="display:flex;align-items:center;gap:6px">`;
+    row+=`<span style="width:32px;text-align:right;color:var(--muted);font-size:11px">${i}</span>`;
+    row+=`<div style="width:60px;border:1px solid ${isBusy?"var(--amber)":"var(--border)"};background:${isBusy?"rgba(240,165,0,.1)":"var(--code-bg)"};border-radius:5px;padding:4px 8px;color:${isBusy?"var(--amber)":"var(--muted)"};font-size:12px;text-align:center">${isBusy?items[0]:"—"}</div>`;
+    if(items.length>1){
+      for(let j=1;j<items.length;j++){
+        row+=`<span style="color:var(--muted)">→</span>`;
+        row+=`<div style="border:1px solid var(--amber);background:rgba(240,165,0,.07);border-radius:5px;padding:4px 8px;color:var(--amber);font-size:12px">${items[j]}</div>`;
+      }
+    }
+    if(isBusy)row+=`<span style="color:var(--muted);font-size:11px">→ null</span>`;
+    const comment=isBusy?`<span style="color:var(--muted);font-size:11px;margin-left:8px">h(${items.join(",")}) = ${items[0]%m}</span>`:"";
+    row+=comment+"</div>";
+    html+=row;
+  }
+  html+="</div>";
+  div.innerHTML=html;
+})();
+
+// ── CHAINING INTERACTIVE ────────────────────────────────────────────
+let chainTable={};let chainM=10;
+function chainReset(){chainTable={};chainM=parseInt(document.getElementById("chain-m").value)||10;renderChain();document.getElementById("chain-log").innerHTML=""}
+function chainInsert(){
+  const k=parseInt(document.getElementById("chain-key").value);
+  const m=parseInt(document.getElementById("chain-m").value)||10;
+  chainM=m;
+  const s=((k%m)+m)%m;
+  if(!chainTable[s])chainTable[s]=[];
+  const log=document.getElementById("chain-log");
+  if(chainTable[s].includes(k)){
+    log.innerHTML+=`<span class="log-info">Key ${k} already at slot ${s}</span>`;
+  } else {
+    chainTable[s].push(k);
+    const probes=chainTable[s].length;
+    if(probes===1){
+      log.innerHTML+=`<span class="log-ok">Insert ${k} → slot ${s} (empty, O(1))</span>`;
+    } else {
+      log.innerHTML+=`<span class="log-col">Insert ${k} → slot ${s} COLLISION — chain length now ${probes}</span>`;
+    }
+  }
+  log.scrollTop=log.scrollHeight;
+  renderChain();
+}
+function renderChain(){
+  const m=chainM;const div=document.getElementById("chain-vis");
+  let html='<div style="display:flex;flex-direction:column;gap:3px;font-family:JetBrains Mono,monospace;font-size:12px">';
+  for(let i=0;i<m;i++){
+    const items=chainTable[i]||[];const busy=items.length>0;
+    html+=`<div style="display:flex;align-items:center;gap:5px">`;
+    html+=`<span style="width:28px;text-align:right;color:var(--muted);font-size:11px">${i}</span>`;
+    html+=`<div style="min-width:52px;border:1px solid ${busy?"var(--amber)":"var(--border)"};background:${busy?"rgba(240,165,0,.1)":"var(--code-bg)"};border-radius:4px;padding:3px 7px;color:${busy?"var(--amber)":"var(--muted)"};text-align:center">${busy?items[0]:"—"}</div>`;
+    if(items.length>1){
+      for(let j=1;j<items.length;j++){
+        html+=`<span style="color:var(--muted)">→</span><div style="border:1px solid rgba(240,165,0,.4);background:rgba(240,165,0,.06);border-radius:4px;padding:3px 7px;color:var(--amber)">${items[j]}</div>`;
+      }
+    }
+    if(busy)html+=`<span style="color:var(--muted);font-size:10px">null</span>`;
+    html+="</div>";
+  }
+  html+="</div>";
+  div.innerHTML=html;
+}
+chainReset();
+
+// ── LINEAR PROBING STATIC ────────────────────────────────────────────
+(function(){
+  const inserts=[76,93,40,47,10,55];const m=7;const t=Array(m).fill(null);
+  let html="<div style='display:flex;flex-direction:column;gap:6px;font-size:13px;font-family:JetBrains Mono,monospace'>";
+  inserts.forEach(k=>{
+    const h0=k%m;let i=0,slot=-1;
+    while(i<m){const s=(h0+i)%m;if(t[s]===null){t[s]=k;slot=s;break;}i++;}
+    const probes=i+1;
+    let thtml="<div style='display:flex;align-items:center;gap:0'>";
+    for(let j=0;j<m;j++){
+      const isNew=j===slot;const wasProbed=j>=h0%m&&j<slot||isNew;
+      thtml+=`<div class="ht-slot${isNew?" active":""}" style="min-width:48px">`;
+      thtml+=`<span class="idx">${j}</span><span class="val">${t[j]!==null?t[j]:""}</span></div>`;
+    }
+    thtml+="</div>";
+    const note=probes>1?`<span style="color:var(--red)"> (collision! ${probes} probes)</span>`:`<span style="color:var(--green)"> (${probes} probe)</span>`;
+    html+=`<div><span style="color:var(--muted)">insert(${k}) h=${k}%7=${h0} → slot ${slot}</span>${note}</div>${thtml}`;
+  });
+  html+="</div>";
+  document.getElementById("lp-static").innerHTML=html;
+})();
+
+// ── PROBE VISUALIZER (interactive) ────────────────────────────────────────────
+let probeTable=[];let probeM=7;
+function probeReset(){
+  probeM=parseInt(document.getElementById("probe-m").value)||7;
+  probeTable=Array(probeM).fill(null);
+  renderProbe([]);document.getElementById("probe-log").innerHTML="";
+}
+function getHash(key,i,m,mode){
+  const h1=((key%m)+m)%m;
+  if(mode==="linear")return(h1+i)%m;
+  if(mode==="quadratic")return(h1+i*i)%m;
+  const mp=m-1||1;const h2=1+(((key%(mp))+mp)%mp);
+  return(h1+i*h2)%m;
+}
+function probeInsert(){
+  const k=parseInt(document.getElementById("probe-key").value);
+  const m=parseInt(document.getElementById("probe-m").value)||7;
+  const mode=document.getElementById("probe-mode").value;
+  probeM=m;if(probeTable.length!==m)probeTable=Array(m).fill(null);
+  const log=document.getElementById("probe-log");
+  let probed=[];
+  for(let i=0;i<m;i++){
+    const s=getHash(k,i,m,mode);probed.push(s);
+    if(probeTable[s]===null||probeTable[s]==="TOMB"){
+      probeTable[s]=k;
+      log.innerHTML+=`<span class="log-ok">Insert ${k} → probes: [${probed.join(",")}] → placed at slot ${s} (${i+1} probe${i?"s":""})</span>`;
+      renderProbe(probed,s);return;
+    }
+    if(i>0)log.innerHTML+=`<span class="log-probe">  probe ${i}: slot ${s} occupied by ${probeTable[s]}</span>`;
+  }
+  log.innerHTML+=`<span class="log-col">Table full! Cannot insert ${k}</span>`;
+  renderProbe(probed,-1);
+}
+function probeSearch(){
+  const k=parseInt(document.getElementById("probe-key").value);
+  const m=probeM;const mode=document.getElementById("probe-mode").value;
+  const log=document.getElementById("probe-log");let probed=[];
+  for(let i=0;i<m;i++){
+    const s=getHash(k,i,m,mode);probed.push(s);
+    if(probeTable[s]===null){log.innerHTML+=`<span class="log-col">Search ${k}: NOT FOUND (hit empty at slot ${s}, probes: ${probed.join(",")})</span>`;renderProbe(probed,-1);return;}
+    if(probeTable[s]===k){log.innerHTML+=`<span class="log-ok">Search ${k}: FOUND at slot ${s} (probes: ${probed.join(",")})</span>`;renderProbe(probed,s);return;}
+  }
+  log.innerHTML+=`<span class="log-col">Search ${k}: NOT FOUND</span>`;
+}
+function renderProbe(probed,found){
+  const m=probeM;const div=document.getElementById("probe-vis");
+  let html="<div style='display:flex;gap:0;flex-wrap:wrap;margin:8px 0'>";
+  for(let i=0;i<m;i++){
+    const isFound=i===found;const wasProbed=probed.includes(i)&&!isFound;
+    const val=probeTable[i];const isEmpty=val===null||val==="TOMB";
+    let cls="ht-slot";
+    if(isFound)cls+=" active";
+    else if(wasProbed)cls+=" collide";
+    html+=`<div class="${cls}" style="min-width:56px">`;
+    html+=`<span class="idx">${i}</span>`;
+    html+=`<span class="val">${val===null?"":val==="TOMB"?"[del]":val}</span>`;
+    html+="</div>";
+  }
+  html+="</div>";
+  div.innerHTML=html;
+  document.getElementById("probe-log").scrollTop=9999;
+}
+probeReset();
+
+// ── UPDATE probe-m when changed ──
+document.getElementById("probe-m").addEventListener("change",probeReset);
+document.getElementById("chain-m").addEventListener("change",chainReset);
+</script>
+
+<style>
+.ex-block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin:20px 0}
+.ex-block h5{font-family:'Fraunces',serif;font-size:17px;color:var(--amber);margin-bottom:8px}
+.ex-block .difficulty{font-family:'JetBrains Mono',monospace;font-size:11px;border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:12px}
+.d-basic{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+.d-mod{background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.3)}
+.d-hard{background:rgba(240,165,0,.12);color:var(--amber);border:1px solid rgba(240,165,0,.3)}
+.d-tricky{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.step-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.step-row:last-child{border-bottom:none}
+.step-row .sn{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);min-width:24px;padding-top:2px}
+.step-row .sd{flex:1;font-size:14px;color:#C8D5E8;line-height:1.6}
+.step-row .sc{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--code-bg);border:1px solid var(--border);border-radius:4px;padding:2px 8px;white-space:nowrap;color:var(--green)}
+.arr-table{display:flex;gap:0;font-family:'JetBrains Mono',monospace;font-size:12px;flex-wrap:wrap;margin:8px 0}
+.arr-cell{border:1px solid var(--border);min-width:44px;padding:5px 8px;text-align:center;background:var(--code-bg);transition:all .3s}
+.arr-cell:first-child{border-radius:5px 0 0 5px}
+.arr-cell:last-child{border-radius:0 5px 5px 0}
+.arr-cell .ci{color:var(--muted);font-size:10px;display:block}
+.arr-cell .cv{min-height:16px;color:var(--text)}
+.arr-cell.hi{background:rgba(240,165,0,.18);border-color:var(--amber)}
+.arr-cell.new{background:rgba(52,211,153,.15);border-color:var(--green);animation:pop .4s ease}
+.arr-cell.col{background:rgba(248,113,113,.15);border-color:var(--red)}
+.arr-cell.tomb{background:rgba(120,120,120,.1);color:var(--muted)}
+.arr-cell.probe{background:rgba(96,165,250,.12);border-color:var(--blue)}
+.arr-cell.found{background:rgba(52,211,153,.2);border-color:var(--green)}
+.arr-cell.emp{color:var(--muted)}
+@keyframes pop{0%{transform:scale(1.15)}100%{transform:scale(1)}}
+.seq-pill{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;margin:3px;transition:all .3s}
+.seq-pill.ok{background:rgba(52,211,153,.15);border:1px solid var(--green);color:var(--green)}
+.seq-pill.dup{background:rgba(248,113,113,.15);border:1px solid var(--red);color:var(--red)}
+.seq-pill.norm{background:rgba(96,165,250,.1);border:1px solid var(--blue);color:var(--blue)}
+.cluster-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-family:'JetBrains Mono',monospace;font-size:12px}
+.ckey{color:var(--muted);min-width:90px;text-align:right}
+.carr{color:var(--muted);font-size:16px}
+.probe-ann{font-size:11px;color:var(--muted);margin-left:4px;font-family:'Plus Jakarta Sans',sans-serif}
+.good-ann{color:var(--green)}
+.bad-ann{color:var(--red)}
+.warn-ann{color:var(--amber)}
+.side-by-side{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.sb-card{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:16px}
+.sb-card h6{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.anno{font-size:12px;color:var(--muted);font-style:italic;margin-left:8px;font-family:'Plus Jakarta Sans',sans-serif}
+.perm-check{font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px 14px;border-radius:6px;margin-top:8px;display:inline-block}
+.perm-ok{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+.perm-fail{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.cluster-bar{display:flex;gap:0;margin:6px 0}
+.cluster-bar .cb{min-width:40px;height:34px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;transition:all .4s}
+.cluster-bar .cb:first-child{border-radius:5px 0 0 5px}
+.cluster-bar .cb:last-child{border-radius:0 5px 5px 0}
+.cb-cluster{background:rgba(248,113,113,.2);border-color:var(--red);color:var(--red);font-weight:700}
+.cb-unrel{background:rgba(240,165,0,.15);border-color:var(--amber);color:var(--amber)}
+.cb-empty{color:var(--muted)}
+.btn-group{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.path-trail{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:13px}
+.pt{padding:4px 10px;border-radius:4px;display:flex;align-items:center;gap:4px}
+.pt.start{background:rgba(240,165,0,.15);border:1px solid var(--amber);color:var(--amber)}
+.pt.probe{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.4);color:var(--blue)}
+.pt.land{background:rgba(52,211,153,.15);border:1px solid var(--green);color:var(--green)}
+.pt.col{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);color:var(--red)}
+.pt-arr{color:var(--muted)}
+</style>
+
+<!-- ═══════════════════════ PROBE SEQUENCE WORKED EXAMPLE -->
+<section id="probe-seq-worked">
+<div class="sec-header">
+  <span class="sec-num">03b — WORKED EXAMPLE</span>
+  <h1>Probe Sequence: A Permutation?</h1>
+  <p class="sec-sub">The claim: for a key k, the sequence ⟨h(k,0), h(k,1), ..., h(k,m−1)⟩ must visit every slot exactly once — a permutation of {0,...,m-1}. Let's verify this for all three methods.</p>
+</div>
+
+<div class="section-intro">
+  <p><strong>Why does this matter?</strong> If the probe sequence is a permutation, we're guaranteed to find an empty slot if one exists. If it cycles back (not a permutation), we might miss empty slots and wrongly report "table full." This is the <em>cycle problem</em> in quadratic probing.</p>
+</div>
+
+<div class="ex-block">
+  <h5>Concrete Setup</h5>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m = 7, key k = 5. We compute h(k, i) for i = 0, 1, 2, 3, 4, 5, 6 under each method.</p>
+  <div class="side-by-side" style="grid-template-columns:1fr 1fr 1fr">
+
+    <div class="sb-card">
+      <h6 style="color:var(--blue)">Linear: h(k,i) = (k%m + i) % m</h6>
+      <div class="step-row"><div class="sn">i=0</div><div class="sd">5%7 + 0 = 5</div><div class="sc">slot 5</div></div>
+      <div class="step-row"><div class="sn">i=1</div><div class="sd">5 + 1 = 6</div><div class="sc">slot 6</div></div>
+      <div class="step-row"><div class="sn">i=2</div><div class="sd">5 + 2 = 7 → 0</div><div class="sc">slot 0</div></div>
+      <div class="step-row"><div class="sn">i=3</div><div class="sd">5 + 3 = 8 → 1</div><div class="sc">slot 1</div></div>
+      <div class="step-row"><div class="sn">i=4</div><div class="sd">5 + 4 = 9 → 2</div><div class="sc">slot 2</div></div>
+      <div class="step-row"><div class="sn">i=5</div><div class="sd">5 + 5 = 10 → 3</div><div class="sc">slot 3</div></div>
+      <div class="step-row"><div class="sn">i=6</div><div class="sd">5 + 6 = 11 → 4</div><div class="sc">slot 4</div></div>
+      <div>Sequence: ⟨5, 6, 0, 1, 2, 3, 4⟩</div>
+      <div class="perm-check perm-ok">✓ Permutation of {0..6}</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">All 7 slots visited. Guaranteed to find empty if one exists.</p>
+    </div>
+
+    <div class="sb-card">
+      <h6 style="color:var(--red)">Quadratic: h(k,i) = (k%m + i²) % m</h6>
+      <div class="step-row"><div class="sn">i=0</div><div class="sd">5 + 0 = 5</div><div class="sc">slot 5</div></div>
+      <div class="step-row"><div class="sn">i=1</div><div class="sd">5 + 1 = 6</div><div class="sc">slot 6</div></div>
+      <div class="step-row"><div class="sn">i=2</div><div class="sd">5 + 4 = 9 → 2</div><div class="sc">slot 2</div></div>
+      <div class="step-row"><div class="sn">i=3</div><div class="sd">5 + 9 = 14 → 0</div><div class="sc">slot 0</div></div>
+      <div class="step-row" style="background:rgba(248,113,113,.07)"><div class="sn" style="color:var(--red)">i=4</div><div class="sd" style="color:var(--red)">5 + 16 = 21 → <strong>0 ← REPEAT!</strong></div><div class="sc" style="color:var(--red)">slot 0</div></div>
+      <div class="step-row" style="background:rgba(248,113,113,.07)"><div class="sn" style="color:var(--red)">i=5</div><div class="sd" style="color:var(--red)">5 + 25 = 30 → <strong>2 ← REPEAT!</strong></div><div class="sc" style="color:var(--red)">slot 2</div></div>
+      <div class="step-row" style="background:rgba(248,113,113,.07)"><div class="sn" style="color:var(--red)">i=6</div><div class="sd" style="color:var(--red)">5 + 36 = 41 → <strong>6 ← REPEAT!</strong></div><div class="sc" style="color:var(--red)">slot 6</div></div>
+      <div>Sequence: ⟨5, 6, 2, 0, <span style="color:var(--red)">0*, 2*, 6*</span>⟩</div>
+      <div class="perm-check perm-fail">✗ NOT a permutation — cycles!</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">Slots 1, 3, 4 never visited! With bad m (non-prime), quadratic can cycle.</p>
+    </div>
+
+    <div class="sb-card">
+      <h6 style="color:var(--green)">Double: h(k,i)=(h₁+i·h₂)%m<br>h₁=5, h₂=1+(5%6)=6</h6>
+      <div class="step-row"><div class="sn">i=0</div><div class="sd">5 + 0·6 = 5</div><div class="sc">slot 5</div></div>
+      <div class="step-row"><div class="sn">i=1</div><div class="sd">5 + 6 = 11 → 4</div><div class="sc">slot 4</div></div>
+      <div class="step-row"><div class="sn">i=2</div><div class="sd">5 + 12 = 17 → 3</div><div class="sc">slot 3</div></div>
+      <div class="step-row"><div class="sn">i=3</div><div class="sd">5 + 18 = 23 → 2</div><div class="sc">slot 2</div></div>
+      <div class="step-row"><div class="sn">i=4</div><div class="sd">5 + 24 = 29 → 1</div><div class="sc">slot 1</div></div>
+      <div class="step-row"><div class="sn">i=5</div><div class="sd">5 + 30 = 35 → 0</div><div class="sc">slot 0</div></div>
+      <div class="step-row"><div class="sn">i=6</div><div class="sd">5 + 36 = 41 → 6</div><div class="sc">slot 6</div></div>
+      <div>Sequence: ⟨5, 4, 3, 2, 1, 0, 6⟩</div>
+      <div class="perm-check perm-ok">✓ Permutation of {0..6}</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">All 7 slots visited, in a different order than linear probing.</p>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <div class="demo-title">Interactive Probe Sequence Explorer</div>
+  <div class="demo-controls">
+    <label>Key (k):</label>
+    <input type="number" id="ps-k" value="5" min="0">
+    <label>Table size (m):</label>
+    <input type="number" id="ps-m" value="7" min="3" max="19">
+    <label>Method:</label>
+    <select id="ps-mode">
+      <option value="all">All 3 side-by-side</option>
+      <option value="linear">Linear only</option>
+      <option value="quadratic">Quadratic only</option>
+      <option value="double">Double only</option>
+    </select>
+    <button class="btn" onclick="showProbeSeq()">Show Sequence</button>
+  </div>
+  <div id="ps-output"></div>
+</div>
+</section>
+
+<!-- ═══════════════════════ CHAINING WORKED EXAMPLES -->
+<section id="chaining-ex">
+<div class="sec-header">
+  <span class="sec-num">04b — WORKED EXAMPLES</span>
+  <h1>Chaining: Complete Walkthrough</h1>
+  <p class="sec-sub">From insertion to search to deletion — every operation annotated step by step.</p>
+</div>
+
+<div class="ex-block">
+  <h5>Example 1: Basic Insertions</h5>
+  <span class="difficulty d-basic">Basic</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px"><strong>Setup:</strong> m = 7, h(k) = k % 7. Insert: 50, 700, 76, 85, 14, 95, 21</p>
+  <div class="step-row"><div class="sn">1</div><div class="sd"><strong>50 % 7 = 1</strong> → slot 1 empty → insert directly</div><div class="sc">slot 1: [50]</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd"><strong>700 % 7 = 0</strong> → slot 0 empty → insert directly</div><div class="sc">slot 0: [700]</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd"><strong>76 % 7 = 6</strong> → slot 6 empty → insert directly</div><div class="sc">slot 6: [76]</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd"><strong>85 % 7 = 1</strong> → slot 1 has [50] → <span style="color:var(--red)">COLLISION!</span> → append to chain</div><div class="sc">slot 1: [50→85]</div></div>
+  <div class="step-row"><div class="sn">5</div><div class="sd"><strong>14 % 7 = 0</strong> → slot 0 has [700] → <span style="color:var(--red)">COLLISION!</span> → append to chain</div><div class="sc">slot 0: [700→14]</div></div>
+  <div class="step-row"><div class="sn">6</div><div class="sd"><strong>95 % 7 = 4</strong> → slot 4 empty → insert directly</div><div class="sc">slot 4: [95]</div></div>
+  <div class="step-row"><div class="sn">7</div><div class="sd"><strong>21 % 7 = 0</strong> → slot 0 has [700→14] → <span style="color:var(--red)">COLLISION!</span> → append → chain of 3!</div><div class="sc">slot 0: [700→14→21]</div></div>
+  <div style="margin-top:14px;padding:12px;background:var(--code-bg);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px">
+    <div style="color:var(--muted)">Final table state (m=7, n=7, α=7/7=<span style="color:var(--amber)">1.0</span>):</div>
+    <div style="margin-top:8px">
+      <div class="cluster-row"><span class="ckey">slot 0:</span><span style="color:var(--text)">[700] → [14] → [21] → null</span></div>
+      <div class="cluster-row"><span class="ckey">slot 1:</span><span style="color:var(--text)">[50] → [85] → null</span></div>
+      <div class="cluster-row"><span class="ckey">slot 2:</span><span style="color:var(--muted)">empty</span></div>
+      <div class="cluster-row"><span class="ckey">slot 3:</span><span style="color:var(--muted)">empty</span></div>
+      <div class="cluster-row"><span class="ckey">slot 4:</span><span style="color:var(--text)">[95] → null</span></div>
+      <div class="cluster-row"><span class="ckey">slot 5:</span><span style="color:var(--muted)">empty</span></div>
+      <div class="cluster-row"><span class="ckey">slot 6:</span><span style="color:var(--text)">[76] → null</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="ex-block">
+  <h5>Example 2: Search — Successful and Unsuccessful</h5>
+  <span class="difficulty d-mod">Moderate</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Using the same table from Example 1. Count exact comparisons for each search.</p>
+
+  <h4>Successful search for key 21:</h4>
+  <div class="step-row"><div class="sn">1</div><div class="sd">Compute h(21) = 21 % 7 = <strong>0</strong> → go to slot 0</div><div class="sc">1 op (hash)</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">slot 0 head = 700. Is 700 == 21? <span style="color:var(--red)">No</span> → move to next</div><div class="sc">comparison 1</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">Next = 14. Is 14 == 21? <span style="color:var(--red)">No</span> → move to next</div><div class="sc">comparison 2</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd">Next = 21. Is 21 == 21? <span style="color:var(--green)">YES</span> → return 21</div><div class="sc">comparison 3 ← found!</div></div>
+  <div class="callout info" style="margin:10px 0"><span class="callout-title">Cost for key 21</span>1 (hash) + 3 (comparisons) = 4 ops. Position in chain = 3rd. α = 1, predicted = 1 + α/2 = 1.5. Key 21 took more than average (it was last in its chain).</div>
+
+  <h4>Unsuccessful search for key 99:</h4>
+  <div class="step-row"><div class="sn">1</div><div class="sd">Compute h(99) = 99 % 7 = <strong>1</strong> → go to slot 1</div><div class="sc">1 op (hash)</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">slot 1 head = 50. Is 50 == 99? <span style="color:var(--red)">No</span></div><div class="sc">comparison 1</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">Next = 85. Is 85 == 99? <span style="color:var(--red)">No</span></div><div class="sc">comparison 2</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd">Next = null → end of chain → <span style="color:var(--red)">NOT FOUND</span></div><div class="sc">traversed whole chain</div></div>
+  <div class="callout info" style="margin:10px 0"><span class="callout-title">Cost for unsuccessful search at slot 1</span>1 (hash) + 2 (comparisons) = 3 ops. α = 1, Theorem 11.1 predicts: 1 + α = 2. We got 1 + 2 (chain length at slot 1). Average would be 1 + avg_chain_length = 1 + 1 (some chains are longer, some empty).</div>
+</div>
+
+<div class="ex-block">
+  <h5>Example 3: Delete — Why Chaining Handles It Cleanly</h5>
+  <span class="difficulty d-hard">Hard concept comparison</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Delete key 14 from the table. Then search for 21. Compare: <em>how much simpler this is than open addressing deletion!</em></p>
+  <div class="step-row"><div class="sn">1</div><div class="sd">h(14) = 14 % 7 = 0 → go to slot 0's chain: [700 → 14 → 21]</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">Find 14 in chain (it's the 2nd node). Remove it by relinking: 700.next = 21</div><div class="sc">chain now [700→21]</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">Search for 21: h(21)=0, traverse [700→21], found! No tombstone needed, no broken chains.</div><div class="sc">✓ 2 comparisons</div></div>
+  <div class="callout success" style="margin:10px 0"><span class="callout-title">✅ Why Chaining Wins on Deletion</span>Deletion in chaining = remove node from linked list. Clean. No tombstones, no broken probe chains, no follow-up searches needed. This is the main advantage of chaining over open addressing for workloads with heavy deletions.</div>
+</div>
+
+<div class="ex-block">
+  <h5>Example 4: Verifying Theorem 11.2 Average</h5>
+  <span class="difficulty d-tricky">Extremely Tricky</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Theorem 11.2 says average successful search = 1 + α/2 = 1 + 1/2 = 1.5 (since α=1 here). Let's verify by computing exact comparisons for every key and averaging.</p>
+  <table>
+    <tr><th>Key</th><th>h(k)</th><th>Position in chain</th><th>Comparisons to find</th></tr>
+    <tr><td>700</td><td>0</td><td>1st</td><td>1</td></tr>
+    <tr><td>14</td><td>0</td><td>2nd (after deleting, but let's use original)</td><td>2</td></tr>
+    <tr><td>21</td><td>0</td><td>3rd</td><td>3</td></tr>
+    <tr><td>50</td><td>1</td><td>1st</td><td>1</td></tr>
+    <tr><td>85</td><td>1</td><td>2nd</td><td>2</td></tr>
+    <tr><td>95</td><td>4</td><td>1st</td><td>1</td></tr>
+    <tr><td>76</td><td>6</td><td>1st</td><td>1</td></tr>
+  </table>
+  <div class="proof" style="margin-top:12px">
+    <p class="proof-title">Average Verification</p>
+    <p class="math">Average comparisons = (1+2+3+1+2+1+1) / 7 = 11/7 ≈ 1.57</p>
+    <p class="math">Theorem predicts: 1 + α/2 = 1 + 1/2 = 1.50</p>
+    <p>Close! The small difference is because n=7 is small. As n grows, the actual average converges to the theoretical value. Plus 1 operation for computing the hash → total ≈ 1 + 1.57 = 2.57 ops, close to theorem's 1 + α/2 = 1.5 + 1 hash = 2.5.</p>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════ LINEAR PROBING WORKED EXAMPLES -->
+<section id="lp-ex">
+<div class="sec-header">
+  <span class="sec-num">06a-examples — LINEAR PROBING</span>
+  <h1>Linear Probing: Complete Walkthrough</h1>
+  <p class="sec-sub">Four examples: from basic insertion to cluster formation, deletion problems, and the cascade effect.</p>
+</div>
+
+<div class="ex-block">
+  <h5>Example 1: Basic Insertion — No Collisions</h5>
+  <span class="difficulty d-basic">Basic</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=10, h(k)=k%10. Insert: 72, 27, 36, 24, 63, 81</p>
+  <div class="step-row"><div class="sn">1</div><div class="sd">72 % 10 = <strong>2</strong> → slot 2 empty</div><div class="sc">slot 2 = 72, 1 probe</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">27 % 10 = <strong>7</strong> → slot 7 empty</div><div class="sc">slot 7 = 27, 1 probe</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">36 % 10 = <strong>6</strong> → slot 6 empty</div><div class="sc">slot 6 = 36, 1 probe</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd">24 % 10 = <strong>4</strong> → slot 4 empty</div><div class="sc">slot 4 = 24, 1 probe</div></div>
+  <div class="step-row"><div class="sn">5</div><div class="sd">63 % 10 = <strong>3</strong> → slot 3 empty</div><div class="sc">slot 3 = 63, 1 probe</div></div>
+  <div class="step-row"><div class="sn">6</div><div class="sd">81 % 10 = <strong>1</strong> → slot 1 empty</div><div class="sc">slot 1 = 81, 1 probe</div></div>
+  <p style="color:var(--muted);font-size:13px">All insertions need exactly 1 probe — no collisions. Final state:</p>
+  <div id="lp-ex1-table"></div>
+</div>
+
+<div class="ex-block">
+  <h5>Example 2: Collision Resolution — Step by Step</h5>
+  <span class="difficulty d-mod">Moderate</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=7, h(k)=k%7. Insert: 76, 93, 40, 47, 10, 55 — watch collisions resolve</p>
+  <div id="lp-ex2-stepper"></div>
+  <div class="btn-group">
+    <button class="btn" onclick="lpStep2Next()">▶ Next Step</button>
+    <button class="btn red sm" onclick="lpStep2Reset()">Reset</button>
+    <span id="lp-ex2-status" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);padding:4px 0"></span>
+  </div>
+  <div id="lp-ex2-explain" style="margin-top:10px;font-size:13px;color:var(--muted);min-height:40px"></div>
+</div>
+
+<div class="ex-block">
+  <h5>Example 3: Search in Linear Probing</h5>
+  <span class="difficulty d-mod">Moderate</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Using the table from Example 2 (after inserting 76, 93, 40, 47, 10, 55 into m=7). Find 55 (successful), then find 12 (unsuccessful).</p>
+  <h4>Successful search for 55:</h4>
+  <div class="step-row"><div class="sn">1</div><div class="sd">h(55) = 55 % 7 = <strong>6</strong> → check slot 6</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">slot 6 = 76. Is 76 == 55? <span style="color:var(--red)">No</span> → probe next (slot 0)</div><div class="sc">probe 1, collision</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">slot 0 = 47. Is 47 == 55? <span style="color:var(--red)">No</span> → probe next (slot 1)</div><div class="sc">probe 2, collision</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd">slot 1 = 55. Is 55 == 55? <span style="color:var(--green)">YES</span> → FOUND!</div><div class="sc">probe 3, FOUND ✓</div></div>
+  <div class="path-trail" style="margin:10px 0">
+    <div class="pt start">h(55)=6</div><div class="pt-arr">→</div>
+    <div class="pt col">slot 6=76 ✗</div><div class="pt-arr">+1</div>
+    <div class="pt col">slot 0=47 ✗</div><div class="pt-arr">+1</div>
+    <div class="pt land">slot 1=55 ✓</div>
+  </div>
+  <h4>Unsuccessful search for 12:</h4>
+  <div class="step-row"><div class="sn">1</div><div class="sd">h(12) = 12 % 7 = <strong>5</strong> → check slot 5</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">slot 5 = 40. Is 40 == 12? No → probe slot 6</div><div class="sc">probe 1</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">slot 6 = 76. Is 76 == 12? No → probe slot 0</div><div class="sc">probe 2</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd">slot 0 = 47. Is 47 == 12? No → probe slot 1</div><div class="sc">probe 3</div></div>
+  <div class="step-row"><div class="sn">5</div><div class="sd">slot 1 = 55. Is 55 == 12? No → probe slot 2</div><div class="sc">probe 4</div></div>
+  <div class="step-row"><div class="sn">6</div><div class="sd">slot 2 = 93. Is 93 == 12? No → probe slot 3</div><div class="sc">probe 5</div></div>
+  <div class="step-row"><div class="sn">7</div><div class="sd">slot 3 = 10. Is 10 == 12? No → probe slot 4</div><div class="sc">probe 6</div></div>
+  <div class="step-row"><div class="sn">8</div><div class="sd">slot 4 = <strong>EMPTY</strong> → stop! 12 is NOT in the table.</div><div class="sc">NOT FOUND ✗</div></div>
+  <div class="callout insight" style="margin:10px 0"><span class="callout-title">Key Lesson</span>Unsuccessful search stops at the FIRST empty slot. We checked 6 slots before finding the empty slot at index 4. This is worst-case-like behavior because the table is dense — all slots from h(12)=5 onward were occupied until slot 4.</div>
+</div>
+</section>
+
+<!-- ═══════════════════════ TOMBSTONE INTERACTIVE -->
+<section id="tombstone-ex">
+<div class="sec-header">
+  <span class="sec-num">06a-tombstone</span>
+  <h1>The Tombstone Problem: Interactive Demo</h1>
+  <p class="sec-sub">See exactly what breaks when you delete without a tombstone — and why the marker is not optional.</p>
+</div>
+
+<div class="ex-block">
+  <h5>Setup: Why Naive Deletion Breaks Search</h5>
+  <span class="difficulty d-tricky">Extremely Tricky</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=7, h=k%7. Table after inserting 76 (slot 6), 47 (slot 0 — collision from 5), 55 (slot 1 — collision). Now delete 76.</p>
+
+  <div class="side-by-side">
+    <div class="sb-card">
+      <h6 style="color:var(--red)">❌ Without Tombstone (naive delete)</h6>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Set deleted slot to NULL/None</p>
+      <div id="tomb-bad-table"></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)"><strong>Search for 55:</strong><br>
+        h(55)=6 → slot 6 is <span style="color:var(--red)">NULL</span> → <span style="color:var(--red)">STOP! Report "not found"</span><br>
+        <span style="color:var(--red)">❌ WRONG! 55 IS in the table at slot 1!</span>
+      </div>
+    </div>
+    <div class="sb-card">
+      <h6 style="color:var(--green)">✅ With Tombstone (correct delete)</h6>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Set deleted slot to TOMB marker</p>
+      <div id="tomb-good-table"></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)"><strong>Search for 55:</strong><br>
+        h(55)=6 → slot 6 is <span style="color:var(--amber)">TOMB</span> → keep probing!<br>
+        → slot 0 = 47 → keep probing!<br>
+        → slot 1 = 55 → <span style="color:var(--green)">FOUND! ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout insight" style="margin-top:16px"><span class="callout-title">🔑 Why Tombstone Works</span>TOMB ≠ NULL. TOMB means "I was deleted, but something might have been placed further along MY probe path. Keep searching." NULL means "Nobody was ever here. The probe chain ends here."<br><br><strong>The crucial invariant:</strong> If key K was inserted at position i (after probing past position j), then K must be reachable from h(K) by following the probe sequence without crossing any NULL. A TOMB preserves this invariant; NULL breaks it.</div>
+</div>
+
+<div class="demo">
+  <div class="demo-title">Interactive Tombstone Demo</div>
+  <div class="demo-controls">
+    <label>m=10, h=k%10. Insert:</label>
+    <input type="number" id="tb-key" value="12" min="0" max="99">
+    <button class="btn" onclick="tbInsert()">Insert</button>
+    <input type="number" id="tb-del" value="2" min="0" max="99">
+    <button class="btn red sm" onclick="tbDelete()">Delete</button>
+    <input type="number" id="tb-srch" value="22" min="0" max="99">
+    <button class="btn blue sm" onclick="tbSearch()">Search</button>
+    <button class="btn red sm" onclick="tbReset()">Reset</button>
+  </div>
+  <div id="tb-vis"></div>
+  <div id="tb-log"></div>
+</div>
+</section>
+
+<!-- ═══════════════════════ CLUSTERING VISUALIZATIONS -->
+<section id="clustering-viz">
+<div class="sec-header">
+  <span class="sec-num">06bc — CLUSTERING</span>
+  <h1>Primary vs Secondary Clustering: Visual Proof</h1>
+  <p class="sec-sub">Watch clustering form in real time, and see why they're two fundamentally different problems requiring two different fixes.</p>
+</div>
+
+<div class="ex-block">
+  <h5>Primary Clustering — Step Through</h5>
+  <span class="difficulty d-hard">Hard</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=10, h=k%10. Watch as keys hashing to slot 0 build a cluster that <em>blocks unrelated keys</em>.</p>
+  <div id="pc-vis"></div>
+  <div class="btn-group">
+    <button class="btn" onclick="pcNext()">▶ Insert next key</button>
+    <button class="btn red sm" onclick="pcReset()">Reset</button>
+    <span id="pc-info" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted)"></span>
+  </div>
+  <div id="pc-explain" style="margin-top:10px;font-size:13px;color:#B0C4DE;min-height:48px;line-height:1.7"></div>
+  <div id="pc-danger" style="margin-top:8px"></div>
+</div>
+
+<div class="ex-block">
+  <h5>Secondary Clustering — Two Keys, Same Starting Slot</h5>
+  <span class="difficulty d-tricky">Extremely Tricky</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=11, h₁=k%11. Keys <strong>k₁=10</strong> and <strong>k₂=21</strong> both have h₁=10. Watch how Quadratic Probing forces the same path, while Double Hashing takes different paths.</p>
+
+  <div class="side-by-side">
+    <div class="sb-card">
+      <h6 style="color:var(--red)">Quadratic Probing (h=k%11+i²)</h6>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:8px">k₁=10, h₁=10. Both follow same path:</p>
+      <div id="sc-qp-k1"></div>
+      <p style="font-size:12px;color:var(--muted);margin:8px 0">k₂=21, h₁=21%11=10. SAME starting slot:</p>
+      <div id="sc-qp-k2"></div>
+      <div class="perm-check perm-fail" style="margin-top:8px">Both traverse IDENTICAL slots → Secondary Cluster!</div>
+    </div>
+    <div class="sb-card">
+      <h6 style="color:var(--green)">Double Hashing (h₁=k%11, h₂=1+k%10)</h6>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:8px">k₁=10: h₁=10, h₂=1+(10%10)=<strong>1</strong>. Path:</p>
+      <div id="sc-dh-k1"></div>
+      <p style="font-size:12px;color:var(--muted);margin:8px 0">k₂=21: h₁=10, h₂=1+(21%10)=<strong>2</strong>. Path:</p>
+      <div id="sc-dh-k2"></div>
+      <div class="perm-check perm-ok" style="margin-top:8px">Different step sizes → Different paths → No cluster!</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════ QUADRATIC/DH WORKED EXAMPLES -->
+<section id="qp-ex">
+<div class="sec-header">
+  <span class="sec-num">06bc-examples</span>
+  <h1>Quadratic Probing & Double Hashing: Worked Examples</h1>
+  <p class="sec-sub">From the cycle trap to the step-size magic of double hashing.</p>
+</div>
+
+<div class="ex-block">
+  <h5>QP Example 1: Insert with Quadratic Jumps</h5>
+  <span class="difficulty d-mod">Moderate</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=7 (prime! important), h(k,i)=(k%7+i²)%7. Insert: 76, 40, 48, 5, 55</p>
+  <div class="step-row"><div class="sn">1</div><div class="sd">76 % 7 = <strong>6</strong> → slot 6 empty</div><div class="sc">slot 6 = 76</div></div>
+  <div class="step-row"><div class="sn">2</div><div class="sd">40 % 7 = <strong>5</strong> → slot 5 empty</div><div class="sc">slot 5 = 40</div></div>
+  <div class="step-row"><div class="sn">3</div><div class="sd">48 % 7 = <strong>6</strong> → slot 6 taken! i=1: (6+1)%7=0 → slot 0 empty</div><div class="sc">slot 0 = 48, 2 probes</div></div>
+  <div class="step-row"><div class="sn">4</div><div class="sd">5 % 7 = <strong>5</strong> → slot 5 taken! i=1: (5+1)%7=6 → taken! i=2: (5+4)%7=2 → slot 2 empty</div><div class="sc">slot 2 = 5, 3 probes</div></div>
+  <div class="step-row"><div class="sn">5</div><div class="sd">55 % 7 = <strong>6</strong> → slot 6 taken! i=1: (6+1)=0 → taken! i=2: (6+4)=10%7=3 → slot 3 empty</div><div class="sc">slot 3 = 55, 3 probes</div></div>
+  <div id="qp-ex1-table"></div>
+</div>
+
+<div class="ex-block">
+  <h5>QP Example 2: The Cycle Trap (Extremely Tricky)</h5>
+  <span class="difficulty d-tricky">Extremely Tricky</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=<strong>8</strong> (NOT prime — this will hurt!), h(k,i)=(k%8+i²)%8. Key k=0.</p>
+  <table>
+    <tr><th>i</th><th>i²</th><th>i² mod 8</th><th>Probe slot (0+i²)%8</th><th>Seen before?</th></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>—</td></tr>
+    <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>—</td></tr>
+    <tr><td>2</td><td>4</td><td>4</td><td>4</td><td>—</td></tr>
+    <tr><td>3</td><td>9</td><td>1</td><td>1</td><td style="color:var(--red)">⚠️ CYCLE!</td></tr>
+    <tr><td>4</td><td>16</td><td>0</td><td>0</td><td style="color:var(--red)">⚠️ CYCLE!</td></tr>
+    <tr><td>5</td><td>25</td><td>1</td><td>1</td><td style="color:var(--red)">⚠️ CYCLE!</td></tr>
+    <tr><td>6</td><td>36</td><td>4</td><td>4</td><td style="color:var(--red)">⚠️ CYCLE!</td></tr>
+    <tr><td>7</td><td>49</td><td>1</td><td>1</td><td style="color:var(--red)">⚠️ CYCLE!</td></tr>
+  </table>
+  <div class="callout warn" style="margin-top:12px"><span class="callout-title">⚠️ The Cycle Disaster</span>Probing only visits slots {0, 1, 4}. Slots {2, 3, 5, 6, 7} are <strong>never probed</strong>. If slots 0, 1, 4 are all occupied, we'll incorrectly report "table full" even though 5 slots are empty!<br><br><strong>Fix: Use prime m.</strong> For prime m, quadratic probing visits at least ⌊m/2⌋+1 distinct slots — enough to guarantee finding an empty slot if the table is less than half full.</div>
+</div>
+
+<div class="ex-block">
+  <h5>DH Example 1: Different h₂ → Different Paths (The Key Proof)</h5>
+  <span class="difficulty d-hard">Hard</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">m=7, h₁(k)=k%7, h₂(k)=1+(k%6). Same h₁=5, but different h₂ → completely different probe sequences.</p>
+  <div class="side-by-side">
+    <div class="sb-card">
+      <h6 style="color:var(--blue)">k=5: h₁=5, h₂=1+(5%6)=6</h6>
+      <div class="step-row"><div class="sn">i=0</div><div class="sd">(5 + 0·6) % 7 = 5</div><div class="sc">slot 5</div></div>
+      <div class="step-row"><div class="sn">i=1</div><div class="sd">(5 + 1·6) % 7 = 11%7 = 4</div><div class="sc">slot 4</div></div>
+      <div class="step-row"><div class="sn">i=2</div><div class="sd">(5 + 2·6) % 7 = 17%7 = 3</div><div class="sc">slot 3</div></div>
+      <div class="step-row"><div class="sn">i=3</div><div class="sd">(5 + 3·6) % 7 = 23%7 = 2</div><div class="sc">slot 2</div></div>
+      <div class="step-row"><div class="sn">i=4</div><div class="sd">(5 + 4·6) % 7 = 29%7 = 1</div><div class="sc">slot 1</div></div>
+      <div class="step-row"><div class="sn">i=5</div><div class="sd">(5 + 5·6) % 7 = 35%7 = 0</div><div class="sc">slot 0</div></div>
+      <div class="step-row"><div class="sn">i=6</div><div class="sd">(5 + 6·6) % 7 = 41%7 = 6</div><div class="sc">slot 6</div></div>
+      <div style="margin-top:8px">Path: ⟨5, 4, 3, 2, 1, 0, 6⟩</div>
+      <div class="perm-check perm-ok">✓ Permutation — steps DOWN by 1 each time</div>
+    </div>
+    <div class="sb-card">
+      <h6 style="color:var(--amber)">k=12: h₁=12%7=5, h₂=1+(12%6)=1</h6>
+      <div class="step-row"><div class="sn">i=0</div><div class="sd">(5 + 0·1) % 7 = 5</div><div class="sc">slot 5</div></div>
+      <div class="step-row"><div class="sn">i=1</div><div class="sd">(5 + 1·1) % 7 = 6</div><div class="sc">slot 6</div></div>
+      <div class="step-row"><div class="sn">i=2</div><div class="sd">(5 + 2·1) % 7 = 0</div><div class="sc">slot 0</div></div>
+      <div class="step-row"><div class="sn">i=3</div><div class="sd">(5 + 3·1) % 7 = 1</div><div class="sc">slot 1</div></div>
+      <div class="step-row"><div class="sn">i=4</div><div class="sd">(5 + 4·1) % 7 = 2</div><div class="sc">slot 2</div></div>
+      <div class="step-row"><div class="sn">i=5</div><div class="sd">(5 + 5·1) % 7 = 3</div><div class="sc">slot 3</div></div>
+      <div class="step-row"><div class="sn">i=6</div><div class="sd">(5 + 6·1) % 7 = 4</div><div class="sc">slot 4</div></div>
+      <div style="margin-top:8px">Path: ⟨5, 6, 0, 1, 2, 3, 4⟩</div>
+      <div class="perm-check perm-ok">✓ Permutation — steps UP by 1 (like linear!)</div>
+    </div>
+  </div>
+  <div class="callout success" style="margin-top:12px"><span class="callout-title">✅ Key Insight</span>Both k=5 and k=12 start at slot 5. But h₂(5)=6 vs h₂(12)=1 → completely different probe paths. No secondary clustering! They only compete at the very first probe — after that, their paths diverge completely. This is the magic of double hashing: m² possible (start, step) pairs vs just m for linear/quadratic.</div>
+</div>
+
+<div class="ex-block">
+  <h5>DH Example 2: h₂ Must Not Be Zero — Why?</h5>
+  <span class="difficulty d-tricky">Extremely Tricky</span>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px">What if h₂(k)=0 for some key? Then h(k,i) = (h₁(k) + i·0) % m = h₁(k) always. The probe sequence would be: same slot, same slot, same slot... infinite loop! You'd never leave the initial slot.</p>
+  <div class="callout warn"><span class="callout-title">⚠️ Why h₂(k) = 1 + (k mod m′)</span>The "1 +" ensures h₂ is NEVER zero. m′ is chosen slightly less than m (often m-1 or a nearby prime) to ensure h₂ covers a wide range. Without the "1 +", a key with k divisible by m′ would give h₂=0 → infinite probing loop.</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════ SHORT NOTES / QUICK REVISION -->
+<section id="short-notes">
+<div class="sec-header">
+  <span class="sec-num">QR — QUICK REVISION</span>
+  <h1>Short Notes</h1>
+  <p class="sec-sub">Every concept, theorem, formula, and trap — compressed for fast recall. No fluff.</p>
+</div>
+
+<style>
+.sn-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.sn-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.sn-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.sn-card h5{font-size:12px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.sn-mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);background:var(--code-bg);padding:7px 10px;border-radius:5px;margin:7px 0}
+.sn-row{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--code-bg);border-radius:4px;margin-bottom:4px;font-size:12px}
+.sn-row span:first-child{color:var(--muted)}
+.sn-row span:last-child{color:var(--green);font-family:'JetBrains Mono',monospace}
+.sn-trap{padding:6px 10px;background:rgba(248,113,113,.07);border-left:2px solid var(--red);border-radius:4px;font-size:12px;margin-bottom:5px}
+.sn-trap strong{color:var(--red)}
+.sn-tip{padding:6px 10px;background:rgba(240,165,0,.07);border-left:2px solid var(--amber);border-radius:4px;font-size:12px;margin-bottom:5px}
+.sn-tip strong{color:var(--amber)}
+.sn-ok{padding:6px 10px;background:rgba(52,211,153,.06);border-left:2px solid var(--green);border-radius:4px;font-size:12px;margin-bottom:5px}
+.sn-ok strong{color:var(--green)}
+ul.sn-ul{font-size:12px;color:#C8D5E8;padding-left:18px;line-height:2;margin:6px 0}
+</style>
+
+<!-- ─────────────── FOUNDATIONS ─────────────── -->
+<h2>Foundations</h2>
+<div class="sn-grid-3">
+
+  <div class="sn-card" style="border-top:2px solid var(--blue)">
+    <h5 style="color:var(--blue)">Direct Address Table</h5>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px">Key is used directly as array index. O(1) insert / search / delete.</p>
+    <p style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:5px">3 Limitations (WHY hashing exists):</p>
+    <ul class="sn-ul">
+      <li>Keys must be <strong>non-negative integers</strong> (strings need pre-hashing)</li>
+      <li>Key <strong>range must be small</strong> — phone numbers → 10⁹ slots for just 100 items</li>
+      <li>Keys must be <strong>dense</strong> — keys {1, 500, 10000} waste 9997 slots</li>
+    </ul>
+    <div class="sn-ok" style="margin-top:8px"><strong>Fix:</strong> pre-hash (→ int) + hash fn (compress range)</div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--amber)">
+    <h5 style="color:var(--amber)">Hash Function h(k) = k % m</h5>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px">Maps any key k → slot in {0 … m−1}. &nbsp;<code>h : U → {0..m−1}</code></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+      <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:7px;font-size:11px">
+        <div style="color:var(--red);font-weight:700;margin-bottom:3px">❌ Bad m</div>
+        <div style="color:var(--muted)">m = 2ⁿ → only last n bits seen<br>m = 10ⁿ → only last n digits<br>→ collision clusters</div>
+      </div>
+      <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:5px;padding:7px;font-size:11px">
+        <div style="color:var(--green);font-weight:700;margin-bottom:3px">✅ Good m</div>
+        <div style="color:var(--muted)">Prime near 2ⁿ<br>e.g. 997 instead of 1024<br>→ uniform spread</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#C8D5E8"><strong>3 Required Properties:</strong> uses every bit of k · uniform spread · O(1) to compute</p>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--red)">
+    <h5 style="color:var(--red)">Collisions &amp; Naming</h5>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px"><strong>Pigeonhole:</strong> |U| &gt; m → ≥ 2 keys always share a slot. Unavoidable.</p>
+    <div class="sn-mono" style="text-align:center">P[h(k) = i] = 1/m<br><span style="color:var(--muted);font-size:11px">Simple Uniform Hashing — equal probability to any slot</span></div>
+    <p style="font-size:11px;color:var(--amber);font-weight:700;margin:8px 0 4px">⚠️ Naming Confusion:</p>
+    <div style="font-size:11px;font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;gap:3px">
+      <div><span style="color:var(--text)">Separate Chaining</span> <span style="color:var(--muted)">=</span> <span style="color:var(--muted)">Open Hashing = Closed Addressing</span></div>
+      <div><span style="color:var(--text)">Open Addressing</span> <span style="color:var(--muted)">=</span> <span style="color:var(--muted)">Closed Hashing</span></div>
+    </div>
+    <div class="sn-mono" style="text-align:center;margin-top:8px">α = n / m &nbsp;(load factor)<br><span style="color:var(--muted);font-size:11px">Chaining: α can be &gt; 1 &nbsp;|&nbsp; OA: α ≤ 1 always</span></div>
+  </div>
+</div>
+
+<!-- ─────────────── SEPARATE CHAINING ─────────────── -->
+<h2>Separate Chaining</h2>
+<div class="sn-grid-2">
+
+  <div class="sn-card" style="border-top:2px solid var(--green)">
+    <h5 style="color:var(--green)">How It Works</h5>
+    <ul class="sn-ul">
+      <li>Each slot holds the <strong>head of a linked list</strong></li>
+      <li>Collision → append new node to the list</li>
+      <li><strong>α = n/m</strong> = average chain length (can exceed 1)</li>
+      <li>n can exceed m — table never "fills up"</li>
+      <li>Deletion = unlink node. <span style="color:var(--green)">No tombstones needed.</span></li>
+    </ul>
+    <table style="font-size:11px;width:100%;margin-top:8px">
+      <tr><th style="font-size:10px">Op</th><th style="font-size:10px">Average</th><th style="font-size:10px">Worst</th></tr>
+      <tr><td>Insert / Search / Delete</td><td style="color:var(--green)">Θ(1 + α)</td><td style="color:var(--red)">O(n)</td></tr>
+    </table>
+    <div class="sn-ok" style="margin-top:8px"><strong>m = Θ(n)</strong> → α = constant → all ops <strong>O(1)</strong></div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--green)">
+    <h5 style="color:var(--green)">Analysis — Theorems 11.1 &amp; 11.2</h5>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:var(--code-bg);padding:10px;border-radius:5px;font-size:12px">
+        <div style="color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;margin-bottom:4px">Thm 11.1 · Unsuccessful Search</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--green)">Θ(1 + α)</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:3px">1 (hash compute) + α (traverse full chain to end)</div>
+      </div>
+      <div style="background:var(--code-bg);padding:10px;border-radius:5px;font-size:12px">
+        <div style="color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;margin-bottom:4px">Thm 11.2 · Successful Search</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--green)">Θ(1 + α/2) = Θ(1 + α)</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:3px">Full avg: 1 + (n−1)/(2m) ≈ 1 + α/2</div>
+      </div>
+      <div class="sn-tip">
+        <strong>"Go Back in Time" Trick:</strong> Cost of <em>successfully</em> finding item i (with n items) ≡ cost of <em>unsuccessfully</em> searching for item i when it was first inserted (i.e., with i−1 items). Why? Insert = unsuccessful search + append.
+        <br><span style="color:var(--muted)">→ Average: (1/n)·Σᵢ₌₁ⁿ [1 + (i−1)/m] = 1 + (n−1)/(2m) ≈ 1 + α/2</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── OPEN ADDRESSING ─────────────── -->
+<h2>Open Addressing</h2>
+
+<div class="sn-card" style="border-top:2px solid var(--amber);margin-bottom:16px">
+  <h5 style="color:var(--amber)">Core Rules</h5>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;font-size:12px">
+    <div><div style="color:var(--amber);font-weight:700;margin-bottom:4px">Constraint</div>
+      <div style="color:#C8D5E8">All n items stored <strong>inside</strong> the table. α ≤ 1 always. Table can become 100% full.</div></div>
+    <div><div style="color:var(--amber);font-weight:700;margin-bottom:4px">Probe Sequence</div>
+      <div style="color:#C8D5E8">⟨h(k,0), h(k,1), …, h(k,m−1)⟩ must be a <strong>permutation of {0…m−1}</strong>. Guarantees finding empty if one exists.</div></div>
+    <div><div style="color:var(--amber);font-weight:700;margin-bottom:4px">General Formula</div>
+      <div class="sn-mono">h(k,i) = (h′(k) + f(i)) % m</div>
+      <div style="color:var(--muted);font-size:11px">Choice of f(i) → LP / QP / DH</div></div>
+  </div>
+</div>
+
+<div class="sn-grid-3">
+
+  <div class="sn-card" style="border-top:2px solid var(--blue)">
+    <h5 style="color:var(--blue)">6a · Linear Probing</h5>
+    <div class="sn-mono">f(i) = i<br>h(k,i) = (k%m + i) % m</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Try h′(k), then h′(k)+1, h′(k)+2 … wrapping around.</p>
+    <div class="sn-ok"><strong>✅</strong> Simple, great cache locality</div>
+    <div class="sn-trap"><strong>❌ Primary Clustering:</strong> consecutive filled block grows → blocks unrelated keys that hash nearby</div>
+    <div class="sn-tip"><strong>m</strong> distinct probe sequences per key</div>
+    <div class="sn-trap"><strong>❌ Deletion needs TOMBSTONE</strong> (cannot just set NULL)</div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--amber)">
+    <h5 style="color:var(--amber)">6b · Quadratic Probing</h5>
+    <div class="sn-mono">f(i) = i²<br>h(k,i) = (h′(k) + i²) % m</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Jumps: +0, +1, +4, +9, +16… always from original h′(k).</p>
+    <div class="sn-ok"><strong>✅</strong> Eliminates primary clustering</div>
+    <div class="sn-trap"><strong>❌ Secondary Clustering:</strong> same h′(k) → f(i) unchanged → entire probe path identical for both keys</div>
+    <div class="sn-trap"><strong>❌ Cycle trap:</strong> non-prime m can cause the sequence to miss slots. Always use <strong>prime m</strong>.</div>
+    <div class="sn-tip"><strong>m</strong> distinct sequences · must use prime m</div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--green)">
+    <h5 style="color:var(--green)">6c · Double Hashing</h5>
+    <div class="sn-mono">h(k,i) = (h₁(k) + i·h₂(k)) % m<br>h₁ = k % m<br>h₂ = 1 + (k % m′) &nbsp;where m′ &lt; m</div>
+    <div class="sn-ok"><strong>✅</strong> Eliminates both primary &amp; secondary clustering</div>
+    <div class="sn-ok"><strong>✅ m²</strong> distinct probe sequences (h₁, h₂ pair)</div>
+    <div class="sn-trap"><strong>⚠️ h₂ must never = 0.</strong> The "1 +" guarantees this. If h₂=0, the probe loops on the same slot forever.</div>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px">Same h₁ + different h₂ → completely different paths after probe 0.</p>
+  </div>
+</div>
+
+<div class="sn-grid-2">
+
+  <div class="sn-card" style="border-top:2px solid var(--purple)">
+    <h5 style="color:var(--purple)">6d · Probe Sequence Count Comparison</h5>
+    <table style="font-size:12px;width:100%">
+      <tr><th style="font-size:11px">Method</th><th style="font-size:11px">Sequences / key</th><th style="font-size:11px">Cluster type</th></tr>
+      <tr><td>Linear Probing</td><td style="color:var(--red);font-family:'JetBrains Mono',monospace">m</td><td style="color:var(--red)">Primary</td></tr>
+      <tr><td>Quadratic Probing</td><td style="color:var(--red);font-family:'JetBrains Mono',monospace">m</td><td style="color:var(--amber)">Secondary</td></tr>
+      <tr><td>Double Hashing</td><td style="color:var(--amber);font-family:'JetBrains Mono',monospace">m²</td><td style="color:var(--green)">Neither</td></tr>
+      <tr><td style="color:var(--muted)">Uniform (ideal)</td><td style="color:var(--green);font-family:'JetBrains Mono',monospace">m!</td><td style="color:var(--green)">None</td></tr>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">More sequences → closer to theoretical uniform hashing → fewer expected collisions per probe.</p>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--red)">
+    <h5 style="color:var(--red)">Tombstone — Why Deletion is Hard in OA</h5>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px">In OA you cannot set a deleted slot to NULL/None.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+      <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:5px;padding:7px">
+        <div style="color:var(--red);font-weight:700;margin-bottom:3px">NULL delete → broken</div>
+        <div style="color:var(--muted)">Probe chain breaks. Search hits NULL early and reports "not found" even though the key exists further along.</div>
+      </div>
+      <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:5px;padding:7px">
+        <div style="color:var(--green);font-weight:700;margin-bottom:3px">TOMB → correct</div>
+        <div style="color:var(--muted)">TOMB = "deleted, keep probing past me."<br>NULL = "never used, stop here."</div>
+      </div>
+    </div>
+    <div class="sn-tip" style="margin-top:8px"><strong>Invariant:</strong> Key K reachable from h(K) without crossing any NULL. TOMB preserves this; NULL breaks it.</div>
+  </div>
+</div>
+
+<!-- ─────────────── OA ANALYSIS ─────────────── -->
+<h2>Open Addressing Analysis</h2>
+<div class="sn-grid-2">
+
+  <div class="sn-card" style="border-top:2px solid var(--amber)">
+    <h5 style="color:var(--amber)">Theorem 11.6 · Unsuccessful Search (OA)</h5>
+    <div class="sn-mono" style="font-size:18px;text-align:center">≤ 1 / (1 − α)</div>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px">Assumes uniform hashing, α &lt; 1.</p>
+    <div class="sn-tip">
+      <strong>Derivation — Geometric Series:</strong><br>
+      P(hit empty) = 1−α. Keep probing until empty.<br>
+      <strong>Reusable template:</strong> P(success) = p → E[attempts] = 1/p<br>
+      ∴ E[probes] = 1/(1−α)<br>
+      <span style="color:var(--muted);font-size:11px">Full proof: E[X] = (1−α)·S where S = Σk·αᵏ⁻¹. AGP trick: S − αS = 1/(1−α) → S = 1/(1−α)². So E[X] = (1−α)/(1−α)² = 1/(1−α).</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;text-align:center;font-size:11px;font-family:'JetBrains Mono',monospace">
+      <div style="background:var(--code-bg);padding:5px;border-radius:4px"><div style="color:var(--muted)">α=0.5</div><div style="color:var(--green);font-weight:700">2</div></div>
+      <div style="background:var(--code-bg);padding:5px;border-radius:4px"><div style="color:var(--muted)">α=0.8</div><div style="color:var(--amber);font-weight:700">5</div></div>
+      <div style="background:var(--code-bg);padding:5px;border-radius:4px"><div style="color:var(--muted)">α=0.9</div><div style="color:var(--red);font-weight:700">10</div></div>
+      <div style="background:var(--code-bg);padding:5px;border-radius:4px"><div style="color:var(--muted)">α=1</div><div style="color:var(--red);font-weight:700">∞</div></div>
+    </div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--amber)">
+    <h5 style="color:var(--amber)">Theorem 11.7 · Successful Search (OA)</h5>
+    <div class="sn-mono" style="font-size:15px;text-align:center">≤ (1/α) · ln(1 / (1−α))</div>
+    <div class="sn-tip">
+      <strong>Derivation:</strong> "Go back in time" → cost searching for item i ≡ unsuccessful search with i−1 items = 1/(1−(i−1)/m) = m/(m−i+1).<br>
+      Average over all n: (1/n)·Σ m/(m−i+1) = (1/α)·∫ dx/x → (1/α)·ln(1/(1−α)).
+    </div>
+    <table style="font-size:11px;width:100%;margin-top:10px">
+      <tr><th style="font-size:10px">Method</th><th style="font-size:10px">Unsuccessful</th><th style="font-size:10px">Successful</th></tr>
+      <tr><td>Chaining</td><td style="color:var(--green)">Θ(1 + α)</td><td style="color:var(--green)">Θ(1 + α/2)</td></tr>
+      <tr><td>OA (uniform)</td><td style="color:var(--amber)">1/(1−α)</td><td style="color:var(--amber)">(1/α)·ln(1/(1−α))</td></tr>
+    </table>
+    <div class="sn-trap" style="margin-top:10px"><strong>Key contrast:</strong> As α→1, OA time→∞. Chaining stays Θ(1+α). Keep OA table at <strong>α ≤ 0.7–0.75</strong>.</div>
+  </div>
+</div>
+
+<!-- ─────────────── PROBABILITY ─────────────── -->
+<h2>Probability in Hashing</h2>
+<div class="sn-grid-3">
+
+  <div class="sn-card" style="border-top:2px solid var(--purple)">
+    <h5 style="color:var(--purple)">Bernoulli Random Variable</h5>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px">Binary outcome: X ∈ {0, 1}. &nbsp;P(X = 1) = p.</p>
+    <div class="sn-mono">E[X]   = p<br>Var[X] = p(1 − p)</div>
+    <p style="font-size:12px;color:#C8D5E8;margin-top:8px"><strong>In hashing:</strong> Xᵢ = 1 if item i goes to target slot, else 0. Since uniform hashing: p = 1/m.</p>
+    <div class="sn-ok" style="margin-top:8px"><strong>Indicator RV technique:</strong> define one Bernoulli per item/event → sum → use linearity of expectation.</div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--purple)">
+    <h5 style="color:var(--purple)">Binomial RV — B(n, p)</h5>
+    <p style="font-size:12px;color:#C8D5E8;margin-bottom:8px">Sum of n independent Bernoulli(p) RVs. Counts total successes in n trials.</p>
+    <div class="sn-mono">P(X=k) = C(n,k)·pᵏ·(1−p)ⁿ⁻ᵏ<br>E[X]   = np<br>Var[X] = np(1−p)<br>E[X²]  = Var[X] + (E[X])²</div>
+    <div style="background:rgba(167,139,250,.08);border-left:2px solid var(--purple);padding:7px;border-radius:4px;font-size:12px;margin-top:8px">
+      <strong>Linearity of Expectation:</strong><br>
+      E[X₁+…+Xₙ] = ΣE[Xᵢ] — <strong>always</strong>, even without independence.
+    </div>
+  </div>
+
+  <div class="sn-card" style="border-top:2px solid var(--blue)">
+    <h5 style="color:var(--blue)">3 Classic Hashing Questions</h5>
+    <div style="display:flex;flex-direction:column;gap:7px;font-size:12px">
+      <div style="background:var(--code-bg);padding:9px;border-radius:5px">
+        <div style="color:var(--amber);font-weight:700;margin-bottom:3px">Q1: E[items in a slot]</div>
+        <div style="font-family:'JetBrains Mono',monospace;color:var(--green)">=  n/m  =  α</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">Load factor IS the expected chain length.</div>
+      </div>
+      <div style="background:var(--code-bg);padding:9px;border-radius:5px">
+        <div style="color:var(--amber);font-weight:700;margin-bottom:3px">Q2: E[empty slots]</div>
+        <div style="font-family:'JetBrains Mono',monospace;color:var(--green)">=  m · (1 − 1/m)ⁿ</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">When n=m: ≈ m/e ≈ <span style="color:var(--red)">37% still empty</span> even when "full".</div>
+      </div>
+      <div style="background:var(--code-bg);padding:9px;border-radius:5px">
+        <div style="color:var(--amber);font-weight:700;margin-bottom:3px">Q3: E[collisions]</div>
+        <div style="font-family:'JetBrains Mono',monospace;color:var(--green)">=  n(n−1) / (2m)</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">P(i-th insert collides) = (i−1)/m. Sum i=1…n.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── MASTER CHEAT SHEET ─────────────── -->
+<h2>Master Cheat Sheet</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+  <div class="sn-card">
+    <h5 style="color:var(--amber)">All Formulas at a Glance</h5>
+    <div class="sn-row"><span>Load factor</span><span>α = n / m</span></div>
+    <div class="sn-row"><span>Chaining: unsuccessful</span><span>Θ(1 + α)</span></div>
+    <div class="sn-row"><span>Chaining: successful</span><span>Θ(1 + α/2)</span></div>
+    <div class="sn-row"><span>OA: unsuccessful (Thm 11.6)</span><span>1 / (1 − α)</span></div>
+    <div class="sn-row"><span>OA: successful (Thm 11.7)</span><span>(1/α)·ln(1/(1−α))</span></div>
+    <div class="sn-row"><span>E[items per slot]</span><span>α</span></div>
+    <div class="sn-row"><span>E[empty slots]</span><span>m·(1−1/m)ⁿ</span></div>
+    <div class="sn-row"><span>E[collisions]</span><span>n(n−1) / (2m)</span></div>
+    <div class="sn-row"><span>LP/QP probe sequences</span><span>m</span></div>
+    <div class="sn-row"><span>DH probe sequences</span><span>m²</span></div>
+    <div class="sn-row"><span>Bernoulli E[X]</span><span>p = 1/m</span></div>
+    <div class="sn-row"><span>Binomial E[X]</span><span>np</span></div>
+    <div class="sn-row"><span>Binomial Var[X]</span><span>np(1−p)</span></div>
+    <div class="sn-row"><span>E[X²]</span><span>Var[X] + (E[X])²</span></div>
+    <div class="sn-row"><span>Chaining O(1) condition</span><span>m = Θ(n)</span></div>
+    <div class="sn-row"><span>OA practical limit</span><span>α ≤ 0.75</span></div>
+  </div>
+
+  <div class="sn-card">
+    <h5 style="color:var(--red)">Common Traps &amp; Pitfalls</h5>
+    <div class="sn-trap"><strong>OA deletion:</strong> Never set slot to NULL. Use TOMBSTONE — it means "deleted, keep probing."</div>
+    <div class="sn-trap"><strong>QP base slot:</strong> Always probe from original h′(k), NOT from the previous probe slot.</div>
+    <div class="sn-trap"><strong>QP + non-prime m:</strong> Quadratic probing can cycle and miss empty slots. Must use prime m.</div>
+    <div class="sn-trap"><strong>DH h₂ = 0:</strong> Leads to infinite loop on the same slot. The "1 +" in h₂ = 1 + (k%m′) prevents this.</div>
+    <div class="sn-trap"><strong>m = 2ⁿ or 10ⁿ:</strong> Only partial key bits used → collision clusters → avoid.</div>
+    <div class="sn-trap"><strong>Naming:</strong> "Open Addressing" ≠ "Open Hashing." They are opposite strategies.</div>
+    <div class="sn-trap"><strong>Secondary clustering:</strong> Caused when f(i) doesn't depend on k (LP and QP). DH fixes this because h₂ is key-dependent.</div>
+    <div class="sn-tip"><strong>Worst case = O(n)</strong> for all methods. Hashing is analyzed on <em>average case</em> only.</div>
+    <div class="sn-ok"><strong>"Go back in time" trick</strong> is used in both Thm 11.2 (chaining) and Thm 11.7 (OA): successful search for item i ≡ unsuccessful search when item i was inserted.</div>
+    <div class="sn-tip"><strong>1/(1−α) template:</strong> Whenever P(success) = p in a repeated trial, E[attempts until success] = 1/p. Reuse everywhere.</div>
+  </div>
+</div>
+
+</section>
+
+</main>
+
+<script>
+// ── PROBE SEQUENCE VISUALIZER ────────────────────────────────
+function computePS(k, m, mode) {
+  const h1 = ((k % m) + m) % m;
+  const mp = (m - 1) || 1;
+  const h2raw = ((k % mp) + mp) % mp;
+  const h2 = 1 + h2raw;
+  const seq = [];
+  for (let i = 0; i < m; i++) {
+    let s;
+    if (mode === 'linear') s = (h1 + i) % m;
+    else if (mode === 'quadratic') s = (h1 + i * i) % m;
+    else s = (h1 + i * h2) % m;
+    seq.push(s);
+  }
+  return { seq, h1, h2 };
+}
+
+function seqDisplay(seq, label, color) {
+  const seen = new Set();
+  let html = `<div style="margin-bottom:6px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">${label}:</span></div>`;
+  html += '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">';
+  const dups = new Set();
+  seq.forEach((s, i) => {
+    if (seen.has(s)) dups.add(s);
+    seen.add(s);
+  });
+  const seenNow = new Set();
+  seq.forEach(s => {
+    const isDup = dups.has(s) && seenNow.has(s);
+    const cls = isDup ? 'seq-pill dup' : 'seq-pill ok';
+    html += `<div class="${cls}">${s}</div>`;
+    seenNow.add(s);
+  });
+  html += '</div>';
+  const isPerm = seen.size === seq.length;
+  html += `<div class="perm-check ${isPerm ? 'perm-ok' : 'perm-fail'}">${isPerm ? '✓ Full permutation (' + seq.length + ' distinct slots)' : '✗ Cycle detected — only ' + seen.size + '/' + seq.length + ' distinct slots'}</div>`;
+  return html;
+}
+
+function showProbeSeq() {
+  const k = parseInt(document.getElementById('ps-k').value) || 0;
+  const m = parseInt(document.getElementById('ps-m').value) || 7;
+  const mode = document.getElementById('ps-mode').value;
+  const out = document.getElementById('ps-output');
+  let html = '';
+  if (mode === 'all') {
+    html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
+    ['linear','quadratic','double'].forEach(md => {
+      const { seq, h1, h2 } = computePS(k, m, md);
+      const modeLabel = md === 'double' ? `Double (h₁=${h1}, h₂=${h2})` : md === 'quadratic' ? `Quadratic (h′=${h1}, f(i)=i²)` : `Linear (h′=${h1}, f(i)=i)`;
+      html += `<div style="background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:14px">`;
+      html += `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px;text-transform:uppercase">${md}</div>`;
+      html += seqDisplay(seq, modeLabel, '');
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    const { seq, h1, h2 } = computePS(k, m, mode);
+    const info = mode === 'double' ? ` — h₁=${h1}, h₂=${h2} (step size)` : ` — h′(k)=${h1}`;
+    html = `<div style="background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:16px">`;
+    html += `<p style="font-size:12px;color:var(--muted);margin-bottom:10px">k=${k}, m=${m}, ${mode}${info}</p>`;
+    html += seqDisplay(seq, 'Probe sequence', '');
+    html += `<p style="font-size:12px;color:var(--muted);margin-top:10px">Sequence: ⟨${seq.join(', ')}⟩</p>`;
+    html += '</div>';
+  }
+  out.innerHTML = html;
+}
+showProbeSeq();
+
+// ── LP EXAMPLE 1 TABLE ────────────────────────────────────────
+(function() {
+  const data = {2:'72',7:'27',6:'36',4:'24',3:'63',1:'81'};
+  let h = '';
+  for (let i = 0; i < 10; i++) {
+    const v = data[i];
+    h += `<div class="arr-cell${v?' new':' emp'}"><span class="ci">${i}</span><span class="cv">${v||''}</span></div>`;
+  }
+  document.getElementById('lp-ex1-table').innerHTML = '<div class="arr-table">'+h+'</div>';
+})();
+
+// ── LP EXAMPLE 2 STEPPER ────────────────────────────────────────
+const lp2Keys = [76,93,40,47,10,55];
+const lp2M = 7;
+let lp2Table = Array(lp2M).fill(null);
+let lp2Step = 0;
+const lp2Explains = [
+  "76 % 7 = 6 → slot 6 is empty. Insert immediately. No collision. Probe count: 1.",
+  "93 % 7 = 2 → slot 2 is empty. Insert immediately. Probe count: 1.",
+  "40 % 7 = 5 → slot 5 is empty. Insert immediately. Probe count: 1.",
+  "47 % 7 = 5 → slot 5 is TAKEN (has 40). Collision! Try slot (5+1)%7=6 → TAKEN (has 76). Try slot (5+2)%7=0 → empty! Probe count: 3.",
+  "10 % 7 = 3 → slot 3 is empty. Insert immediately. Probe count: 1.",
+  "55 % 7 = 6 → slot 6 is TAKEN. Try slot 0 → TAKEN. Try slot 1 → empty! Probe count: 3. Notice: 55 ended up at slot 1, far from its original hash slot 6!"
+];
+function lpStep2Next() {
+  if (lp2Step >= lp2Keys.length) return;
+  const k = lp2Keys[lp2Step];
+  const h0 = k % lp2M;
+  let i = 0, placed = -1;
+  while (i < lp2M) {
+    const s = (h0 + i) % lp2M;
+    if (lp2Table[s] === null) { lp2Table[s] = k; placed = s; break; }
+    i++;
+  }
+  document.getElementById('lp-ex2-explain').innerHTML = '<span style="color:var(--amber);font-weight:600">Step '+(lp2Step+1)+':</span> '+lp2Explains[lp2Step];
+  document.getElementById('lp-ex2-status').textContent = (lp2Step+1)+' / '+lp2Keys.length+' inserted';
+  lp2Step++;
+  renderLP2Table(placed, h0);
+}
+function renderLP2Table(placed, h0) {
+  let h = '';
+  for (let i = 0; i < lp2M; i++) {
+    const v = lp2Table[i];
+    let cls = 'arr-cell';
+    if (i === placed) cls += ' new';
+    else if (v !== null) cls += ' hi';
+    else cls += ' emp';
+    h += `<div class="${cls}"><span class="ci">${i}</span><span class="cv">${v!==null?v:''}</span></div>`;
+  }
+  document.getElementById('lp-ex2-stepper').innerHTML = '<div class="arr-table">'+h+'</div>';
+}
+function lpStep2Reset() { lp2Table = Array(lp2M).fill(null); lp2Step = 0; document.getElementById('lp-ex2-stepper').innerHTML='<div class="arr-table">'+Array.from({length:lp2M},(_,i)=>`<div class="arr-cell emp"><span class="ci">${i}</span><span class="cv"></span></div>`).join('')+'</div>'; document.getElementById('lp-ex2-explain').innerHTML=''; document.getElementById('lp-ex2-status').textContent=''; }
+lpStep2Reset();
+
+// ── TOMBSTONE DEMO STATIC ────────────────────────────────────────
+(function() {
+  // Table after inserting into m=7: h=k%7
+  // 76→slot6, 47→slot0 (h=5, probe to 0), 55→slot1 (h=6, probe to 0,1)
+  // Actually let's use a cleaner scenario:
+  // m=7, Insert: 76(→6), then 55 (h=6, collision, goes to 0), then 47(h=5, goes to 5)
+  // Delete 76 from slot 6
+  const mState = [55,null,null,null,null,47,null]; // 55 at slot 0, 47 at slot 5
+  // The slot 6 was 76, now deleted
+  
+  // bad table: slot 6 = null after deleting 76
+  let badHtml = '';
+  for(let i=0;i<7;i++){
+    const v = i===6?null:mState[i];
+    badHtml += `<div class="arr-cell${v===null?' emp':''}"><span class="ci">${i}</span><span class="cv">${v!==null?v:''}</span></div>`;
+  }
+  document.getElementById('tomb-bad-table').innerHTML = '<div class="arr-table">'+badHtml+'</div>';
+  
+  // good table: slot 6 = TOMB
+  let goodHtml = '';
+  for(let i=0;i<7;i++){
+    const v = i===6?'TOMB':mState[i];
+    goodHtml += `<div class="arr-cell${v==='TOMB'?' tomb':v===null?' emp':''}"><span class="ci">${i}</span><span class="cv">${v!==null?v:''}</span></div>`;
+  }
+  document.getElementById('tomb-good-table').innerHTML = '<div class="arr-table">'+goodHtml+'</div>';
+})();
+
+// ── TOMBSTONE INTERACTIVE ────────────────────────────────────────
+let tbTable = Array(10).fill(null);
+function tbReset(){tbTable=Array(10).fill(null);renderTb([]);document.getElementById('tb-log').innerHTML=''}
+function tbHashLP(k,i,m){return((k%m)+i)%m}
+function tbInsert(){
+  const k=parseInt(document.getElementById('tb-key').value);const m=10;
+  const log=document.getElementById('tb-log');
+  let probed=[];
+  for(let i=0;i<m;i++){const s=tbHashLP(k,i,m);probed.push(s);
+    if(tbTable[s]===null||tbTable[s]==='TOMB'){tbTable[s]=k;
+      log.innerHTML+=`<span class="log-ok">Insert ${k}: probes [${probed.join(',')}] → slot ${s}</span>\n`;
+      renderTb([s]);return;}}
+  log.innerHTML+=`<span class="log-col">Table full, cannot insert ${k}</span>\n`;
+}
+function tbDelete(){
+  const k=parseInt(document.getElementById('tb-del').value);const m=10;
+  const log=document.getElementById('tb-log');
+  for(let i=0;i<m;i++){const s=tbHashLP(k,i,m);
+    if(tbTable[s]===null){log.innerHTML+=`<span class="log-col">Delete ${k}: NOT FOUND</span>\n`;renderTb([]);return;}
+    if(tbTable[s]===k){tbTable[s]='TOMB';log.innerHTML+=`<span class="log-probe">Delete ${k}: placed TOMBSTONE at slot ${s}</span>\n`;renderTb([s]);return;}}
+}
+function tbSearch(){
+  const k=parseInt(document.getElementById('tb-srch').value);const m=10;
+  const log=document.getElementById('tb-log');
+  let probed=[];
+  for(let i=0;i<m;i++){const s=tbHashLP(k,i,m);probed.push(s);
+    if(tbTable[s]===null){log.innerHTML+=`<span class="log-col">Search ${k}: NOT FOUND (stopped at empty slot ${s}). Probed: [${probed.join(',')}]</span>\n`;renderTb(probed);return;}
+    if(tbTable[s]===k){log.innerHTML+=`<span class="log-ok">Search ${k}: FOUND at slot ${s}. Probed: [${probed.join(',')}]</span>\n`;renderTb(probed,s);return;}}
+}
+function renderTb(probed,found=-1){
+  const div=document.getElementById('tb-vis');
+  let h='<div class="arr-table">';
+  for(let i=0;i<10;i++){
+    const v=tbTable[i];
+    let cls='arr-cell';
+    if(i===found&&v!==null&&v!=='TOMB')cls+=' found';
+    else if(probed.includes(i))cls+=' probe';
+    if(v==='TOMB')cls+=' tomb';
+    if(v===null)cls+=' emp';
+    h+=`<div class="${cls}"><span class="ci">${i}</span><span class="cv">${v===null?'':v==='TOMB'?'[del]':v}</span></div>`;
+  }
+  h+='</div>';div.innerHTML=h;
+  document.getElementById('tb-log').scrollTop=9999;
+}
+tbReset();
+
+// ── PRIMARY CLUSTERING STEPPER ────────────────────────────────────────
+const pcKeys = [0, 10, 20, 30, 1, 2, 40];  // first 4 hash to 0, then 1,2 unrelated, 40→0
+const pcM = 10;
+let pcTable = Array(pcM).fill(null);
+let pcStep = 0;
+const pcInfos = [
+  {k:0,  ann:"0 % 10 = 0. Slot 0 empty. Insert directly (1 probe). Cluster starts forming here.", type:'cluster'},
+  {k:10, ann:"10 % 10 = 0. COLLISION at slot 0! Probe +1 → slot 1 empty. Insert (2 probes). Cluster at {0,1}.", type:'cluster'},
+  {k:20, ann:"20 % 10 = 0. COLLISION at 0! Probe 1 → also full! Probe 2 → slot 2 empty. Insert (3 probes). Cluster at {0,1,2}.", type:'cluster'},
+  {k:30, ann:"30 % 10 = 0. Cluster at {0,1,2}! Must probe 3 times → slot 3. Insert (4 probes). Cluster at {0,1,2,3}.", type:'cluster'},
+  {k:1,  ann:"1 % 10 = 1. h(1)=1, but slot 1 is OCCUPIED by key 10 (which doesn't even hash here!). Must probe to slot 4. 4 PROBES! Key '1' which rightfully belongs at slot 1 is blocked by the cluster from slot 0 keys.", type:'victim'},
+  {k:2,  ann:"2 % 10 = 2. h(2)=2, but slot 2 is OCCUPIED by key 20. Must probe to slot 5. 4 PROBES! This is primary clustering: unrelated keys (1,2) are blocked by a cluster they have nothing to do with.", type:'victim'},
+  {k:40, ann:"40 % 10 = 0. Cluster is now {0,1,2,3,4,5}! Must probe 6 times → slot 6. The cluster keeps growing, blocking more and more unrelated insertions.", type:'cluster'},
+];
+function pcNext(){
+  if(pcStep>=pcKeys.length)return;
+  const info=pcInfos[pcStep];const k=info.k;const h0=k%pcM;
+  let i=0,placed=-1,probes=0;
+  while(i<pcM){const s=(h0+i)%pcM;probes++;if(pcTable[s]===null){pcTable[s]=k;placed=s;break;}i++;}
+  document.getElementById('pc-explain').innerHTML=
+    `<span style="color:${info.type==='victim'?'var(--red)':'var(--amber)'};font-weight:600">Insert ${k} (h=${h0}):</span> ${info.ann}`;
+  document.getElementById('pc-info').textContent=`Step ${pcStep+1}/${pcKeys.length} | Probes needed: ${probes}`;
+  if(info.type==='victim'){
+    document.getElementById('pc-danger').innerHTML=`<div class="callout warn" style="margin-top:4px;padding:12px 16px"><span class="callout-title">💥 Innocent Victim!</span>Key ${k} (h(${k})=${h0}) is being forced out of its natural slot by the cluster. This is the <strong>primary clustering cascade effect</strong>.</div>`;
+  } else {
+    document.getElementById('pc-danger').innerHTML='';
+  }
+  pcStep++;renderPC(placed,h0);
+}
+function renderPC(placed,h0){
+  // Group slots into cluster (red), victim (amber), placed (green), empty (dim)
+  const clusterKeys=[0,10,20,30,40];
+  const victimKeys=[1,2];
+  let html='<div class="arr-table">';
+  for(let i=0;i<pcM;i++){
+    const v=pcTable[i];
+    let cls='arr-cell';let style='';
+    if(i===placed){cls+=' new';}
+    else if(v!==null&&clusterKeys.includes(v)){cls+=' col';} // cluster = red
+    else if(v!==null&&victimKeys.includes(v)){style='background:rgba(240,165,0,.18);border-color:var(--amber)';} // victim = amber
+    else if(v===null){cls+=' emp';}
+    const extra=style?` style="${style}"`:'';
+    html+=`<div class="${cls}"${extra}><span class="ci">${i}</span><span class="cv">${v!==null?v:''}</span></div>`;
+  }
+  html+='</div>';
+  html+=`<div style="margin-top:8px;font-size:11px;font-family:'JetBrains Mono',monospace">`;
+  html+=`<span style="color:var(--red)">■</span> cluster keys &nbsp; `;
+  html+=`<span style="color:var(--amber)">■</span> innocent victims &nbsp; `;
+  html+=`<span style="color:var(--green)">■</span> just inserted</div>`;
+  document.getElementById('pc-vis').innerHTML=html;
+}
+function pcReset(){pcTable=Array(pcM).fill(null);pcStep=0;renderPC(-1,-1);document.getElementById('pc-explain').innerHTML='';document.getElementById('pc-danger').innerHTML='';document.getElementById('pc-info').textContent='';}
+pcReset();
+
+// ── SECONDARY CLUSTERING PATHS ────────────────────────────────────────
+function makePathDisplay(seq, m, label, color) {
+  let html = `<div style="margin-top:4px">`;
+  seq.forEach((s, i) => {
+    html += `<span class="seq-pill ok" style="background:rgba(${color},.12);border-color:rgba(${color},.4);color:rgba(${color},1)">${s}</span>`;
+    if (i < seq.length - 1 && i < 5) html += '<span style="color:var(--muted);font-size:12px">→</span>';
+    if (i === 5) { html += '<span style="color:var(--muted)">...</span>'; }
+  });
+  html += `</div>`;
+  return html;
+}
+
+(function(){
+  // m=11, k1=10 h1=10, k2=21 h1=10
+  // QP: h(k,i)=(k%11+i²)%11
+  const m=11;
+  const seqQP1=[],seqQP2=[],seqDH1=[],seqDH2=[];
+  const k1=10,k2=21;
+  for(let i=0;i<m;i++){
+    seqQP1.push(((k1%m)+i*i)%m);
+    seqQP2.push(((k2%m)+i*i)%m);
+    const h1a=(k1%m),h2a=1+(k1%(m-1)),h1b=(k2%m),h2b=1+(k2%(m-1));
+    seqDH1.push((h1a+i*h2a)%m);
+    seqDH2.push((h1b+i*h2b)%m);
+  }
+  function seqBadges(seq,isSame){
+    const dups=new Set();const seen=new Set();
+    seq.forEach(s=>{if(seen.has(s))dups.add(s);seen.add(s);});
+    const seenNow=new Set();
+    let h='<div style="display:flex;flex-wrap:wrap;gap:2px;margin:4px 0">';
+    seq.forEach(s=>{
+      const isDup=dups.has(s)&&seenNow.has(s);
+      const cls=isDup?'seq-pill dup':'seq-pill ok';
+      h+=`<div class="${cls}">${s}</div>`;seenNow.add(s);
+    });
+    h+='</div>';return h;
+  }
+  const sameQP=JSON.stringify(seqQP1)===JSON.stringify(seqQP2);
+  document.getElementById('sc-qp-k1').innerHTML=seqBadges(seqQP1,false)+`<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">⟨${seqQP1.slice(0,6).join(',')},...⟩</div>`;
+  document.getElementById('sc-qp-k2').innerHTML=seqBadges(seqQP2,false)+`<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">⟨${seqQP2.slice(0,6).join(',')},...⟩ ${sameQP?'← IDENTICAL to k₁!':''}</div>`;
+  document.getElementById('sc-dh-k1').innerHTML=seqBadges(seqDH1,false)+`<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">h₂=${1+(k1%(m-1))}: ⟨${seqDH1.slice(0,5).join(',')},...⟩</div>`;
+  document.getElementById('sc-dh-k2').innerHTML=seqBadges(seqDH2,false)+`<div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">h₂=${1+(k2%(m-1))}: ⟨${seqDH2.slice(0,5).join(',')},...⟩ ← DIFFERENT!</div>`;
+})();
+
+// ── QP EXAMPLE 1 TABLE ────────────────────────────────────────
+(function(){
+  const data={0:48,2:5,3:55,5:40,6:76};
+  let h='<div class="arr-table">';
+  for(let i=0;i<7;i++){
+    const v=data[i];
+    h+=`<div class="arr-cell${v!==undefined?' hi':' emp'}"><span class="ci">${i}</span><span class="cv">${v!==undefined?v:''}</span></div>`;
+  }
+  h+='</div>';
+  document.getElementById('qp-ex1-table').innerHTML=h;
+})();
+</script>
+
+</body>
+</html>

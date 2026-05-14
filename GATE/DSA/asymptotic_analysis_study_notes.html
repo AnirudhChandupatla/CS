@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asymptotic Analysis – Deep Study Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #13161e;
+  --bg3: #1a1e28;
+  --card: #1e2330;
+  --card2: #232940;
+  --border: #2e3550;
+  --accent1: #f0a500;
+  --accent2: #e05c5c;
+  --accent3: #4fc3f7;
+  --accent4: #81c784;
+  --accent5: #ce93d8;
+  --accent6: #ff8a65;
+  --text: #e8eaf6;
+  --text2: #9fa8b8;
+  --text3: #636d82;
+  --highlight: rgba(240,165,0,0.12);
+  --highlight2: rgba(79,195,247,0.1);
+  --code-bg: #111420;
+  --shadow: 0 4px 32px rgba(0,0,0,0.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Lato',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:16px;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+
+/* ── HEADER ── */
+.site-header{
+  background:linear-gradient(135deg,#0d0f14 0%,#1a1030 50%,#0d1520 100%);
+  border-bottom:2px solid var(--accent1);
+  padding:56px 0 40px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.site-header::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(240,165,0,.12),transparent);
+}
+.site-header h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,5vw,3.4rem);
+  font-weight:700;
+  color:#fff;
+  position:relative;
+  letter-spacing:-0.5px;
+}
+.site-header h1 span{color:var(--accent1)}
+.site-header .sub{
+  color:var(--text2);
+  font-size:1rem;
+  margin-top:8px;
+  font-weight:300;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  position:relative;
+}
+.quick-nav-btn{
+  display:inline-block;
+  margin-top:20px;
+  padding:10px 28px;
+  background:transparent;
+  border:1.5px solid var(--accent1);
+  color:var(--accent1);
+  border-radius:4px;
+  cursor:pointer;
+  font-size:.9rem;
+  font-family:'Lato',sans-serif;
+  font-weight:700;
+  letter-spacing:1px;
+  transition:all .2s;
+  position:relative;
+}
+.quick-nav-btn:hover{background:var(--accent1);color:#000}
+
+/* ── NAV ── */
+.toc{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:0;
+  position:sticky;top:0;z-index:100;
+}
+.toc-inner{
+  display:flex;flex-wrap:wrap;gap:0;
+  max-width:1200px;margin:0 auto;
+}
+.toc a{
+  display:block;
+  padding:13px 18px;
+  color:var(--text2);
+  text-decoration:none;
+  font-size:.82rem;
+  font-weight:700;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  border-bottom:3px solid transparent;
+  transition:all .2s;
+}
+.toc a:hover,.toc a.active{
+  color:var(--accent1);
+  border-bottom-color:var(--accent1);
+  background:var(--highlight);
+}
+
+/* ── LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+
+/* ── SECTIONS ── */
+.section{padding:64px 0 48px;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-tag{
+  display:inline-block;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  color:var(--accent1);
+  margin-bottom:8px;
+}
+h2.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.6rem,3vw,2.2rem);
+  font-weight:700;
+  color:#fff;
+  margin-bottom:6px;
+  line-height:1.2;
+}
+.section-desc{
+  color:var(--text2);
+  font-size:1rem;
+  margin-bottom:36px;
+  max-width:720px;
+}
+h3{
+  font-family:'Playfair Display',serif;
+  font-size:1.25rem;
+  color:var(--accent3);
+  margin:36px 0 14px;
+  padding-left:14px;
+  border-left:3px solid var(--accent3);
+}
+h4{
+  color:var(--accent1);
+  font-size:1rem;
+  font-weight:700;
+  margin:24px 0 10px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+/* ── CARDS ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:24px 28px;
+  margin:20px 0;
+  box-shadow:var(--shadow);
+}
+.card.highlight{border-left:4px solid var(--accent1)}
+.card.blue{border-left:4px solid var(--accent3)}
+.card.green{border-left:4px solid var(--accent4)}
+.card.pink{border-left:4px solid var(--accent5)}
+.card.orange{border-left:4px solid var(--accent6)}
+.card.red{border-left:4px solid var(--accent2)}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0}
+
+/* ── FORMULA BOXES ── */
+.formula-box{
+  background:var(--code-bg);
+  border:1.5px solid var(--accent1);
+  border-radius:6px;
+  padding:18px 24px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.95rem;
+  color:var(--accent1);
+  margin:16px 0;
+  overflow-x:auto;
+  position:relative;
+}
+.formula-box.blue{border-color:var(--accent3);color:var(--accent3)}
+.formula-box.green{border-color:var(--accent4);color:var(--accent4)}
+.formula-box.pink{border-color:var(--accent5);color:var(--accent5)}
+.formula-box.orange{border-color:var(--accent6);color:var(--accent6)}
+.formula-box.red{border-color:var(--accent2);color:var(--accent2)}
+.formula-label{
+  position:absolute;top:-10px;left:16px;
+  background:var(--code-bg);
+  padding:0 8px;
+  font-size:.7rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text3);
+}
+
+/* ── CODE BLOCKS ── */
+pre{
+  background:var(--code-bg);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:20px 24px;
+  overflow-x:auto;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88rem;
+  line-height:1.65;
+  margin:16px 0;
+  color:#c8d0e0;
+}
+.comment{color:#5c6a82;font-style:italic}
+.keyword{color:var(--accent5)}
+.num{color:var(--accent4)}
+.fn{color:var(--accent3)}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;margin:20px 0}
+table{
+  width:100%;border-collapse:collapse;
+  font-size:.9rem;
+}
+thead tr{background:var(--bg3)}
+thead th{
+  padding:12px 16px;
+  text-align:left;
+  color:var(--accent1);
+  font-weight:700;
+  font-size:.8rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  border-bottom:2px solid var(--border);
+}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:hover{background:var(--bg3)}
+tbody td{padding:12px 16px;color:var(--text2)}
+tbody td:first-child{color:var(--text);font-weight:600}
+
+/* ── CALLOUTS ── */
+.callout{
+  display:flex;gap:16px;
+  background:var(--bg3);
+  border-radius:6px;
+  padding:20px;
+  margin:20px 0;
+  border:1px solid var(--border);
+}
+.callout-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px}
+.callout-body strong{display:block;margin-bottom:4px;font-weight:700}
+.callout.warn{border-left:4px solid var(--accent2)}
+.callout.tip{border-left:4px solid var(--accent4)}
+.callout.note{border-left:4px solid var(--accent3)}
+.callout.magic{border-left:4px solid var(--accent5)}
+
+/* ── STEP-BY-STEP ── */
+.steps{counter-reset:step;margin:20px 0}
+.step{
+  display:flex;gap:16px;
+  margin:12px 0;
+  padding:16px 20px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:6px;
+}
+.step::before{
+  counter-increment:step;
+  content:counter(step);
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;
+  background:var(--accent1);
+  color:#000;
+  border-radius:50%;
+  font-weight:700;
+  font-size:.85rem;
+  flex-shrink:0;
+  margin-top:2px;
+}
+.step-content{flex:1}
+.step-content strong{display:block;color:var(--text);margin-bottom:4px}
+.step-content span{color:var(--text2);font-size:.95rem}
+
+/* ── COMPARISON VISUAL ── */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:640px){.compare-grid{grid-template-columns:1fr}}
+.compare-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:20px;
+}
+.compare-box.left{border-top:3px solid var(--accent2)}
+.compare-box.right{border-top:3px solid var(--accent4)}
+.compare-label{font-size:.75rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:10px}
+.compare-box.left .compare-label{color:var(--accent2)}
+.compare-box.right .compare-label{color:var(--accent4)}
+
+/* ── NOTATION BLOCKS ── */
+.notation-row{
+  display:flex;align-items:stretch;gap:0;
+  margin:12px 0;
+  border-radius:6px;overflow:hidden;
+  border:1px solid var(--border);
+}
+.notation-sym{
+  display:flex;align-items:center;justify-content:center;
+  min-width:60px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.5rem;
+  font-weight:700;
+  background:var(--card2);
+  padding:16px;
+}
+.notation-content{
+  flex:1;
+  padding:14px 20px;
+  background:var(--card);
+}
+.notation-content .name{font-weight:700;color:var(--text);margin-bottom:4px}
+.notation-content .rule{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--text2);margin-bottom:4px}
+.notation-content .meaning{font-size:.9rem;color:var(--text2)}
+.notation-content .meaning em{color:var(--accent4);font-style:normal}
+
+/* ── GROWTH RATE VISUAL ── */
+.growth-bar-wrap{margin:24px 0}
+.growth-item{display:flex;align-items:center;gap:12px;margin:8px 0}
+.growth-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.85rem;
+  width:130px;flex-shrink:0;
+  color:var(--text2);
+}
+.growth-bar{
+  height:22px;
+  border-radius:3px;
+  display:flex;align-items:center;padding-left:10px;
+  font-size:.78rem;font-weight:700;color:#000;
+  transition:width .5s ease;
+  min-width:30px;
+}
+.growth-desc{font-size:.8rem;color:var(--text3);flex-shrink:0}
+
+/* ── EXAMPLE BLOCKS ── */
+.example{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:24px;
+  margin:20px 0;
+}
+.example-label{
+  font-size:.72rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--text3);
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.example-label::before{
+  content:'';display:block;width:20px;height:2px;
+  background:var(--accent1);
+}
+.example-label .diff{
+  margin-left:auto;
+  padding:2px 10px;
+  border-radius:12px;
+  font-size:.68rem;
+  font-weight:700;
+}
+.diff.easy{background:rgba(129,199,132,.2);color:var(--accent4)}
+.diff.medium{background:rgba(240,165,0,.2);color:var(--accent1)}
+.diff.hard{background:rgba(224,92,92,.2);color:var(--accent2)}
+.diff.tricky{background:rgba(206,147,216,.2);color:var(--accent5)}
+
+/* ── PROOF STEPS ── */
+.proof{
+  background:var(--code-bg);
+  border-left:3px solid var(--accent5);
+  padding:16px 20px;
+  border-radius:0 6px 6px 0;
+  margin:12px 0;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88rem;
+  color:var(--text);
+}
+.proof .line{display:block;padding:3px 0;color:var(--text2)}
+.proof .comment{color:var(--text3);font-style:italic}
+.proof .result{color:var(--accent1);font-weight:600}
+
+/* ── TRUTH TABLE ── */
+.truth-table{margin:20px 0}
+.truth-table table{width:100%}
+.truth-table th{text-align:center}
+.truth-table td{text-align:center}
+.check{color:var(--accent4)}
+.cross{color:var(--accent2)}
+
+/* ── QUICK NOTES ── */
+#quick-notes{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.85);
+  z-index:200;
+  padding:20px;
+  overflow-y:auto;
+}
+#quick-notes.visible{display:block}
+.qn-inner{
+  max-width:900px;margin:0 auto;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:40px;
+  position:relative;
+}
+.qn-inner h2{
+  font-family:'Playfair Display',serif;
+  font-size:1.8rem;
+  color:var(--accent1);
+  margin-bottom:28px;
+}
+.qn-close{
+  position:absolute;top:20px;right:20px;
+  background:none;border:none;
+  color:var(--text3);font-size:1.5rem;cursor:pointer;
+}
+.qn-close:hover{color:var(--text)}
+.qn-section{margin:24px 0}
+.qn-section h3{
+  font-size:1rem;font-weight:700;
+  color:var(--accent3);
+  text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:10px;
+  border:none;padding:0;
+}
+.qn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.qn-item{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:12px 16px;
+  font-size:.88rem;
+}
+.qn-item strong{color:var(--accent1);display:block;margin-bottom:4px;font-family:'JetBrains Mono',monospace}
+.qn-item span{color:var(--text2)}
+
+/* ── MISC ── */
+.pill{
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:12px;
+  font-size:.75rem;
+  font-weight:700;
+  margin:2px;
+}
+.pill.o{background:rgba(224,92,92,.2);color:var(--accent2)}
+.pill.omega{background:rgba(79,195,247,.2);color:var(--accent3)}
+.pill.theta{background:rgba(129,199,132,.2);color:var(--accent4)}
+.pill.lo{background:rgba(240,165,0,.2);color:var(--accent1)}
+.pill.lomega{background:rgba(206,147,216,.2);color:var(--accent5)}
+
+p{margin:10px 0;color:var(--text2);line-height:1.8}
+strong{color:var(--text)}
+em{color:var(--accent1);font-style:normal}
+ul,ol{padding-left:24px;margin:10px 0;color:var(--text2)}
+li{margin:6px 0;line-height:1.7}
+li strong{color:var(--text)}
+.tag{
+  display:inline-block;
+  background:rgba(240,165,0,.15);
+  color:var(--accent1);
+  font-size:.75rem;
+  font-weight:700;
+  padding:2px 8px;
+  border-radius:3px;
+  margin-bottom:8px;
+}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+.inline-code{
+  font-family:'JetBrains Mono',monospace;
+  background:var(--code-bg);
+  padding:2px 7px;
+  border-radius:3px;
+  font-size:.88em;
+  color:var(--accent3);
+  border:1px solid var(--border);
+}
+.big-num{
+  font-family:'Playfair Display',serif;
+  font-size:2.5rem;
+  font-weight:700;
+  color:var(--accent1);
+  display:block;
+}
+.annotation{
+  font-size:.82rem;
+  color:var(--accent6);
+  font-style:italic;
+  margin-left:12px;
+}
+.canvas-wrap{
+  background:var(--code-bg);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px;
+  margin:20px 0;
+  text-align:center;
+}
+canvas{display:block;margin:0 auto}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="site-header">
+  <div class="container">
+    <div class="section-tag">Computer Science · Algorithm Analysis</div>
+    <h1><span>Asymptotic Analysis</span> — Complete Study Notes</h1>
+    <p class="sub">Big-O · Big-Ω · Theta · Little-o · Little-ω · Loop Analysis</p>
+    <button class="quick-nav-btn" onclick="document.getElementById('quick-notes').classList.add('visible')">
+      ⚡ Quick Revision Notes
+    </button>
+  </div>
+</header>
+
+<!-- ─── NAV ─── -->
+<nav class="toc">
+  <div class="toc-inner container">
+    <a href="#s1">Why Analyze?</a>
+    <a href="#s2">Step Count</a>
+    <a href="#s3">Asymptotic</a>
+    <a href="#s4">Big-O</a>
+    <a href="#s5">Big-Ω</a>
+    <a href="#s6">Theta</a>
+    <a href="#s7">Little Notations</a>
+    <a href="#s8">Growth Rates</a>
+    <a href="#s9">Comparison Tools</a>
+    <a href="#s10">Properties</a>
+    <a href="#s11">Loop Complexity</a>
+    <a href="#s12">Examples Bank</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 1 — WHY ANALYZE -->
+<!-- ═══════════════════════════════════════════════════ -->
+<main>
+<section class="section" id="s1">
+<div class="container">
+  <div class="section-tag">Section 01</div>
+  <h2 class="section-title">Why Analyze Algorithms?</h2>
+  <p class="section-desc">Before writing complex code, understand <em>why</em> measuring performance matters — and why the naive approaches fail.</p>
+
+  <h3>The Central Question</h3>
+  <div class="card highlight">
+    <p><strong>"Will my program handle large, real-world input?"</strong></p>
+    <p>Two problems hide here: <em>Time</em> (why is it slow?) and <em>Space</em> (why does it run out of memory?). A face-detector app that is too slow or an app eating 500 MB will be rejected by users.</p>
+  </div>
+
+  <h3>Three Approaches — Evolution of Thinking</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>Approach 1 — Manual Clock Timing (Not Practical)</strong>
+        <span>You run the program with a stopwatch. Simple, but the result depends entirely on the hardware. Sachin on MacBook Pro: 100ms. Deepak on HP: 1000ms — which algorithm is truly faster? You simply cannot tell!</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Approach 2 — A Posteriori Analysis (Platform Dependent)</strong>
+        <span>Run the algorithm, measure actual time. The result is platform-dependent: different CPU clock speeds, instruction sets, memory access times all change the number. This is not practical for comparing algorithms fairly.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>Approach 3 — A Priori Analysis → Step Count → Asymptotic Analysis ✅</strong>
+        <span>Count the number of basic operations (steps) the algorithm performs — not actual time. This is hardware-independent. Then simplify the step count using asymptotic analysis to focus only on what grows fast. This is what we use!</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>What Is Input Size?</h3>
+  <p>Every algorithm takes input. The complexity is always a <em>function of input size</em>.</p>
+  <div class="card-grid">
+    <div class="card blue">
+      <h4>Insert in Linked List (size n)</h4>
+      <p>Input: Linked list of n nodes + value to insert</p>
+      <p>Input size ≈ <em>n</em></p>
+      <p>T(n) — function of n</p>
+    </div>
+    <div class="card blue">
+      <h4>Multiply Two Numbers</h4>
+      <p>First number has n digits, second has m digits</p>
+      <p>Input size = <em>n + m</em></p>
+      <p>T(m, n) — function of both</p>
+    </div>
+    <div class="card blue">
+      <h4>Graph Algorithm (Bipartite check)</h4>
+      <p>Graph G with V vertices (n) and E edges (m)</p>
+      <p>Input size = n + m</p>
+      <p>T(m, n) — function of both</p>
+    </div>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <strong>Key Insight (Knuth, 1970s)</strong>
+      Use the scientific method to understand performance. Count operations, not clock time. This gives a mathematical characterization that is platform-independent.
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 2 — STEP COUNT -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s2">
+<div class="container">
+  <div class="section-tag">Section 02</div>
+  <h2 class="section-title">Step Count Method</h2>
+  <p class="section-desc">Count each operation. Every assignment, comparison, arithmetic operation = 1 step.</p>
+
+  <h3>Example 1 — Sum of Array</h3>
+<pre>
+<span class="keyword">Algorithm</span> <span class="fn">Sum</span>(a, n)          <span class="comment">// Step Count (T.C.)    Space Count</span>
+{
+  sum = 0;               <span class="comment">// 1                    1 word (sum)</span>
+  <span class="keyword">for</span> i = 1 to n do      <span class="comment">// n+1                  1 word (i, n)</span>
+    sum = sum + a[i];    <span class="comment">// n                    n words (array a[])</span>
+  return sum;            <span class="comment">// 1</span>
+}
+                         <span class="comment">// Total: 2n+3          (n+3) words</span></pre>
+
+  <div class="card green">
+    <p><strong>Time Complexity:</strong> 2n + 3</p>
+    <p><strong>Space Complexity:</strong> (n+3) words</p>
+  </div>
+
+  <h3>Example 2 — Matrix Addition</h3>
+<pre>
+<span class="keyword">Algorithm</span> <span class="fn">Add</span>(a, b, c, m, n)
+{
+  <span class="keyword">for</span> i = 1 to m do         <span class="comment">// m+1 times</span>
+    <span class="keyword">for</span> j = 1 to n do       <span class="comment">// m(n+1) times</span>
+      c[i,j] = a[i,j] + b[i,j]; <span class="comment">// m·n times</span>
+}
+                              <span class="comment">// Total = 2mn + 2m + 2</span></pre>
+
+  <h3>Problem with Exact Step Count</h3>
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <strong>Why Bother With Exact Counts?</strong>
+      If an algorithm has 1000 lines, calculating exact step counts for each line is impractical. We need a simpler bound. Can we approximate <code class="inline-code">3n + 2</code> as just <code class="inline-code">n</code>? Yes! This leads us to Asymptotic Analysis.
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 3 — ASYMPTOTIC ANALYSIS -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s3">
+<div class="container">
+  <div class="section-tag">Section 03</div>
+  <h2 class="section-title">Asymptotic Analysis</h2>
+  <p class="section-desc">The magical simplification — focus only on what matters as input grows large.</p>
+
+  <h3>The Core Idea — Rounding for Functions</h3>
+  <div class="card highlight">
+    <p><strong>Asymptotic Analysis = "Rounding" for functions.</strong></p>
+    <p>Just like 1,000,001 ≈ 1,000,000 in everyday math:</p>
+    <p>→ <code class="inline-code">3n²</code> ≈ <code class="inline-code">n²</code> in asymptotic sense</p>
+    <p>→ <code class="inline-code">n² + n</code> → significant term is <code class="inline-code">n²</code></p>
+    <p><strong>Why?</strong> Because for large n, the dominant term overwhelms all others. At n=1,000,000, the <code class="inline-code">n²</code> term is a million times larger than <code class="inline-code">n</code>.</p>
+  </div>
+
+  <h3>What Asymptotic Analysis Does</h3>
+  <div class="card-grid">
+    <div class="card">
+      <h4>✂️ Drops Constants</h4>
+      <p><code class="inline-code">3n²</code> → <code class="inline-code">n²</code></p>
+      <p>The constant 3 doesn't affect growth rate.</p>
+    </div>
+    <div class="card">
+      <h4>✂️ Drops Lower-Order Terms</h4>
+      <p><code class="inline-code">n² + n + 5</code> → <code class="inline-code">n²</code></p>
+      <p>For large n, n² dominates completely.</p>
+    </div>
+    <div class="card">
+      <h4>📊 Captures Growth Rate</h4>
+      <p>If n doubles (n → 2n): n² grows by ×4, n³ by ×8. The rate of growth is what matters.</p>
+    </div>
+    <div class="card">
+      <h4>🎯 For Large Input</h4>
+      <p>Asymptotic analysis is designed for large input sizes. For small inputs, any algorithm is fast — nobody cares.</p>
+    </div>
+  </div>
+
+  <h3>The 5 Asymptotic Notations</h3>
+  <p>These are <em>mathematical notations</em> (not CS-specific) used to express relationships between functions:</p>
+  <div class="notation-row">
+    <div class="notation-sym" style="color:var(--accent2)">O</div>
+    <div class="notation-content">
+      <div class="name">Big-O Notation</div>
+      <div class="rule">T(n) ≤ c·g(n) for all n ≥ n₀ (∃ c, n₀ > 0)</div>
+      <div class="meaning"><em>Upper bound</em> — "at most this much"</div>
+    </div>
+  </div>
+  <div class="notation-row">
+    <div class="notation-sym" style="color:var(--accent3)">Ω</div>
+    <div class="notation-content">
+      <div class="name">Big-Omega Notation</div>
+      <div class="rule">T(n) ≥ c·g(n) for all n ≥ n₀ (∃ c, n₀ > 0)</div>
+      <div class="meaning"><em>Lower bound</em> — "at least this much"</div>
+    </div>
+  </div>
+  <div class="notation-row">
+    <div class="notation-sym" style="color:var(--accent4)">Θ</div>
+    <div class="notation-content">
+      <div class="name">Theta Notation</div>
+      <div class="rule">c₁·g(n) ≤ T(n) ≤ c₂·g(n) for all n ≥ n₀</div>
+      <div class="meaning"><em>Tight bound</em> — "exactly this order" (both O and Ω)</div>
+    </div>
+  </div>
+  <div class="notation-row">
+    <div class="notation-sym" style="color:var(--accent1)">o</div>
+    <div class="notation-content">
+      <div class="name">Little-o Notation</div>
+      <div class="rule">T(n) &lt; c·g(n) for ALL c &gt; 0 (∃ n₀ > 0)</div>
+      <div class="meaning"><em>Strict upper bound</em> — "strictly less than"</div>
+    </div>
+  </div>
+  <div class="notation-row">
+    <div class="notation-sym" style="color:var(--accent5)">ω</div>
+    <div class="notation-content">
+      <div class="name">Little-omega Notation</div>
+      <div class="rule">T(n) &gt; c·g(n) for ALL c &gt; 0 (∃ n₀ > 0)</div>
+      <div class="meaning"><em>Strict lower bound</em> — "strictly greater than"</div>
+    </div>
+  </div>
+
+  <div class="callout magic">
+    <div class="callout-icon">✨</div>
+    <div class="callout-body">
+      <strong>Abuse of Notation (Important!)</strong>
+      When we write <code>f(n) = O(g(n))</code>, the "=" is NOT equality! It means <code>f(n) ∈ O(g(n))</code> — f belongs to the SET of all functions bounded by g. O(n²) is a set containing n², 3n²+5, n, log n, 1, etc. We write "=" for convenience, but never misuse it.
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 4 — BIG-O -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s4">
+<div class="container">
+  <div class="section-tag">Section 04</div>
+  <h2 class="section-title">Big-O Notation — Upper Bound</h2>
+  <p class="section-desc">The most popular notation. Tells you the <em>worst your algorithm will ever do</em>.</p>
+
+  <h3>Formal Definition</h3>
+  <div class="formula-box">
+    <div class="formula-label">DEFINITION</div>
+    T(n) = O(g(n))  ⟺  ∃ c > 0, n₀ ≥ 0 such that ∀ n ≥ n₀: T(n) ≤ c·g(n)
+  </div>
+
+  <h3>Visual Intuition</h3>
+  <div class="canvas-wrap">
+    <canvas id="bigO" width="600" height="260"></canvas>
+  </div>
+
+  <h3>Plain English Meaning</h3>
+  <div class="card highlight">
+    <p><strong>T(n) = O(n²)</strong> means:</p>
+    <p>"For any input of size n, my algorithm takes <em>AT MOST c·n²</em> steps." (for some constant c, after some turning point n₀)</p>
+    <p>→ Your manager asks: "How long will it take?" You say: "Never more than n² operations, guaranteed."</p>
+  </div>
+
+  <h3>The Turning Point (n₀) Concept</h3>
+  <div class="card">
+    <p>Before n₀, anything can happen — f(n) might be bigger or smaller than c·g(n). We don't care about small input!</p>
+    <p>After n₀, <strong>c·g(n) is always ≥ f(n)</strong>. This is what asymptotic analysis cares about — behavior for <em>large</em> n.</p>
+  </div>
+
+  <h3>Examples with c and n₀</h3>
+  <p style="color:var(--text3);font-size:.85rem;margin-bottom:8px">Note: You will rarely need to find c and n₀ in practice. But understanding them builds intuition.</p>
+
+  <div class="example">
+    <div class="example-label">Example 1 <span class="diff easy">Easy</span></div>
+    <p><strong>Prove: 3n + 2 = O(n)</strong></p>
+    <p>We need: 3n + 2 ≤ c·n for some c and n₀.</p>
+    <div class="proof">
+      <span class="line">Try c = 4:</span>
+      <span class="line">3n + 2 ≤ 4n   ⟺   2 ≤ n</span>
+      <span class="line">So for n₀ = 3: 3(3)+2=11, 4(3)=12 ✓</span>
+      <span class="result">∴ c=4, n₀=3 works. Also c=10000, n₀=1 works. Many answers valid!</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Example 2 <span class="diff easy">Easy</span></div>
+    <p><strong>Prove: 1 + n + n² = O(n²)</strong></p>
+    <div class="proof">
+      <span class="line">Since 1 ≤ n², n ≤ n² for n ≥ 1:</span>
+      <span class="line">1 + n + n² ≤ n² + n² + n² = 3n²</span>
+      <span class="result">∴ c=3, n₀=2 works → 1+n+n² = O(n²)</span>
+    </div>
+    <p>Also true: 1+n+n² = O(n³), O(n⁴), O(2ⁿ)... All are valid upper bounds!</p>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Example 3 <span class="diff medium">Medium</span></div>
+    <p><strong>Is 2²ⁿ = O(2ⁿ)?</strong></p>
+    <div class="proof">
+      <span class="line">Need: 2²ⁿ ≤ c·2ⁿ  ⟺  2ⁿ ≤ c</span>
+      <span class="line">But c is a constant! 2ⁿ grows unboundedly.</span>
+      <span class="line">No constant c can ever bound 2ⁿ from above.</span>
+      <span class="result">∴ 2²ⁿ ≠ O(2ⁿ)  — FALSE!</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Example 4 <span class="diff medium">Medium</span></div>
+    <p><strong>Is 2ⁿ⁺¹ = O(2ⁿ)?</strong></p>
+    <div class="proof">
+      <span class="line">2ⁿ⁺¹ = 2 · 2ⁿ</span>
+      <span class="line">Need: 2·2ⁿ ≤ c·2ⁿ  ⟺  2 ≤ c</span>
+      <span class="result">∴ c=3, n₀=1 works → 2ⁿ⁺¹ = O(2ⁿ)  — TRUE ✓</span>
+    </div>
+  </div>
+
+  <h3>Key Rules for Big-O</h3>
+  <div class="card-grid">
+    <div class="card">
+      <h4>Rule 1: Drop Lower Terms</h4>
+      <p><code class="inline-code">n² + n + 1 = O(n²)</code></p>
+    </div>
+    <div class="card">
+      <h4>Rule 2: Drop Constants</h4>
+      <p><code class="inline-code">5n = O(n)</code></p>
+    </div>
+    <div class="card">
+      <h4>Rule 3: Can Go Higher</h4>
+      <p><code class="inline-code">n² = O(n³) = O(n⁴) = ...</code> All valid, just not tight.</p>
+    </div>
+    <div class="card">
+      <h4>Rule 4: Cannot Go Lower</h4>
+      <p><code class="inline-code">n² ≠ O(n)</code> (n cannot upper-bound n²)</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 5 — BIG OMEGA -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s5">
+<div class="container">
+  <div class="section-tag">Section 05</div>
+  <h2 class="section-title">Big-Ω Notation — Lower Bound</h2>
+  <p class="section-desc">The mirror of Big-O. Tells you the <em>minimum</em> your algorithm will ever take.</p>
+
+  <h3>Formal Definition</h3>
+  <div class="formula-box blue">
+    <div class="formula-label">DEFINITION</div>
+    T(n) = Ω(g(n))  ⟺  ∃ c > 0, n₀ ≥ 0 such that ∀ n ≥ n₀: T(n) ≥ c·g(n)
+  </div>
+
+  <h3>Visual Intuition</h3>
+  <div class="canvas-wrap">
+    <canvas id="bigOmega" width="600" height="260"></canvas>
+  </div>
+
+  <h3>Relationship with Big-O</h3>
+  <div class="formula-box">
+    <div class="formula-label">KEY THEOREM</div>
+    T(n) = O(g(n))  ⟺  g(n) = Ω(T(n))
+    
+    (f ≤ g  means  g ≥ f — they're transpose of each other)
+  </div>
+
+  <div class="card highlight">
+    <p><strong>T(n) = Ω(n²)</strong> means:</p>
+    <p>"For any input of size n, my algorithm takes <em>AT LEAST c·n²</em> steps."</p>
+    <p>→ "Whatever input you give me, I'm guaranteed to take at least n² operations."</p>
+  </div>
+
+  <h3>Important Observation</h3>
+  <div class="card-grid">
+    <div class="card blue">
+      <h4>Big-O (Upper)</h4>
+      <p>You can always go HIGHER: if T(n) = O(n²), then also O(n³), O(n⁴)...</p>
+    </div>
+    <div class="card orange">
+      <h4>Big-Ω (Lower)</h4>
+      <p>You can always go LOWER: if T(n) = Ω(n²), then also Ω(n), Ω(log n), Ω(1)...</p>
+    </div>
+  </div>
+
+  <h3>Trivial Bounds (Always True for Any Algorithm)</h3>
+  <div class="card">
+    <p>For <em>any algorithm</em>:</p>
+    <ul>
+      <li><code class="inline-code">T(n) = Ω(1)</code> — at least constant time (always)</li>
+      <li><code class="inline-code">T(n) = O(∞)</code> — at most infinite time (trivially true)</li>
+    </ul>
+    <p>These are the "trivial" bounds — mathematically correct but useless!</p>
+    <p>Donald Knuth invented Theta notation <strong>because students gave trivial bounds</strong> in their answers.</p>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Examples <span class="diff easy">Easy</span></div>
+    <ul>
+      <li><code class="inline-code">3n + 2 = Ω(n)</code> — c=1, n₀=1: 3n+2 ≥ n ✓</li>
+      <li><code class="inline-code">10n² + 4n + 2 = Ω(n²)</code> — c=1, n₀=1 ✓</li>
+      <li><code class="inline-code">n² = Ω(n)</code>, also <code class="inline-code">Ω(log n)</code>, also <code class="inline-code">Ω(1)</code></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 6 — THETA -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s6">
+<div class="container">
+  <div class="section-tag">Section 06</div>
+  <h2 class="section-title">Theta (Θ) Notation — Tight Bound</h2>
+  <p class="section-desc">The most precise and honest bound. Says exactly what order of growth your function has.</p>
+
+  <h3>Formal Definition</h3>
+  <div class="formula-box green">
+    <div class="formula-label">DEFINITION</div>
+    T(n) = Θ(g(n))  ⟺  T(n) = O(g(n)) AND T(n) = Ω(g(n))
+    
+    ⟺  ∃ c₁, c₂ > 0, n₀ such that ∀ n ≥ n₀:
+         c₁·g(n) ≤ T(n) ≤ c₂·g(n)
+  </div>
+
+  <h3>Visual Intuition</h3>
+  <div class="canvas-wrap">
+    <canvas id="bigTheta" width="600" height="260"></canvas>
+  </div>
+
+  <h3>Plain English Meaning</h3>
+  <div class="card green">
+    <p><strong>T(n) = Θ(n²)</strong> means:</p>
+    <p>"The algorithm takes <em>exactly n² order</em> of steps. Not more, not less. The functions are asymptotically equal."</p>
+    <p>→ <code class="inline-code">3n² = Θ(n²)</code> (constants don't matter, growth rate matters)</p>
+    <p>→ <code class="inline-code">3n² ≠ Θ(n³)</code> (n³ is fundamentally different growth)</p>
+  </div>
+
+  <h3>The "Maggi Noodles" Analogy</h3>
+  <div class="card">
+    <p>How long to cook Maggi?</p>
+    <ul>
+      <li><code class="inline-code">O(1 day)</code> — At most 1 day. True but useless (too loose).</li>
+      <li><code class="inline-code">Ω(10 seconds)</code> — At least 10 sec. True but useless (too loose).</li>
+      <li><code class="inline-code">Θ(3 minutes)</code> — Exactly ~3 minutes. Precise and useful!</li>
+    </ul>
+    <p>Theta gives you the <em>tightest, most honest</em> answer.</p>
+  </div>
+
+  <h3>Implication Chain</h3>
+  <div class="formula-box">
+    <div class="formula-label">LOGIC</div>
+    If T(n) = Θ(g(n))  →  T(n) = O(g(n)) AND T(n) = Ω(g(n))
+    
+    If T(n) = O(g(n)) AND T(n) = Ω(g(n))  →  T(n) = Θ(g(n))
+    
+    Big-O alone does NOT imply Theta.
+    Big-Ω alone does NOT imply Theta.
+  </div>
+
+  <h3>Important: Algorithm Cases vs Notations</h3>
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <strong>COMMON MISCONCEPTION — DO NOT DO THIS!</strong>
+      People wrongly think: Best case = Ω, Worst case = O, Average case = Θ. This is <strong>FALSE</strong>.
+      You can use ANY notation with ANY case. Worst-case can be Θ. Best-case can be O. Average can be Ω. They are independent concepts!
+    </div>
+  </div>
+
+  <div class="compare-grid">
+    <div class="compare-box left">
+      <div class="compare-label">❌ WRONG</div>
+      <ul>
+        <li>Best case → Ω</li>
+        <li>Worst case → O</li>
+        <li>Average case → Θ</li>
+      </ul>
+    </div>
+    <div class="compare-box right">
+      <div class="compare-label">✅ CORRECT</div>
+      <ul>
+        <li>Best case can be Θ(1)</li>
+        <li>Worst case can be Θ(n²)</li>
+        <li>We can say: for every input, algorithm takes Θ(n²)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Examples <span class="diff easy">Easy</span></div>
+    <ul>
+      <li><code class="inline-code">3n² = Θ(n²)</code> — 2n² ≤ 3n² ≤ 4n², c₁=2, c₂=4 ✓</li>
+      <li><code class="inline-code">10n² + 4n + 2 = Θ(n²)</code> — significant term is n²</li>
+      <li><code class="inline-code">6·2ⁿ + n² = Θ(2ⁿ)</code> — c₁=1, c₂=7, works for n≥5 ✓</li>
+      <li><code class="inline-code">3n + 10¹⁰ = Θ(n)</code> — even HUGE constants become irrelevant at large n!</li>
+    </ul>
+  </div>
+
+  <h3>Comparing O, Ω, Θ Side by Side</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>T(n) relation</th><th>Asymptotic meaning</th><th>Informal</th></tr></thead>
+      <tbody>
+        <tr><td>T(n) = O(g(n))</td><td>T(n) ≤ c·g(n)</td><td>"at most" / upper bound</td></tr>
+        <tr><td>T(n) = Ω(g(n))</td><td>T(n) ≥ c·g(n)</td><td>"at least" / lower bound</td></tr>
+        <tr><td>T(n) = Θ(g(n))</td><td>c₁·g(n) ≤ T(n) ≤ c₂·g(n)</td><td>"exactly" / tight bound</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 7 — LITTLE NOTATIONS -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s7">
+<div class="container">
+  <div class="section-tag">Section 07</div>
+  <h2 class="section-title">Little-o and Little-ω Notations</h2>
+  <p class="section-desc">Strict bounds — when the difference is a function, not just a constant.</p>
+
+  <h3>Little-o (Strict Upper Bound)</h3>
+  <div class="formula-box">
+    <div class="formula-label">DEFINITION</div>
+    T(n) = o(g(n))  ⟺  ∀ c > 0, ∃ n₀ > 0 such that ∀ n ≥ n₀: T(n) &lt; c·g(n)
+    
+    KEY DIFFERENCE from Big-O:
+    Big-O: "there EXISTS one c that works"
+    Little-o: "it works for ALL c (however small)"
+  </div>
+
+  <div class="compare-grid">
+    <div class="compare-box left">
+      <div class="compare-label">Big-O (n² = O(2n²))</div>
+      <p>Find ONE c that works.</p>
+      <p>c=1 works: n² ≤ 2n² ✓</p>
+      <p>But c=1/10: n² ≤ 2n²/10? Only if n²≤n²/5. NO!</p>
+      <p>→ Only needs <strong>one</strong> c → Big-O ✓</p>
+    </div>
+    <div class="compare-box right">
+      <div class="compare-label">Little-o (n² ≠ o(2n²))</div>
+      <p>Must work for ALL c.</p>
+      <p>c=1/10: n² &lt; 2n²/10? n² &lt; n²/5? FALSE!</p>
+      <p>Not true for all c → NOT little-o</p>
+      <p>→ Need ALL c to work → fails</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p><strong>When is f(n) = o(g(n))?</strong> When the <em>difference is a function</em> (not just a constant).</p>
+    <ul>
+      <li><code class="inline-code">n² = o(n³)</code> ✓ — difference is a factor of n (function)</li>
+      <li><code class="inline-code">n² ≠ o(2n²)</code> ✗ — difference is factor of 2 (constant)</li>
+      <li><code class="inline-code">n² = O(2n²)</code> ✓ — big-O is fine with constant factors</li>
+    </ul>
+  </div>
+
+  <h3>Little-ω (Strict Lower Bound)</h3>
+  <div class="formula-box orange">
+    <div class="formula-label">DEFINITION</div>
+    T(n) = ω(g(n))  ⟺  ∀ c > 0, ∃ n₀ > 0 such that ∀ n ≥ n₀: T(n) > c·g(n)
+    
+    T(n) = ω(g(n))  ⟺  g(n) = o(T(n))  [transpose property]
+  </div>
+
+  <h3>Full Notation Summary</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Notation</th><th>Symbol</th><th>Meaning</th><th>Strict?</th><th>c</th></tr></thead>
+      <tbody>
+        <tr><td>Big-O</td><td>O</td><td>f ≤ g (asymptotically)</td><td>No (≤)</td><td>∃ one c</td></tr>
+        <tr><td>Big-Omega</td><td>Ω</td><td>f ≥ g (asymptotically)</td><td>No (≥)</td><td>∃ one c</td></tr>
+        <tr><td>Theta</td><td>Θ</td><td>f = g (asymptotically)</td><td>Equal</td><td>∃ c₁, c₂</td></tr>
+        <tr><td>Little-o</td><td>o</td><td>f &lt;&lt; g (strictly)</td><td>Yes (&lt;)</td><td>∀ c</td></tr>
+        <tr><td>Little-omega</td><td>ω</td><td>f &gt;&gt; g (strictly)</td><td>Yes (&gt;)</td><td>∀ c</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Incomparability</h3>
+  <div class="card red">
+    <h4>Some Functions Cannot Be Compared!</h4>
+    <p><code class="inline-code">n^(1+sin n)</code> vs <code class="inline-code">n</code></p>
+    <p>Since sin(n) oscillates between -1 and 1, the exponent oscillates between 0 and 2. Sometimes n^(1+sin n) = n⁰ = 1, sometimes = n². No stable turning point exists!</p>
+    <p>→ These functions are <strong>incomparable</strong> — none of O, Ω, Θ applies.</p>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 8 — GROWTH RATES -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s8">
+<div class="container">
+  <div class="section-tag">Section 08</div>
+  <h2 class="section-title">Growth Rate Hierarchy</h2>
+  <p class="section-desc">The fundamental ordering that every computer scientist must know.</p>
+
+  <h3>The Great Chain of Growth</h3>
+  <div class="formula-box green">
+    <div class="formula-label">ORDER (SLOWEST → FASTEST)</div>
+    1 &lt; log n &lt; √n &lt; n &lt; n log n &lt; n² &lt; n³ &lt; ... &lt; 2ⁿ &lt; 3ⁿ &lt; ... &lt; n! &lt; nⁿ
+  </div>
+
+  <div class="growth-bar-wrap">
+    <div class="growth-item">
+      <div class="growth-label">O(1)</div>
+      <div class="growth-bar" style="width:4%;background:#4fc3f7">1</div>
+      <div class="growth-desc">Constant — ideal</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(log n)</div>
+      <div class="growth-bar" style="width:8%;background:#81c784">log n</div>
+      <div class="growth-desc">Logarithmic — excellent (binary search)</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(√n)</div>
+      <div class="growth-bar" style="width:12%;background:#a5d6a7">√n</div>
+      <div class="growth-desc">Square root</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(n)</div>
+      <div class="growth-bar" style="width:20%;background:#f0a500">n</div>
+      <div class="growth-desc">Linear — very good</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(n log n)</div>
+      <div class="growth-bar" style="width:30%;background:#ffcc02">n log n</div>
+      <div class="growth-desc">Log-linear — good (merge sort)</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(n²)</div>
+      <div class="growth-bar" style="width:45%;background:#ff8a65">n²</div>
+      <div class="growth-desc">Quadratic — acceptable for small n</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(n³)</div>
+      <div class="growth-bar" style="width:60%;background:#ef5350">n³</div>
+      <div class="growth-desc">Cubic — slow for large n</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(2ⁿ)</div>
+      <div class="growth-bar" style="width:80%;background:#b71c1c">2ⁿ</div>
+      <div class="growth-desc">Exponential — DANGEROUS!</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(n!)</div>
+      <div class="growth-bar" style="width:92%;background:#880e4f">n!</div>
+      <div class="growth-desc">Factorial — basically unusable</div>
+    </div>
+    <div class="growth-item">
+      <div class="growth-label">O(nⁿ)</div>
+      <div class="growth-bar" style="width:100%;background:#4a148c">nⁿ</div>
+      <div class="growth-desc">Worst imaginable</div>
+    </div>
+  </div>
+
+  <h3>Concrete Reality Check</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>n</th><th>log₂n</th><th>n log₂n</th><th>n²</th><th>n³</th><th>2ⁿ</th><th>n!</th></tr></thead>
+      <tbody>
+        <tr><td>10</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>4 sec</td></tr>
+        <tr><td>30</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td><strong>18 min</strong></td><td><strong>10²⁵ years</strong></td></tr>
+        <tr><td>50</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>1 sec</td><td><strong>36 years</strong></td><td>very long</td></tr>
+        <tr><td>100</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>18 min</td><td>10¹⁷ years</td><td>very long</td></tr>
+        <tr><td>1,000</td><td>&lt;1 sec</td><td>&lt;1 sec</td><td>1 sec</td><td>very long</td><td>∞</td><td>∞</td></tr>
+        <tr><td>1,000,000</td><td>1 sec</td><td>20 sec</td><td>12 days</td><td>∞</td><td>∞</td><td>∞</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">💀</div>
+    <div class="callout-body">
+      <strong>The Chessboard Story (Exponential Danger)</strong>
+      A wise man asked a king to give 1 grain of rice on day 1, 2 on day 2, 4 on day 3, doubling each day for 64 squares of a chessboard. The total? 2⁶⁴ grains = about 2,000 times the total world wheat production today! This is 2ⁿ in action. An algorithm that takes 2ⁿ = 2¹⁰⁰ steps would take longer than the age of the universe.
+    </div>
+  </div>
+
+  <h3>n! vs nⁿ — Stirling's Approximation</h3>
+  <div class="card pink">
+    <h4>Stirling's Approximation</h4>
+    <div class="formula-box pink" style="font-size:.9rem">
+      n! ≈ √(2πn) · (n/e)ⁿ
+    </div>
+    <ul>
+      <li><strong>Before log:</strong> n! &lt; nⁿ (strictly) → <code class="inline-code">n! = o(nⁿ)</code></li>
+      <li><strong>After log:</strong> log(n!) = Θ(n log n) — EXACTLY equal!</li>
+      <li><strong>Proof:</strong> log(n!) = log(n·(n-1)·...·1) = Σlog(i) from i=1 to n</li>
+      <li>Upper bound: all n terms ≤ log n → log(n!) ≤ n log n</li>
+      <li>Lower bound: take n/2 terms (each ≥ log(n/2)) → log(n!) ≥ (n/2)log(n/2) = Θ(n log n)</li>
+      <li>Therefore: <code class="inline-code">log(n!) = Θ(n log n)</code></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 9 — COMPARISON TOOLBOX -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s9">
+<div class="container">
+  <div class="section-tag">Section 09</div>
+  <h2 class="section-title">Function Comparison — The Toolbox</h2>
+  <p class="section-desc">How to compare two functions asymptotically. These tools always work.</p>
+
+  <h3>Tool 1: Cancel Common Terms</h3>
+  <div class="card highlight">
+    <p>If both functions share a common factor, divide both by it first.</p>
+    <p>Compare n² and n³ → divide by n² → compare 1 and n → n³ is bigger ✓</p>
+    <p>Compare n²·log n and n·log²n → divide by n·log n → compare n and log n → first is bigger ✓</p>
+  </div>
+
+  <h3>Tool 2: When to Ignore Constants</h3>
+  <div class="card">
+    <p><strong>Only safe to ignore constants in these forms:</strong></p>
+    <ul>
+      <li><code class="inline-code">c · f(n)</code> → safe to ignore c (e.g., 3n² → n²)</li>
+      <li><code class="inline-code">f(n) + d</code> → safe to ignore d (e.g., n² + 5 → n²)</li>
+    </ul>
+    <p><strong>NEVER ignore constants when they are "inside" the function:</strong></p>
+    <ul>
+      <li><code class="inline-code">n^(5+n)</code> — the 5 is part of exponent! n^5 is huge.</li>
+      <li><code class="inline-code">2^(2n)</code> — the 2 inside doubles the exponent!</li>
+      <li><code class="inline-code">(5/2)^n</code> vs <code class="inline-code">2^n</code> — the 5/2 base matters!</li>
+    </ul>
+  </div>
+
+  <h3>Tool 3: Take Logarithm</h3>
+  <div class="card blue">
+    <p><strong>Why log works:</strong> Log is order-preserving: a &gt; b ⟹ log a &gt; log b (always true for real numbers).</p>
+    <p><strong>What log does:</strong> It compresses huge gaps. Before log: n and 2ⁿ are vastly far apart. After log: log n and n are still far apart → you can conclude 2ⁿ &gt; n.</p>
+    <p><strong>When it fails:</strong> After log, if you get <em>equal</em> functions, you cannot conclude anything about the original. (e.g., n² vs n³: after log → 2 log n vs 3 log n → both are Θ(log n) → CAN'T CONCLUDE)</p>
+    <div class="formula-box blue" style="font-size:.85rem">
+      log(f) > log(g)  ⟹  f > g  asymptotically  ✓
+      log(f) < log(g)  ⟹  f < g  asymptotically  ✓
+      log(f) = log(g)  ⟹  CANNOT SAY anything about f vs g  ✗
+    </div>
+  </div>
+
+  <h3>Tool 4: Assume a Form of n</h3>
+  <div class="card">
+    <p>Substitute n = 2^k or n = 2^(2^k) to simplify complex expressions involving nested logs/powers.</p>
+    <p>Example: Compare (log n)^(log log n) vs (log log n)^(log n)</p>
+    <p>Let n = 2^k → log n = k, log log n = log k</p>
+    <p>Now compare k^(log k) vs (log k)^k → take log → (log k)² vs k·log(log k) → k dominates → second is larger</p>
+  </div>
+
+  <h3>Key Relationships to Remember</h3>
+  <div class="card-grid">
+    <div class="card green">
+      <h4>Polynomial vs Log</h4>
+      <p>n^ε > (log n)^k for any ε>0, any k>0</p>
+      <p><em>Even the tiniest polynomial power beats any log power!</em></p>
+    </div>
+    <div class="card green">
+      <h4>Exponential vs Polynomial</h4>
+      <p>a^n > n^k for any a>1, any k>0</p>
+      <p><em>Any exponential beats any polynomial!</em></p>
+    </div>
+    <div class="card green">
+      <h4>Log Base Changes</h4>
+      <p>log₂n = Θ(log₁₀n) — all log bases differ only by a constant factor!</p>
+      <p>log_a(n) = log_b(n) / log_b(a)</p>
+    </div>
+    <div class="card orange">
+      <h4>Exponential Base Matters</h4>
+      <p>2^n ≠ Θ(3^n) — different exponential bases are asymptotically different!</p>
+      <p>3^n / 2^n = (3/2)^n → ∞</p>
+    </div>
+  </div>
+
+  <h3>Log Properties Reference</h3>
+  <div class="formula-box" style="font-size:.85rem">
+    <div class="formula-label">LOG RULES</div>
+    a = b^(log_b a)                         // basic
+    log_c(ab) = log_c a + log_c b           // product
+    log_b(a^n) = n·log_b a                  // power
+    log_b a = log_c a / log_c b             // change base
+    log_b(1/a) = -log_b a                   // reciprocal
+    log_b a = 1 / log_a b                   // inversion
+    a^(log_b c) = c^(log_b a)               // swap base/argument
+    log_b a > log_b b  iff  a > b (b>1)     // order preserving
+  </div>
+
+  <h3>Worked Examples</h3>
+  <div class="example">
+    <div class="example-label">Compare n^(log₂ n) vs 2^n <span class="diff medium">Medium</span></div>
+    <p>Take log₂ both sides:</p>
+    <div class="proof">
+      <span class="line">log(n^(log₂n)) = (log₂n)² = (log n)²</span>
+      <span class="line">log(2ⁿ) = n</span>
+      <span class="line">Compare: (log n)² vs n</span>
+      <span class="line">By n^ε > (log n)^k rule: n > (log n)² ✓</span>
+      <span class="result">∴ 2ⁿ > n^(log n) asymptotically → n^(log n) = O(2ⁿ)</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Compare n^(log₂ n) vs n^(log₁₀ n) <span class="diff hard">Hard</span></div>
+    <p>Which exponent is bigger? log₂n vs log₁₀n</p>
+    <div class="proof">
+      <span class="line">log₂n = log₁₀n / log₁₀2 ≈ log₁₀n / 0.3</span>
+      <span class="line">∴ log₂n > log₁₀n (since dividing by fraction < 1 makes it bigger)</span>
+      <span class="line">Higher exponent means larger function:</span>
+      <span class="result">∴ n^(log₂ n) > n^(log₁₀ n) → n^(log₁₀ n) = O(n^(log₂ n))</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Arrange: 2^(log n), (log n)^2, √(log n), log(log n) <span class="diff hard">Hard</span></div>
+    <p>Let k = log n (substituting):</p>
+    <div class="proof">
+      <span class="line">A = 2^k, B = k², C = √k, D = log k</span>
+      <span class="line">Order: D < C < B < A (by polynomial/exponential rules)</span>
+      <span class="line">log(log n) < √(log n) < (log n)² < 2^(log n)</span>
+      <span class="result">∴ log log n &lt; √log n &lt; (log n)² &lt; 2^(log n)</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Arrange: 2^(2^n), n!, 4^n, 2^n <span class="diff hard">Hard</span></div>
+    <div class="proof">
+      <span class="line">After log: log(2^(2^n)) = 2^n, log(n!) ≈ n log n, log(4^n) = n log 4, log(2^n) = n</span>
+      <span class="line">Order of log values: n &lt; n log 4 &lt; n log n &lt; 2^n</span>
+      <span class="result">∴ 2^n &lt; 4^n &lt; n! &lt; 2^(2^n)</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 10 — PROPERTIES -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s10">
+<div class="container">
+  <div class="section-tag">Section 10</div>
+  <h2 class="section-title">Properties of Asymptotic Notations</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Property</th><th>Statement</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Transitivity</td>
+          <td>f=O(g), g=O(h) → f=O(h)<br>(same for Ω, Θ, o, ω)</td>
+          <td>If f≤g and g≤h, then f≤h</td>
+        </tr>
+        <tr>
+          <td>Reflexivity</td>
+          <td>f=O(f), f=Ω(f), f=Θ(f)</td>
+          <td>f=f trivially satisfies all bounds</td>
+        </tr>
+        <tr>
+          <td>Symmetry</td>
+          <td>f=Θ(g) ⟺ g=Θ(f)</td>
+          <td>Equality is symmetric (only Theta!)</td>
+        </tr>
+        <tr>
+          <td>Transpose Sym.</td>
+          <td>f=O(g) ⟺ g=Ω(f)<br>f=o(g) ⟺ g=ω(f)</td>
+          <td>Less-than swaps with greater-than</td>
+        </tr>
+        <tr>
+          <td>Implication</td>
+          <td>f=Θ(g) → f=O(g) AND f=Ω(g)</td>
+          <td>Equal implies both upper and lower</td>
+        </tr>
+        <tr>
+          <td>Combination</td>
+          <td>f=O(g) AND f=Ω(g) → f=Θ(g)</td>
+          <td>Upper+lower together = tight bound</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Best Case, Worst Case, Average Case</h3>
+  <div class="card-grid">
+    <div class="card red">
+      <h4>Best Case</h4>
+      <p>The input that causes the <em>minimum</em> number of operations.</p>
+      <p>Example (search in linked list): Searching for the first element → O(1)</p>
+    </div>
+    <div class="card highlight">
+      <h4>Worst Case</h4>
+      <p>The input that causes the <em>maximum</em> number of operations.</p>
+      <p>Example: Searching for the last element → O(n)</p>
+    </div>
+    <div class="card blue">
+      <h4>Average Case</h4>
+      <p>Expected operations over all possible inputs (probabilistic).</p>
+      <p>Much harder to compute. Involves expectation theory.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 11 — LOOP COMPLEXITY -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s11">
+<div class="container">
+  <div class="section-tag">Section 11</div>
+  <h2 class="section-title">Loop Complexity Analysis</h2>
+  <p class="section-desc">Systematic method to determine time complexity from code structure.</p>
+
+  <h3>Pattern 1 — Increment by Constant</h3>
+  <div class="formula-box">
+    <div class="formula-label">RULE</div>
+    for(i=1; i≤n; i+=a)  →  runs ⌈n/a⌉ times  →  O(n/a) = O(n)
+    
+    for(i=n; i≥1; i-=a)  →  same: O(n/a) = O(n)   [reverse is same!]
+  </div>
+
+  <div class="example">
+    <div class="example-label">Examples <span class="diff easy">Easy</span></div>
+    <pre>
+<span class="keyword">for</span>(i=1; i&lt;=n; i++)    <span class="comment">// O(n)   — increment by 1</span>
+<span class="keyword">for</span>(i=1; i&lt;=n; i+=2)   <span class="comment">// O(n/2) = O(n) — increment by 2</span>
+<span class="keyword">for</span>(i=1; i&lt;=n; i+=5)   <span class="comment">// O(n/5) = O(n) — increment by 5</span>
+<span class="keyword">for</span>(i=n; i&gt;=1; i--)    <span class="comment">// O(n)   — decrement by 1</span></pre>
+  </div>
+
+  <h3>Pattern 2 — Multiply/Divide by Constant</h3>
+  <div class="formula-box blue">
+    <div class="formula-label">RULE</div>
+    for(i=1; i≤n; i*=k)  →  runs log_k(n) times  →  O(log n)
+    for(i=n; i≥1; i/=k)  →  same: O(log n)
+  </div>
+
+  <div class="example">
+    <div class="example-label">Why? Derivation <span class="diff medium">Medium</span></div>
+    <p>i starts at 1, then 2, then 4, ..., after k steps = 2^k. Stops when 2^k = n → k = log₂n.</p>
+    <pre>
+<span class="keyword">for</span>(i=1; i&lt;=n; i*=2)   <span class="comment">// O(log₂n)</span>
+<span class="keyword">for</span>(i=1; i&lt;=n; i*=3)   <span class="comment">// O(log₃n)</span>
+<span class="keyword">for</span>(i=n; i&gt;=1; i/=2)   <span class="comment">// O(log₂n)  — reverse is same!</span>
+<span class="keyword">for</span>(i=2; i&lt;=2^n; i*=2) <span class="comment">// log₂(2^n) = n  → O(n)</span>
+<span class="keyword">for</span>(i=0; i&lt;n; i*=2)    <span class="comment">// INFINITE LOOP! 0*2=0 always!</span></pre>
+  </div>
+
+  <h3>Pattern 3 — Squaring (i = i²)</h3>
+  <div class="formula-box pink">
+    <div class="formula-label">RULE</div>
+    for(i=2; i≤n; i=i*i)  →  runs O(log log n) times
+  </div>
+
+  <div class="example">
+    <div class="example-label">Why? Derivation <span class="diff hard">Hard</span></div>
+    <p>i starts at 2 = 2^1, then 4 = 2^2, then 16 = 2^4, then 2^8... After k steps: i = 2^(2^k).</p>
+    <p>Stops when 2^(2^k) = n → 2^k = log₂n → k = log₂(log₂n)</p>
+    <pre>
+<span class="keyword">for</span>(i=2; i&lt;=n; i=i*i)             <span class="comment">// O(log log n)</span>
+<span class="keyword">for</span>(i=n; i&gt;=2; i=sqrt(i))         <span class="comment">// O(log log n)  — square root = reverse</span>
+<span class="keyword">for</span>(i=2; i&lt;=n*n; i=i*i)           <span class="comment">// O(log log n²) = O(log(2 log n)) = O(log log n)</span></pre>
+  </div>
+
+  <h3>Nested Loops</h3>
+  <pre>
+<span class="comment">// Independent nested loops</span>
+<span class="keyword">for</span>(i=0; i&lt;n; i++)           <span class="comment">// n times</span>
+  <span class="keyword">for</span>(j=0; j&lt;n; j++)         <span class="comment">// n times</span>
+    stmt;                     <span class="comment">→ O(n²)</span>
+
+<span class="comment">// Dependent inner loop</span>
+<span class="keyword">for</span>(i=0; i&lt;n; i++)           <span class="comment">// n times</span>
+  <span class="keyword">for</span>(j=i; j&lt;n; j++)         <span class="comment">// (n-i) times</span>
+    stmt;                     <span class="comment">→ Sum: n+(n-1)+...+1 = n(n+1)/2 = O(n²)</span>
+
+<span class="comment">// Inner loop depends on i, increments by i</span>
+<span class="keyword">for</span>(i=0; i&lt;n; i++)           <span class="comment">// n times</span>
+  <span class="keyword">for</span>(j=1; j&lt;n; j+=i)        <span class="comment">// n/i times</span>
+    stmt;                     <span class="comment">→ Σ(n/i) for i=1 to n = n·H(n) ≈ n·ln(n) = O(n log n)</span></pre>
+
+  <h3>Quick Reference — Time Complexity Patterns</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Loop Pattern</th><th>Complexity</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>i++ (1 to n)</td><td>O(n)</td><td>n iterations</td></tr>
+        <tr><td>i += a (constant)</td><td>O(n/a) = O(n)</td><td>n/a iterations</td></tr>
+        <tr><td>i *= k</td><td>O(log_k n)</td><td>log_k n iterations</td></tr>
+        <tr><td>i = i²</td><td>O(log log n)</td><td>log log n iterations</td></tr>
+        <tr><td>Two nested i++</td><td>O(n²)</td><td>n × n</td></tr>
+        <tr><td>Nested, j from i to n</td><td>O(n²)</td><td>n(n+1)/2</td></tr>
+        <tr><td>Nested j from 1 to n, j+=i</td><td>O(n log n)</td><td>harmonic series</td></tr>
+        <tr><td>Outer i++, inner j *= 2</td><td>O(n log n)</td><td>n × log n</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SECTION 12 — EXAMPLES BANK -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="section" id="s12">
+<div class="container">
+  <div class="section-tag">Section 12</div>
+  <h2 class="section-title">Problem Examples Bank</h2>
+  <p class="section-desc">Practice problems covering every concept, from basic to tricky.</p>
+
+  <h3>Type 1 — Finding c and n₀</h3>
+
+  <div class="example">
+    <div class="example-label">Q: Find c,n₀ for 3n+2 = O(n) <span class="diff easy">Easy</span></div>
+    <div class="proof">
+      <span class="line">Need: 3n+2 ≤ c·n</span>
+      <span class="line">Try c=4: 3n+2 ≤ 4n ↔ 2 ≤ n → true for n₀=3</span>
+      <span class="result">Answer: c=4, n₀=3 (many answers valid: c=10000,n₀=1; etc.)</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: Is 2n² = O(n³)? <span class="diff easy">Easy</span></div>
+    <div class="proof">
+      <span class="line">Need: 2n² ≤ c·n³ ↔ 2 ≤ c·n</span>
+      <span class="line">c=1, n₀=2: 2(4)=8, 1·8=8 ✓</span>
+      <span class="result">YES: c=1, n₀=2 works → 2n² = O(n³)</span>
+    </div>
+  </div>
+
+  <h3>Type 2 — True/False Notation Problems</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Statement</th><th>True/False</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>n = O(n²)</td><td>✅ TRUE</td><td>n ≤ n² for n≥1</td></tr>
+        <tr><td>n² = O(n)</td><td>❌ FALSE</td><td>n² grows faster than n</td></tr>
+        <tr><td>2ⁿ⁺¹ = O(2ⁿ)</td><td>✅ TRUE</td><td>2ⁿ⁺¹ = 2·2ⁿ, c=2</td></tr>
+        <tr><td>2²ⁿ = O(2ⁿ)</td><td>❌ FALSE</td><td>2²ⁿ/2ⁿ = 2ⁿ → ∞, no c exists</td></tr>
+        <tr><td>n² = o(n³)</td><td>✅ TRUE</td><td>n³/n² = n → ∞, works for all c</td></tr>
+        <tr><td>n² = o(2n²)</td><td>❌ FALSE</td><td>Ratio is constant, fails small c</td></tr>
+        <tr><td>log₂n = Θ(log₁₀n)</td><td>✅ TRUE</td><td>Differ by constant log(10)</td></tr>
+        <tr><td>f=Θ(g) → f=O(g)</td><td>✅ TRUE</td><td>Theta implies Big-O</td></tr>
+        <tr><td>f=O(g) → f=Θ(g)</td><td>❌ FALSE</td><td>n²=O(n³) but n²≠Θ(n³)</td></tr>
+        <tr><td>n² = Ω(n)</td><td>✅ TRUE</td><td>n² ≥ c·n for c=1, n₀=1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Type 3 — Comparison Ordering</h3>
+
+  <div class="example">
+    <div class="example-label">Q: Arrange in increasing order: n!, 4ⁿ, 2ⁿ, 2^(2^n) <span class="diff hard">Hard</span></div>
+    <div class="proof">
+      <span class="line">2^n: log = n</span>
+      <span class="line">4^n = (2^2)^n = 2^(2n): log = 2n</span>
+      <span class="line">n!: log = n log n (by Stirling)</span>
+      <span class="line">2^(2^n): log = 2^n</span>
+      <span class="line">Compare logs: n &lt; 2n &lt; n log n &lt; 2^n</span>
+      <span class="result">Order: 2ⁿ &lt; 4ⁿ &lt; n! &lt; 2^(2^n)</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: f(n)=n^log₂(n), g(n)=2ⁿ — which is bigger? <span class="diff hard">Hard</span></div>
+    <div class="proof">
+      <span class="line">log f = (log₂n)²</span>
+      <span class="line">log g = n</span>
+      <span class="line">Compare: (log n)² vs n</span>
+      <span class="line">n^ε beats (log n)^k for any ε,k → n > (log n)²</span>
+      <span class="result">2ⁿ > n^(log n) → f(n) = O(g(n)) → B is answer</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: f(n)=2ⁿ, g(n)=n^√n — which is bigger? <span class="diff tricky">Tricky</span></div>
+    <div class="proof">
+      <span class="line">log f = n · log 2 = n (constant)</span>
+      <span class="line">log g = √n · log n</span>
+      <span class="line">Compare: n vs √n · log n → divide by √n</span>
+      <span class="line">√n vs log n → n^(1/2) > log n (polynomial > log)</span>
+      <span class="result">log f > log g → f > g → 2ⁿ > n^√n → f=Ω(g)</span>
+    </div>
+  </div>
+
+  <h3>Type 4 — Gate-Style MCQ</h3>
+
+  <div class="example">
+    <div class="example-label">Q: f(n)=n, g(n)=n² — which is true? <span class="diff easy">Easy</span></div>
+    <p>n &lt; n² for large n → f is smaller → <strong>f(n) = O(g(n))</strong> ✓</p>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: f(n)=n², g(n)=2ⁿ — which is true? <span class="diff easy">Easy</span></div>
+    <p>n² &lt; 2ⁿ for large n → <strong>f(n) = O(g(n))</strong> ✓ and more precisely <strong>f(n) = o(g(n))</strong></p>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: n^(5+n) vs n^n — can we ignore the 5? <span class="diff tricky">Tricky</span></div>
+    <div class="proof">
+      <span class="line">n^(5+n) = n^5 · n^n</span>
+      <span class="line">n^(5+n) / n^n = n^5 → ∞</span>
+      <span class="line">The 5 CANNOT be ignored — it represents n^5 factor!</span>
+      <span class="result">n^(5+n) is STRICTLY LARGER than n^n → n^n = o(n^(5+n))</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: Loop complexity of below code <span class="diff medium">Medium</span></div>
+    <pre>
+<span class="keyword">for</span>(i=0; i&lt;n; i*=2) { ... }  <span class="comment">// i starts at 0!</span></pre>
+    <div class="proof">
+      <span class="result">INFINITE LOOP! 0 * 2 = 0 forever. Always check initialization!</span>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Q: Find complexity — outer n, inner j from 1 to n, step by i <span class="diff hard">Hard</span></div>
+    <pre>
+<span class="keyword">for</span>(i=1; i&lt;=n; i++)
+  <span class="keyword">for</span>(j=1; j&lt;n; j+=i)
+    stmt;</pre>
+    <div class="proof">
+      <span class="line">Inner loop runs n/i times for each i</span>
+      <span class="line">Total = Σ(n/i) for i=1 to n = n × (1 + 1/2 + 1/3 + ... + 1/n)</span>
+      <span class="line">= n × H(n) ≈ n × ln(n)</span>
+      <span class="result">O(n log n)</span>
+    </div>
+  </div>
+</div>
+</section>
+</main>
+
+<!-- ─── QUICK NOTES OVERLAY ─── -->
+<div id="quick-notes">
+  <div class="qn-inner">
+    <button class="qn-close" onclick="document.getElementById('quick-notes').classList.remove('visible')">✕</button>
+    <h2>⚡ Quick Revision Notes</h2>
+
+    <div class="qn-section">
+      <h3>5 Notations — Core Definitions</h3>
+      <div class="qn-grid">
+        <div class="qn-item">
+          <strong>O(g(n)) — Big-O</strong>
+          <span>f ≤ c·g for all n≥n₀. ∃ c,n₀. Upper bound. "AT MOST"</span>
+        </div>
+        <div class="qn-item">
+          <strong>Ω(g(n)) — Big-Omega</strong>
+          <span>f ≥ c·g for all n≥n₀. ∃ c,n₀. Lower bound. "AT LEAST"</span>
+        </div>
+        <div class="qn-item">
+          <strong>Θ(g(n)) — Theta</strong>
+          <span>c₁g ≤ f ≤ c₂g. Tight bound. "EXACTLY". O AND Ω together.</span>
+        </div>
+        <div class="qn-item">
+          <strong>o(g(n)) — little-o</strong>
+          <span>f &lt; c·g for ALL c. Strict upper. Big-O with functional gap.</span>
+        </div>
+        <div class="qn-item">
+          <strong>ω(g(n)) — little-ω</strong>
+          <span>f > c·g for ALL c. Strict lower. Big-Ω with functional gap.</span>
+        </div>
+        <div class="qn-item">
+          <strong>Key Difference</strong>
+          <span>Big-O/Ω: ∃ one c works. Little-o/ω: ∀ c must work.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Growth Rate Order</h3>
+      <div class="qn-item" style="font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--accent4)">
+        1 &lt; log n &lt; √n &lt; n &lt; n log n &lt; n² &lt; n³ &lt; 2ⁿ &lt; 3ⁿ &lt; n! &lt; nⁿ
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Loop Complexity Patterns</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><strong>i++ or i+=a</strong><span>O(n) — linear</span></div>
+        <div class="qn-item"><strong>i*=k or i/=k</strong><span>O(log n) — logarithmic</span></div>
+        <div class="qn-item"><strong>i = i²</strong><span>O(log log n) — double-log</span></div>
+        <div class="qn-item"><strong>Nested i++,j++</strong><span>O(n²) — quadratic</span></div>
+        <div class="qn-item"><strong>Nested j from i to n</strong><span>O(n²) — triangular sum</span></div>
+        <div class="qn-item"><strong>Outer i++, inner j*=2</strong><span>O(n log n)</span></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Key Rules</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><strong>Drop lower terms</strong><span>n²+n+1 = O(n²)</span></div>
+        <div class="qn-item"><strong>Drop multiplied constants</strong><span>5n = O(n)</span></div>
+        <div class="qn-item"><strong>DON'T drop inside</strong><span>n^(5+n) ≠ n^n !</span></div>
+        <div class="qn-item"><strong>DON'T drop base</strong><span>2^(2n) ≠ O(2^n)</span></div>
+        <div class="qn-item"><strong>Log bases differ by const</strong><span>log₂n = Θ(log₁₀n)</span></div>
+        <div class="qn-item"><strong>n^ε beats (log n)^k</strong><span>Always, for any ε>0, k>0</span></div>
+        <div class="qn-item"><strong>Stirling: log(n!)</strong><span>= Θ(n log n)</span></div>
+        <div class="qn-item"><strong>n! vs nⁿ</strong><span>n! = o(nⁿ) but log(n!) = Θ(log(nⁿ))</span></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Implication Logic</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><strong>Θ → O and Ω</strong><span>Tight implies both bounds</span></div>
+        <div class="qn-item"><strong>O + Ω → Θ</strong><span>Both bounds together = tight</span></div>
+        <div class="qn-item"><strong>O alone ≠ Θ</strong><span>n² = O(n³) ≠ Θ(n³)</span></div>
+        <div class="qn-item"><strong>f=O(g) ⟺ g=Ω(f)</strong><span>Transpose property</span></div>
+        <div class="qn-item"><strong>f=o(g) ⟺ g=ω(f)</strong><span>Strict transpose</span></div>
+        <div class="qn-item"><strong>Cases ≠ Notations!</strong><span>Best/worst/avg case each can use any O,Ω,Θ</span></div>
+      </div>
+    </div>
+
+    <div class="qn-section">
+      <h3>Comparison Toolbox</h3>
+      <div class="qn-grid">
+        <div class="qn-item"><strong>Step 1</strong><span>Cancel common factors first</span></div>
+        <div class="qn-item"><strong>Step 2</strong><span>Ignore constants only in c·f(n) or f(n)+d form</span></div>
+        <div class="qn-item"><strong>Step 3</strong><span>Take log — if result is >, then original is >; if equal, can't conclude</span></div>
+        <div class="qn-item"><strong>Step 4</strong><span>Substitute n=2^k to simplify nested logs</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CANVASES JS ─── -->
+<script>
+function drawGraph(id, mode) {
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = {l:50,r:20,t:20,b:40};
+  const gW = W-pad.l-pad.r, gH = H-pad.t-pad.b;
+  
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#111420';
+  ctx.fillRect(0,0,W,H);
+  
+  // axes
+  ctx.strokeStyle = '#2e3550';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t);
+  ctx.lineTo(pad.l, pad.t+gH);
+  ctx.lineTo(pad.l+gW, pad.t+gH);
+  ctx.stroke();
+  
+  // axis labels
+  ctx.fillStyle = '#636d82';
+  ctx.font = '12px JetBrains Mono, monospace';
+  ctx.fillText('n', pad.l+gW+5, pad.t+gH+5);
+  ctx.fillText('T(n)', pad.l-40, pad.t+10);
+  
+  const n0x = pad.l + gW*0.35;
+  
+  if(mode === 'bigO') {
+    // f(n) — wavy then below
+    ctx.strokeStyle = '#f0a500';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const wave = n < 0.35 ? Math.sin(n*30)*0.15 : 0;
+      const y = 0.2 + n*0.6 + wave;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    // c·g(n) — above f after n0
+    ctx.strokeStyle = '#e05c5c';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const y = 0.05 + n*0.88;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    // n0 line
+    ctx.strokeStyle = '#636d82';
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(n0x, pad.t); ctx.lineTo(n0x, pad.t+gH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // labels
+    ctx.fillStyle = '#f0a500';
+    ctx.font = 'bold 13px JetBrains Mono, monospace';
+    ctx.fillText('f(n)', pad.l+gW-60, pad.t+gH*0.25);
+    ctx.fillStyle = '#e05c5c';
+    ctx.fillText('c·g(n)', pad.l+gW-80, pad.t+gH*0.1);
+    ctx.fillStyle = '#636d82';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.fillText('n₀', n0x-6, pad.t+gH+18);
+    
+    // annotation
+    ctx.fillStyle = '#4fc3f7';
+    ctx.font = '12px Lato, sans-serif';
+    ctx.fillText('After n₀: f(n) ≤ c·g(n)  →  f(n) = O(g(n))', pad.l+10, pad.t+20);
+  }
+  
+  if(mode === 'bigOmega') {
+    // f(n) — above c·g(n) after n0
+    ctx.strokeStyle = '#f0a500';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const wave = n < 0.35 ? Math.sin(n*25)*0.1 : 0;
+      const y = 0.1 + n*0.85 + wave;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    ctx.strokeStyle = '#4fc3f7';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const y = 0.05 + n*0.62;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    ctx.strokeStyle = '#636d82';
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(n0x, pad.t); ctx.lineTo(n0x, pad.t+gH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.fillStyle = '#f0a500';
+    ctx.font = 'bold 13px JetBrains Mono, monospace';
+    ctx.fillText('f(n)', pad.l+gW-50, pad.t+gH*0.08);
+    ctx.fillStyle = '#4fc3f7';
+    ctx.fillText('c·g(n)', pad.l+gW-75, pad.t+gH*0.28);
+    ctx.fillStyle = '#636d82';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.fillText('n₀', n0x-6, pad.t+gH+18);
+    ctx.fillStyle = '#4fc3f7';
+    ctx.font = '12px Lato, sans-serif';
+    ctx.fillText('After n₀: f(n) ≥ c·g(n)  →  f(n) = Ω(g(n))', pad.l+10, pad.t+20);
+  }
+  
+  if(mode === 'bigTheta') {
+    // f(n) sandwiched
+    ctx.strokeStyle = '#f0a500';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const wave = n < 0.35 ? Math.sin(n*28)*0.12 : 0;
+      const y = 0.15 + n*0.65 + wave;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    // c2·g(n) — upper
+    ctx.strokeStyle = '#e05c5c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const y = 0.05 + n*0.88;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    // c1·g(n) — lower
+    ctx.strokeStyle = '#4fc3f7';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for(let x=0; x<=gW; x++) {
+      const n = x/gW;
+      const y = 0.05 + n*0.52;
+      const px = pad.l+x, py = pad.t+gH*(1-Math.min(y,0.95));
+      x===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    
+    ctx.strokeStyle = '#636d82';
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(n0x, pad.t); ctx.lineTo(n0x, pad.t+gH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.fillStyle = '#f0a500';
+    ctx.font = 'bold 13px JetBrains Mono, monospace';
+    ctx.fillText('f(n)', pad.l+gW-55, pad.t+gH*0.22);
+    ctx.fillStyle = '#e05c5c';
+    ctx.fillText('c₂·g(n)', pad.l+gW-80, pad.t+gH*0.08);
+    ctx.fillStyle = '#4fc3f7';
+    ctx.fillText('c₁·g(n)', pad.l+gW-80, pad.t+gH*0.42);
+    ctx.fillStyle = '#636d82';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.fillText('n₀', n0x-6, pad.t+gH+18);
+    ctx.fillStyle = '#81c784';
+    ctx.font = '12px Lato, sans-serif';
+    ctx.fillText('c₁g(n) ≤ f(n) ≤ c₂g(n)  →  f(n) = Θ(g(n))', pad.l+10, pad.t+20);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  drawGraph('bigO', 'bigO');
+  drawGraph('bigOmega', 'bigOmega');
+  drawGraph('bigTheta', 'bigTheta');
+  
+  // TOC active state
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.toc a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#'+entry.target.id);
+        });
+      }
+    });
+  }, {threshold:0.2});
+  sections.forEach(s => observer.observe(s));
+});
+</script>
+</body>
+</html>
