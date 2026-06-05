@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LCS — Deep Study Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080b12;--bg2:#0f1321;--bg3:#141929;--bg4:#1c2238;
+  --surface:#181e30;--surface2:#1e2640;
+  --accent:#5b8fff;--accent2:#c084fc;--accent3:#34d399;
+  --warn:#fbbf24;--danger:#f87171;--coral:#fb923c;
+  --text:#e8ecf8;--text2:#8b96be;--text3:#4a5272;
+  --border:rgba(91,143,255,.1);--border2:rgba(91,143,255,.22);
+  --mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;
+  --radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.78;min-height:100vh;overflow-x:hidden}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(8,11,18,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:0;overflow-x:auto;height:50px}
+.topnav a{display:inline-flex;align-items:center;height:50px;padding:0 11px;color:var(--text3);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:.05em;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.topnav a:hover,.topnav a.active{color:var(--accent);border-bottom-color:var(--accent)}
+.topnav .logo{color:var(--accent);font-weight:700;font-size:14px;margin-right:14px;border:none!important;font-family:'Playfair Display',serif;flex-shrink:0}
+.page{max-width:940px;margin:0 auto;padding:2.5rem 1.5rem 8rem}
+.hero{text-align:center;padding:4rem 1rem 3rem;position:relative}
+.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse at 50% 0%,rgba(91,143,255,.12) 0%,transparent 70%);pointer-events:none}
+.hero-tag{display:inline-block;background:rgba(91,143,255,.1);color:var(--accent);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:1.2rem;border:1px solid var(--border2)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,6vw,3.6rem);font-weight:700;line-height:1.1;color:var(--text);margin-bottom:.8rem}
+.hero h1 span{color:var(--accent)}
+.hero-sub{color:var(--text2);font-size:1rem;max-width:540px;margin:.8rem auto 1.5rem}
+.hero-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:1.2rem}
+.hero-chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--text2);font-weight:600}
+section{margin-bottom:4.5rem;scroll-margin-top:58px}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+h2{font-size:1.6rem;font-weight:700;color:var(--text);margin-bottom:1.1rem;line-height:1.3}
+h3{font-size:1.08rem;font-weight:600;color:var(--accent2);margin:2rem 0 .6rem}
+h4{font-size:.85rem;font-weight:700;color:var(--warn);margin:1.4rem 0 .4rem;text-transform:uppercase;letter-spacing:.07em}
+p{color:var(--text2);margin-bottom:.85rem}
+p strong,li strong{color:var(--text);font-weight:600}
+hr.div{border:none;border-top:1px solid var(--border);margin:2.5rem 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem 1.5rem;margin-bottom:1.1rem}
+.card.ab{border-left:3px solid var(--accent)}.card.gb{border-left:3px solid var(--accent3)}.card.wb{border-left:3px solid var(--warn)}.card.db{border-left:3px solid var(--danger)}.card.pb{border-left:3px solid var(--accent2)}.card.cb{border-left:3px solid var(--coral)}
+.insight{background:rgba(91,143,255,.07);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.insight-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;margin-bottom:.3rem}
+.magic-box{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.magic-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent3);text-transform:uppercase;margin-bottom:.3rem}
+.warn-box{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.warn-label{font-size:10px;font-weight:700;color:var(--warn);text-transform:uppercase;margin-bottom:.3rem}
+.code-block{background:#060810;border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;margin:1rem 0;overflow-x:auto}
+.code-block pre{font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#cdd6f4}
+.kw{color:#89b4fa}.fn{color:#a6e3a1}.cm{color:#585b70;font-style:italic}.nb{color:#fab387}.st{color:#a6e3a1}.num{color:#f5a97f}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:.6rem 0}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
+.badge.time{background:rgba(91,143,255,.14);color:var(--accent);border:1px solid var(--border2)}
+.badge.good{background:rgba(52,211,153,.1);color:var(--accent3);border:1px solid rgba(52,211,153,.2)}
+.badge.bad{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.2)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin:1rem 0}
+.tbl th{background:var(--bg4);color:var(--accent);font-weight:700;padding:.55rem .9rem;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border2)}
+.tbl td{padding:.55rem .9rem;color:var(--text2);border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(91,143,255,.04);color:var(--text)}
+.tbl td.hl{color:var(--accent3);font-weight:700;font-family:var(--mono)}
+.tbl td.match{background:rgba(52,211,153,.12)!important;color:var(--accent3);font-weight:700}
+.tbl td.ans{background:rgba(251,191,36,.15)!important;color:var(--warn);font-weight:700}
+.viz{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.3rem;margin:1.2rem 0;overflow:hidden}
+.viz-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.8rem}
+.ctrl-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:.7rem 0}
+.ctrl-row label{font-size:12px;color:var(--text2);font-weight:600}
+.ctrl-row input[type=text]{background:var(--bg4);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-family:var(--mono);font-size:12px;outline:none;width:180px}
+.run-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 18px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.run-btn:hover{opacity:.85}
+.run-btn.sec{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.run-btn.sec:hover{color:var(--text);opacity:1}
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:1rem 0;font-size:12px;font-weight:600}
+.flow-box{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--text2);text-align:center;line-height:1.4}
+.flow-box.hl{background:rgba(91,143,255,.15);color:var(--accent);border-color:var(--border2)}
+.flow-box.good{background:rgba(52,211,153,.12);color:var(--accent3);border-color:rgba(52,211,153,.2)}
+.flow-box.bad{background:rgba(248,113,113,.1);color:var(--danger);border-color:rgba(248,113,113,.2)}
+.flow-arr{color:var(--text3);font-size:18px;flex-shrink:0}
+.seq{display:inline-flex;gap:3px;align-items:flex-start;font-family:var(--mono);font-size:13px;flex-wrap:wrap}
+.seq-char{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:12px}
+.seq-char.drop{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:var(--text3);text-decoration:line-through}
+.seq-char.lcs{background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.35);color:var(--warn)}
+.seq-char.hi{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.3);color:var(--accent3)}
+.gc{width:38px;height:32px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border-radius:5px;border:1px solid var(--border);color:var(--text2);font-family:var(--mono)}
+.gc.hdr{background:var(--bg4);color:var(--accent);border-color:var(--border2)}
+.gc.zero{background:rgba(91,143,255,.06);color:var(--text3)}
+.gc.match2{background:rgba(52,211,153,.18);color:var(--accent3);border-color:rgba(52,211,153,.3)}
+.gc.norm{background:rgba(91,143,255,.1);color:var(--accent)}
+.gc.ans{background:rgba(251,191,36,.2);color:var(--warn);border-color:rgba(251,191,36,.4)}
+.arr-legend{display:flex;gap:14px;flex-wrap:wrap;margin:.7rem 0;font-size:11px;color:var(--text2)}
+.arr-legend span{display:flex;align-items:center;gap:5px}
+.arr-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+ol.ri{padding-left:1.4rem}
+ol.ri li{color:var(--text2);margin-bottom:.4rem}
+code{font-family:var(--mono);color:var(--accent);font-size:.88em;background:rgba(91,143,255,.1);padding:1px 5px;border-radius:4px}
+#quick-revision{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;overflow-y:auto;backdrop-filter:blur(8px)}
+#quick-revision .qr-inner{max-width:860px;margin:2rem auto;padding:2rem;background:var(--bg2);border-radius:20px;border:1px solid var(--border2);position:relative}
+.qr-close{display:block;float:right;background:var(--surface);border:none;color:var(--text2);font-size:1.5rem;cursor:pointer;border-radius:8px;width:36px;height:36px;line-height:36px;text-align:center;margin-bottom:1rem}
+.qr-close:hover{color:var(--text)}
+#quick-revision h2{font-size:1.4rem;color:var(--accent);margin-bottom:1.5rem;font-family:'Playfair Display',serif;clear:both}
+#quick-revision h3{color:var(--warn);margin:1.5rem 0 .4rem;font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;border-top:1px solid var(--border);padding-top:.9rem}
+#quick-revision ul{padding-left:1.3rem}
+#quick-revision li{color:var(--text2);margin-bottom:.35rem;font-size:.88rem}
+#quick-revision li strong{color:var(--text)}
+.qr-formula{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.65rem 1rem;font-family:var(--mono);font-size:12px;color:var(--accent3);margin:.5rem 0}
+#qr-open-btn{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:11px 20px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(91,143,255,.4);z-index:200;transition:transform .15s,box-shadow .15s}
+#qr-open-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(91,143,255,.5)}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="logo">LCS</span>
+  <a href="#overview">Overview</a>
+  <a href="#what-is">Definition</a>
+  <a href="#brute">Brute Force</a>
+  <a href="#dp-idea">DP Idea</a>
+  <a href="#recursion">Formula</a>
+  <a href="#calls">Calls</a>
+  <a href="#bottomup">Bottom-Up</a>
+  <a href="#walkthrough">Example</a>
+  <a href="#backtrack">Backtrack</a>
+  <a href="#interactive">Try It</a>
+  <a href="#alt">Alt Way</a>
+  <a href="#apps">Apps</a>
+  <a href="#gate">GATE</a>
+  <a href="#compare">Summary</a>
+</nav>
+
+<div class="page">
+
+<div class="hero">
+  <div class="hero-tag">Dynamic Programming · Algorithm Design · GO Classes</div>
+  <h1>Longest Common<br><span>Subsequence</span></h1>
+  <p class="hero-sub">Given two sequences, find the longest sequence that is a subsequence of both — without changing element order.</p>
+  <div class="hero-chips">
+    <span class="hero-chip">🧬 DNA matching</span>
+    <span class="hero-chip">📄 git diff</span>
+    <span class="hero-chip">🧩 DP classic</span>
+    <span class="hero-chip">⏱ O(m·n)</span>
+  </div>
+</div>
+
+<!-- ── OVERVIEW ── -->
+<section id="overview">
+  <div class="section-label">10,000 ft view</div>
+  <h2>Big Picture — How Everything Connects</h2>
+
+  <div class="card ab">
+    <p>LCS is a perfect showcase of how DP converts an <em>exponentially expensive</em> brute-force into a <em>polynomial-time</em> table-fill. The journey:</p>
+    <div class="flow">
+      <div class="flow-box bad">Brute Force<br><small>O(n·2ᵐ)</small></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-box hl">Recursive Insight<br><small>2 elegant cases</small></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-box hl">Memoization<br><small>m×n unique calls</small></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-box good">Bottom-Up DP<br><small>O(m·n) table</small></div>
+    </div>
+  </div>
+
+  <p>The <strong>magic insight</strong>: every sub-problem LCS(i,j) depends on at most 3 earlier cells. Instead of recomputing them 2<sup>m</sup> times, store each in a table — each of the m×n cells is filled exactly once.</p>
+
+  <div class="viz">
+    <div class="viz-title">Concept Dependency Map</div>
+    <svg width="100%" height="160" viewBox="0 0 680 160" style="font-family:var(--sans)">
+      <defs><marker id="arr1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#5b8fff" opacity=".7"/></marker></defs>
+      <rect x="4" y="55" width="110" height="44" rx="8" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.3)" stroke-width="1.5"/>
+      <text x="59" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#f87171">Subsequence</text>
+      <text x="59" y="90" text-anchor="middle" font-size="10" fill="#9aa3c2">drop, keep order</text>
+      <rect x="148" y="55" width="120" height="44" rx="8" fill="rgba(91,143,255,.08)" stroke="rgba(91,143,255,.25)" stroke-width="1.5"/>
+      <text x="208" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#5b8fff">Common Subseq</text>
+      <text x="208" y="90" text-anchor="middle" font-size="10" fill="#9aa3c2">in both X and Y</text>
+      <rect x="310" y="55" width="110" height="44" rx="8" fill="rgba(251,191,36,.08)" stroke="rgba(251,191,36,.25)" stroke-width="1.5"/>
+      <text x="365" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#fbbf24">LCS Problem</text>
+      <text x="365" y="90" text-anchor="middle" font-size="10" fill="#9aa3c2">longest of those</text>
+      <rect x="470" y="15" width="120" height="44" rx="8" fill="rgba(52,211,153,.07)" stroke="rgba(52,211,153,.22)" stroke-width="1.5"/>
+      <text x="530" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#34d399">Recursive Cases</text>
+      <text x="530" y="50" text-anchor="middle" font-size="10" fill="#9aa3c2">match / no-match</text>
+      <rect x="470" y="100" width="120" height="44" rx="8" fill="rgba(192,84,252,.08)" stroke="rgba(192,84,252,.22)" stroke-width="1.5"/>
+      <text x="530" y="118" text-anchor="middle" font-size="11" font-weight="700" fill="#c084fc">DP Table O(mn)</text>
+      <text x="530" y="134" text-anchor="middle" font-size="10" fill="#9aa3c2">bottom-up fill</text>
+      <line x1="114" y1="77" x2="146" y2="77" stroke="#5b8fff" stroke-width="1.4" opacity=".6" marker-end="url(#arr1)"/>
+      <line x1="268" y1="77" x2="308" y2="77" stroke="#5b8fff" stroke-width="1.4" opacity=".6" marker-end="url(#arr1)"/>
+      <line x1="420" y1="68" x2="468" y2="42" stroke="#5b8fff" stroke-width="1.4" opacity=".6" marker-end="url(#arr1)"/>
+      <line x1="420" y1="88" x2="468" y2="114" stroke="#5b8fff" stroke-width="1.4" opacity=".6" marker-end="url(#arr1)"/>
+      <line x1="530" y1="59" x2="530" y2="98" stroke="#5b8fff" stroke-width="1" stroke-dasharray="3,3" opacity=".5" marker-end="url(#arr1)"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ── DEFINITION ── -->
+<section id="what-is">
+  <div class="section-label">Core Definitions</div>
+  <h2>What is Subsequence? What is LCS?</h2>
+
+  <h3>Subsequence</h3>
+  <div class="card ab">
+    <div class="insight">
+      <div class="insight-label">Definition</div>
+      <p>Z is a <strong>subsequence</strong> of X if Z can be obtained from X by <em>dropping (removing) some symbols</em>, keeping the remaining ones in their original left-to-right order.</p>
+    </div>
+  </div>
+
+  <h4>Visual: Subsequences of ABCDEFGH</h4>
+  <div class="viz">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11px;color:var(--accent3);margin-bottom:5px">BDFH ✓ — pick positions 2,4,6,8 (keep order)</div>
+        <div class="seq">
+          <div><div class="seq-char drop">A</div></div>
+          <div><div class="seq-char hi">B</div></div>
+          <div><div class="seq-char drop">C</div></div>
+          <div><div class="seq-char hi">D</div></div>
+          <div><div class="seq-char drop">E</div></div>
+          <div><div class="seq-char hi">F</div></div>
+          <div><div class="seq-char drop">G</div></div>
+          <div><div class="seq-char hi">H</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--danger);margin-bottom:5px">GAX ✗ — NOT valid. G is at position 7, A is at position 1. You can't go backwards!</div>
+        <p style="font-size:12px;color:var(--text3)">Rule: once you pick position k, your next pick must be at position &gt; k.</p>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px">C ✓ | ABCDEFGH ✓ (whole string = valid subsequence) | AG ✓</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>LCS Problem Statement</h3>
+  <div class="card gb">
+    <p>A <strong>common subsequence</strong> of X and Y = a sequence that is a subsequence of both X and Y.</p>
+    <p>The <strong>Longest Common Subsequence (LCS)</strong> = the common subsequence with maximum length.</p>
+  </div>
+
+  <h4>Example: X = ABCDEFGH, Y = ABDFGHI</h4>
+  <div class="card">
+    <p>Common subsequences: A, AB, ABD, ABDF, ABDFG, <strong style="color:var(--accent3)">ABDFGH</strong> ← LCS (length 6)</p>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:.8rem">
+      <div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">X = ABCDEFGH — LCS chars highlighted</div>
+        <div class="seq">
+          <div><div class="seq-char lcs">A</div></div>
+          <div><div class="seq-char lcs">B</div></div>
+          <div><div class="seq-char drop">C</div></div>
+          <div><div class="seq-char lcs">D</div></div>
+          <div><div class="seq-char drop">E</div></div>
+          <div><div class="seq-char lcs">F</div></div>
+          <div><div class="seq-char lcs">G</div></div>
+          <div><div class="seq-char lcs">H</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Y = ABDFGHI — same LCS chars</div>
+        <div class="seq">
+          <div><div class="seq-char lcs">A</div></div>
+          <div><div class="seq-char lcs">B</div></div>
+          <div><div class="seq-char lcs">D</div></div>
+          <div><div class="seq-char lcs">F</div></div>
+          <div><div class="seq-char lcs">G</div></div>
+          <div><div class="seq-char lcs">H</div></div>
+          <div><div class="seq-char drop">I</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <div class="warn-label">Formal Task</div>
+    <p>Given X of length m and Y of length n, find the <strong>length</strong> of their LCS (and optionally reconstruct the actual subsequence string).</p>
+  </div>
+</section>
+
+<!-- ── BRUTE FORCE ── -->
+<section id="brute">
+  <div class="section-label">Approach 1 — Naive</div>
+  <h2>Brute Force — Enumerate All Subsequences</h2>
+
+  <div class="card db">
+    <p><strong>Algorithm:</strong></p>
+    <ol class="ri">
+      <li>Enumerate <strong>all possible subsequences of X</strong> — there are 2<sup>m</sup> of them.</li>
+      <li>For each one, check if it is also a subsequence of Y.</li>
+      <li>Keep track of the longest one found.</li>
+    </ol>
+  </div>
+
+  <h3>Why 2ᵐ subsequences?</h3>
+  <div class="card">
+    <p>For each character in X (|X| = m), you have exactly 2 choices: <strong>include it</strong> or <strong>skip it</strong>. With m independent binary choices → 2<sup>m</sup> possible subsequences.</p>
+    <p style="font-size:12px;color:var(--text3)">m=10 → 1024, m=20 → 1M, m=50 → 10<sup>15</sup> → takes thousands of years.</p>
+  </div>
+
+  <h3>How to check if subsequence Z is in Y — O(n) two-pointer method</h3>
+  <div class="viz">
+    <div class="viz-title">Check ABC ⊆ PQADTBXSCFG using two pointers i (on Z), j (on Y)</div>
+    <table class="tbl"><thead><tr><th>Step</th><th>i → Z[i]</th><th>j → Y[j]</th><th>Match?</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>A</td><td>P</td><td>No</td><td>advance j only</td></tr>
+      <tr><td>2</td><td>A</td><td>Q</td><td>No</td><td>advance j only</td></tr>
+      <tr><td>3</td><td class="match">A</td><td class="match">A</td><td>Yes!</td><td>advance BOTH i and j</td></tr>
+      <tr><td>4</td><td>B</td><td>D</td><td>No</td><td>advance j only</td></tr>
+      <tr><td>5</td><td class="match">B</td><td class="match">B</td><td>Yes!</td><td>advance BOTH</td></tr>
+      <tr><td>6</td><td class="match">C</td><td class="match">C</td><td>Yes!</td><td>advance BOTH</td></tr>
+      <tr><td>End</td><td>i exhausted</td><td>—</td><td colspan="2" class="hl">ABC is a subsequence of Y ✓</td></tr>
+    </tbody></table>
+    <p style="font-size:12px;color:var(--text2);margin-top:.6rem">Time = O(|Y|) = O(n) — just one linear scan. If Z[i] matches Y[j], advance both; else advance only j.</p>
+  </div>
+
+  <h3>Total Brute Force Complexity</h3>
+  <table class="tbl">
+    <thead><tr><th>Step</th><th>Count</th><th>Time Each</th><th>Total</th></tr></thead>
+    <tbody>
+      <tr><td>Enumerate all subsequences of X</td><td>2<sup>m</sup></td><td>—</td><td>—</td></tr>
+      <tr><td>Check each against Y</td><td>2<sup>m</sup></td><td>O(n)</td><td class="hl" style="color:var(--danger)">O(n · 2ᵐ)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="magic-box">
+    <div class="magic-label">Why Brute Force Fails → Motivation for DP</div>
+    <p>We <strong>recompute the same LCS sub-problems over and over</strong> inside the recursion. DP fixes this by <em>storing</em> each answer once — turning 2<sup>m</sup> repeated calls into exactly m×n calls total.</p>
+  </div>
+</section>
+
+<!-- ── DP IDEA ── -->
+<section id="dp-idea">
+  <div class="section-label">The Key Insight</div>
+  <h2>Recursive Insight — Two Cases</h2>
+
+  <p>Instead of checking all subsequences, we ask a smarter question: <strong>"What does LCS(X[1..i], Y[1..j]) look like, based on whether the last characters match?"</strong></p>
+
+  <h3>Case 1 — Last chars MATCH: X[i] = Y[j]</h3>
+  <div class="card gb">
+    <div class="magic-box">
+      <div class="magic-label">The Magic Insight</div>
+      <p>If the last characters match, they <strong>will always appear in some optimal LCS</strong>. Why throw away a free match? So we claim 1 for this pair, and recurse on the remaining prefixes.</p>
+    </div>
+    <div class="code-block"><pre>LCS(i, j) = <span class="num">1</span> + LCS(i-<span class="num">1</span>, j-<span class="num">1</span>)    <span class="cm">// X[i] == Y[j]</span></pre></div>
+    <div style="margin-top:.7rem">
+      <p style="font-size:12.5px"><strong>Example:</strong> X = ABDE, Y = ZBE — both end in E</p>
+      <p style="font-size:12.5px">LCS(ABDE, ZBE) = 1 + LCS(ABD, ZB) → the E is in the LCS for free</p>
+    </div>
+  </div>
+
+  <h3>Case 2 — Last chars DON'T MATCH: X[i] ≠ Y[j]</h3>
+  <div class="card ab">
+    <div class="warn-box">
+      <div class="warn-label">Critical Rule — You CANNOT decrement both at once</div>
+      <p>When X[i] ≠ Y[j], you might think: "drop both last chars → LCS(i-1, j-1)". This is <strong>WRONG</strong>.</p>
+      <p><strong>Counter-example:</strong> X = PBT, Y = YXB. Last chars T ≠ B. If we drop both, we get LCS(PB, YX) = 0. But the real LCS is "B" (length 1) — dropping both hid it!</p>
+      <p>The correct logic: the optimal LCS either doesn't use X[i], or doesn't use Y[j] (since they can't match each other). Try both, take the max.</p>
+    </div>
+    <div class="code-block"><pre>LCS(i, j) = max(
+    LCS(i-<span class="num">1</span>, j),    <span class="cm">// drop X[i]  — maybe X[i] not in LCS</span>
+    LCS(i, j-<span class="num">1</span>)     <span class="cm">// drop Y[j]  — maybe Y[j] not in LCS</span>
+)                  <span class="cm">// X[i] != Y[j]</span></pre></div>
+    <div class="viz" style="margin-top:.7rem">
+      <div class="viz-title">Example: X = ABDG, Y = ZBD (last: G ≠ D)</div>
+      <table class="tbl"><thead><tr><th>Option</th><th>Sub-problem</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Drop G from X</td><td>LCS(ABD, ZBD)</td><td>Maybe G isn't in the LCS anyway</td></tr>
+        <tr><td>Drop D from Y</td><td>LCS(ABDG, ZB)</td><td>Maybe D from Y isn't in the LCS</td></tr>
+        <tr><td class="hl">Answer</td><td class="match">max(both)</td><td>Take whichever is larger</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <h3>Side by Side — Case 1 vs Case 2</h3>
+  <div class="viz">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem">
+      <div style="padding:1rem;background:rgba(52,211,153,.05);border-radius:8px;border:1px solid rgba(52,211,153,.15)">
+        <div style="font-size:11px;font-weight:700;color:var(--accent3);margin-bottom:6px">CASE 1: X[i] = Y[j] — Match!</div>
+        <div style="font-size:12px;color:var(--text2)">X: A C G G <strong style="color:var(--accent3);font-family:var(--mono)">A</strong></div>
+        <div style="font-size:12px;color:var(--text2)">Y: A C T <strong style="color:var(--accent3);font-family:var(--mono)">A</strong></div>
+        <div style="font-size:12px;color:var(--accent3);margin-top:5px">LCS(5,4) = 1 + LCS(4,3)</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">✓ count this A, move diagonal</div>
+      </div>
+      <div style="padding:1rem;background:rgba(248,113,113,.05);border-radius:8px;border:1px solid rgba(248,113,113,.12)">
+        <div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:6px">CASE 2: X[i] ≠ Y[j] — No match</div>
+        <div style="font-size:12px;color:var(--text2)">X: A C G G <strong style="color:var(--danger);font-family:var(--mono)">T</strong></div>
+        <div style="font-size:12px;color:var(--text2)">Y: A C T <strong style="color:var(--accent2);font-family:var(--mono)">A</strong></div>
+        <div style="font-size:12px;color:var(--accent);margin-top:5px">LCS(5,4) = max(LCS(4,4), LCS(5,3))</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">Try dropping T, or dropping A</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── RECURSION FORMULA ── -->
+<section id="recursion">
+  <div class="section-label">The Formula</div>
+  <h2>Complete Recursive Equation</h2>
+
+  <div class="card gb">
+    <p><strong>LCS[i,j]</strong> = length of LCS of X[1..i] and Y[1..j]</p>
+    <div class="code-block"><pre><span class="cm">// Base cases — empty string has LCS = 0</span>
+LCS[<span class="num">0</span>, j] = <span class="num">0</span>    <span class="cm">for any j</span>
+LCS[i, <span class="num">0</span>] = <span class="num">0</span>    <span class="cm">for any i</span>
+
+<span class="cm">// Recursive cases</span>
+LCS[i, j] = <span class="num">1</span> + LCS[i-<span class="num">1</span>, j-<span class="num">1</span>]               <span class="cm">if X[i] == Y[j]  (Case 1)</span>
+LCS[i, j] = max( LCS[i-<span class="num">1</span>, j], LCS[i, j-<span class="num">1</span>] )   <span class="cm">if X[i] != Y[j]  (Case 2)</span>
+
+<span class="cm">// Final answer</span>
+return LCS[m, n]   <span class="cm">// m = |X|, n = |Y|</span></pre></div>
+  </div>
+
+  <h3>Cell Dependency — Which cells does (i,j) need?</h3>
+  <div class="viz">
+    <div class="viz-title">Cell (i,j) depends on exactly 3 neighbors (diagonal, above, left)</div>
+    <div style="display:flex;gap:1.5rem;align-items:flex-start">
+      <svg width="220" height="110" viewBox="0 0 220 110" style="font-family:var(--mono);flex-shrink:0">
+        <defs><marker id="dep-arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#5b8fff"/></marker></defs>
+        <rect x="8" y="8" width="72" height="38" rx="6" fill="rgba(91,143,255,.15)" stroke="rgba(91,143,255,.4)"/>
+        <text x="44" y="32" text-anchor="middle" fill="#5b8fff" font-size="12" font-weight="700">(i-1,j-1)</text>
+        <rect x="100" y="8" width="72" height="38" rx="6" fill="rgba(192,84,252,.15)" stroke="rgba(192,84,252,.4)"/>
+        <text x="136" y="32" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="700">(i-1,j)</text>
+        <rect x="8" y="62" width="72" height="38" rx="6" fill="rgba(52,211,153,.15)" stroke="rgba(52,211,153,.4)"/>
+        <text x="44" y="86" text-anchor="middle" fill="#34d399" font-size="12" font-weight="700">(i,j-1)</text>
+        <rect x="138" y="62" width="72" height="38" rx="6" fill="rgba(251,191,36,.2)" stroke="rgba(251,191,36,.4)"/>
+        <text x="174" y="86" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700">(i,j)</text>
+        <line x1="80" y1="27" x2="136" y2="64" stroke="#5b8fff" stroke-width="1.5" marker-end="url(#dep-arr)"/>
+        <line x1="136" y1="46" x2="156" y2="64" stroke="#c084fc" stroke-width="1.5" marker-end="url(#dep-arr)"/>
+        <line x1="80" y1="81" x2="136" y2="81" stroke="#34d399" stroke-width="1.5" marker-end="url(#dep-arr)"/>
+      </svg>
+      <div style="font-size:12px;color:var(--text2);padding-top:.3rem">
+        <p><span style="color:#5b8fff">■ diagonal (i-1,j-1)</span><br>Used in Case 1 (X[i]=Y[j]): 1 + diagonal</p>
+        <p><span style="color:#c084fc">■ above (i-1,j)</span><br>Used in Case 2: drop X's last char</p>
+        <p><span style="color:#34d399">■ left (i,j-1)</span><br>Used in Case 2: drop Y's last char</p>
+        <p style="margin-top:.5rem;color:var(--accent2)"><strong>Fill order:</strong> Row by row, left to right. Every cell only needs cells already computed. ✓</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Pure Recursive Code</h3>
+  <div class="code-block"><pre><span class="kw">int</span> <span class="fn">LCS</span>(<span class="kw">int</span> i, <span class="kw">int</span> j) {
+    <span class="kw">if</span> (i == <span class="num">0</span> || j == <span class="num">0</span>)   <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">if</span> (x[i] == y[j])        <span class="kw">return</span> <span class="num">1</span> + <span class="fn">LCS</span>(i-<span class="num">1</span>, j-<span class="num">1</span>);
+    <span class="kw">else return</span> max(<span class="fn">LCS</span>(i, j-<span class="num">1</span>), <span class="fn">LCS</span>(i-<span class="num">1</span>, j));
+}</pre></div>
+</section>
+
+<!-- ── CALLS ANALYSIS ── -->
+<section id="calls">
+  <div class="section-label">Complexity Deep Dive</div>
+  <h2>Total Calls vs Unique Calls</h2>
+
+  <h3>Total Recursive Calls — Exponential 😱</h3>
+  <div class="card db">
+    <p>Case 2 makes <strong>2 sub-calls per call</strong>. This forms a binary tree of depth m. Result: 2<sup>m</sup> total calls in the worst case.</p>
+    <div class="viz">
+      <div class="viz-title">Recursion Tree — LCS(4,3). Notice LCS(3,2) appears twice (orange circles)</div>
+      <svg width="100%" height="190" viewBox="0 0 680 190" style="font-family:var(--mono);font-size:11px">
+        <defs><marker id="ta" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#4a5272"/></marker></defs>
+        <rect x="295" y="6" width="66" height="26" rx="5" fill="rgba(91,143,255,.15)" stroke="rgba(91,143,255,.35)"/>
+        <text x="328" y="23" text-anchor="middle" fill="#5b8fff" font-weight="700">4,3</text>
+        <rect x="125" y="52" width="60" height="26" rx="5" fill="rgba(91,143,255,.1)" stroke="rgba(91,143,255,.2)"/>
+        <text x="155" y="69" text-anchor="middle" fill="#8b96be">3,3</text>
+        <rect x="430" y="52" width="60" height="26" rx="5" fill="rgba(91,143,255,.1)" stroke="rgba(91,143,255,.2)"/>
+        <text x="460" y="69" text-anchor="middle" fill="#8b96be">4,2</text>
+        <line x1="310" y1="32" x2="170" y2="52" stroke="#4a5272" stroke-width="1.2" marker-end="url(#ta)"/>
+        <line x1="346" y1="32" x2="448" y2="52" stroke="#4a5272" stroke-width="1.2" marker-end="url(#ta)"/>
+        <rect x="38" y="100" width="56" height="26" rx="5" fill="rgba(91,143,255,.07)" stroke="rgba(91,143,255,.15)"/>
+        <text x="66" y="117" text-anchor="middle" fill="#4a5272">2,3</text>
+        <rect x="162" y="100" width="60" height="26" rx="5" fill="rgba(251,191,36,.18)" stroke="rgba(251,191,36,.5)" stroke-width="1.5"/>
+        <text x="192" y="117" text-anchor="middle" fill="#fbbf24" font-weight="700">3,2 ●</text>
+        <rect x="348" y="100" width="60" height="26" rx="5" fill="rgba(251,191,36,.18)" stroke="rgba(251,191,36,.5)" stroke-width="1.5"/>
+        <text x="378" y="117" text-anchor="middle" fill="#fbbf24" font-weight="700">3,2 ●</text>
+        <rect x="480" y="100" width="56" height="26" rx="5" fill="rgba(91,143,255,.07)" stroke="rgba(91,143,255,.15)"/>
+        <text x="508" y="117" text-anchor="middle" fill="#4a5272">4,1</text>
+        <line x1="140" y1="78" x2="75" y2="100" stroke="#4a5272" stroke-width="1" marker-end="url(#ta)"/>
+        <line x1="162" y1="78" x2="183" y2="100" stroke="#4a5272" stroke-width="1" marker-end="url(#ta)"/>
+        <line x1="445" y1="78" x2="368" y2="100" stroke="#4a5272" stroke-width="1" marker-end="url(#ta)"/>
+        <line x1="475" y1="78" x2="496" y2="100" stroke="#4a5272" stroke-width="1" marker-end="url(#ta)"/>
+        <text x="280" y="150" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="700">↑ LCS(3,2) computed TWICE already at depth 2!</text>
+        <text x="280" y="167" text-anchor="middle" fill="#f87171" font-size="10">Deeper levels → exponentially more repetition</text>
+        <text x="280" y="183" text-anchor="middle" fill="#4a5272" font-size="10">Total calls = O(2ᵐ)</text>
+      </svg>
+    </div>
+    <div class="badge-row">
+      <span class="badge bad">2ᵐ total calls (exponential)</span>
+      <span class="badge bad">Same sub-problems recomputed many times</span>
+    </div>
+  </div>
+
+  <h3>Unique Calls — Only m×n! 🎉</h3>
+  <div class="card gb">
+    <div class="magic-box">
+      <div class="magic-label">The Key Observation That Enables DP</div>
+      <p>LCS(i,j) is fully defined by 2 parameters: <strong>i</strong> ∈ {0..m} and <strong>j</strong> ∈ {0..n}. So there are at most <strong>(m+1)×(n+1)</strong> unique sub-problems. Store each result once → each computed only once.</p>
+    </div>
+    <div class="badge-row">
+      <span class="badge good">m×n unique sub-problems</span>
+      <span class="badge good">Each computed exactly once</span>
+      <span class="badge time">O(m·n) time and space</span>
+    </div>
+  </div>
+
+  <h3>Before vs After DP</h3>
+  <table class="tbl">
+    <thead><tr><th>Aspect</th><th>Pure Recursion</th><th>DP (Memo / Bottom-Up)</th></tr></thead>
+    <tbody>
+      <tr><td>Total work</td><td style="color:var(--danger)">2ᵐ calls</td><td class="hl">m×n fills</td></tr>
+      <tr><td>m=20, n=20</td><td style="color:var(--danger)">1,000,000+</td><td style="color:var(--accent3)">400</td></tr>
+      <tr><td>m=50, n=50</td><td style="color:var(--danger)">≈ 10¹⁵</td><td style="color:var(--accent3)">2,500</td></tr>
+      <tr><td>Feasible?</td><td style="color:var(--danger)">No — takes years</td><td style="color:var(--accent3)">Yes — milliseconds</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── BOTTOM-UP ── -->
+<section id="bottomup">
+  <div class="section-label">DP Implementation</div>
+  <h2>Bottom-Up DP — Table Filling</h2>
+
+  <div class="card ab">
+    <p>Create a table C of size (m+1)×(n+1). All row-0 and col-0 cells = 0. Fill left-to-right, top-to-bottom. Answer at C[m,n].</p>
+    <div class="code-block"><pre><span class="kw">function</span> <span class="fn">LCS_DP</span>(X[<span class="num">1..m</span>], Y[<span class="num">1..n</span>]):
+    C[i,<span class="num">0</span>] = <span class="num">0</span>   <span class="kw">for all</span> i     <span class="cm">// base: empty Y</span>
+    C[<span class="num">0</span>,j] = <span class="num">0</span>   <span class="kw">for all</span> j     <span class="cm">// base: empty X</span>
+    
+    <span class="kw">for</span> i = <span class="num">1</span> to m:
+        <span class="kw">for</span> j = <span class="num">1</span> to n:
+            <span class="kw">if</span> X[i] == Y[j]:
+                C[i,j] = C[i-<span class="num">1</span>,j-<span class="num">1</span>] + <span class="num">1</span>          <span class="cm">// Case 1: match</span>
+            <span class="kw">else</span>:
+                C[i,j] = max(C[i-<span class="num">1</span>,j], C[i,j-<span class="num">1</span>])  <span class="cm">// Case 2: no match</span>
+    
+    <span class="kw">return</span> C[m,n]</pre></div>
+    <div class="badge-row">
+      <span class="badge time">Time: O(m·n)</span>
+      <span class="badge time">Space: O(m·n)</span>
+      <span class="badge good">Answer at C[m,n]</span>
+    </div>
+  </div>
+
+  <h3>Memoized (Top-Down) Code</h3>
+  <div class="code-block"><pre><span class="cm">// dp[i][j] = null means not yet computed</span>
+<span class="kw">int</span> <span class="fn">LCS</span>(<span class="kw">int</span> i, <span class="kw">int</span> j) {
+    <span class="kw">if</span> (dp[i][j] != null) <span class="kw">return</span> dp[i][j];  <span class="cm">// cache hit</span>
+    <span class="kw">if</span> (i==<span class="num">0</span> || j==<span class="num">0</span>) { dp[i][j]=<span class="num">0</span>; <span class="kw">return</span> <span class="num">0</span>; }
+    <span class="kw">if</span> (x[i]==y[j])  dp[i][j] = <span class="num">1</span> + <span class="fn">LCS</span>(i-<span class="num">1</span>,j-<span class="num">1</span>);
+    <span class="kw">else</span>             dp[i][j] = max(<span class="fn">LCS</span>(i,j-<span class="num">1</span>), <span class="fn">LCS</span>(i-<span class="num">1</span>,j));
+    <span class="kw">return</span> dp[i][j];
+}</pre></div>
+</section>
+
+<!-- ── FULL WALKTHROUGH ── -->
+<section id="walkthrough">
+  <div class="section-label">Step-by-Step Example</div>
+  <h2>Full Worked Example</h2>
+
+  <div class="card ab">
+    <p><strong>X = ABCBDAB</strong> (m=7) &nbsp;&nbsp;&nbsp; <strong>Y = BDCABA</strong> (n=6)</p>
+    <p>Table size = (7+1)×(6+1) = 8×7. Row 0 and column 0 are all zeros. Fill row by row.</p>
+  </div>
+
+  <h4>Completed DP Table (green = Case 1 match used, gold = final answer)</h4>
+  <div class="viz" style="overflow-x:auto">
+    <table id="demo-table" class="tbl" style="font-family:var(--mono);font-size:12px;min-width:420px"></table>
+  </div>
+
+  <h4>Key cells explained step-by-step</h4>
+  <table class="tbl">
+    <thead><tr><th>Cell C[i,j]</th><th>X[i]</th><th>Y[j]</th><th>Match?</th><th>Formula</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>C[1,1]</td><td>A</td><td>B</td><td>No</td><td>max(C[0,1], C[1,0]) = max(0,0)</td><td class="hl">0</td></tr>
+      <tr><td>C[2,1]</td><td>B</td><td>B</td><td class="match">Yes!</td><td>1 + C[1,0] = 1+0</td><td class="match">1</td></tr>
+      <tr><td>C[3,3]</td><td>C</td><td>C</td><td class="match">Yes!</td><td>1 + C[2,2] = 1+1</td><td class="match">2</td></tr>
+      <tr><td>C[4,4]</td><td>B</td><td>A</td><td>No</td><td>max(C[3,4], C[4,3]) = max(2,2)</td><td class="hl">2</td></tr>
+      <tr><td>C[6,4]</td><td>A</td><td>A</td><td class="match">Yes!</td><td>1 + C[5,3] = 1+2</td><td class="match">3</td></tr>
+      <tr><td>C[7,6]</td><td>B</td><td>A</td><td>No</td><td>max(C[6,6], C[7,5]) = max(4,4)</td><td class="ans">4 ← ANSWER</td></tr>
+    </tbody>
+  </table>
+
+  <div class="magic-box">
+    <div class="magic-label">Answer</div>
+    <p>LCS length = <strong>4</strong>. Multiple valid LCS exist: <strong>BDAB</strong>, <strong>BCAB</strong>, <strong>BCBA</strong> — all length 4, all equally valid.</p>
+  </div>
+</section>
+
+<!-- ── BACKTRACKING ── -->
+<section id="backtrack">
+  <div class="section-label">Reconstruction</div>
+  <h2>Backtracking — Find the Actual LCS String</h2>
+
+  <p>After filling the table, start at C[m,n] and trace back to C[0,0] using the same rules that filled each cell.</p>
+
+  <div class="card ab">
+    <div class="code-block"><pre><span class="fn">BACKTRACK</span>(i, j):
+    <span class="kw">if</span> i==<span class="num">0</span> or j==<span class="num">0</span>:  <span class="kw">return</span> <span class="st">""</span>
+    <span class="kw">if</span> X[i] == Y[j]:
+        <span class="kw">return</span> <span class="fn">BACKTRACK</span>(i-<span class="num">1</span>, j-<span class="num">1</span>) + X[i]     <span class="cm">// ↖ diagonal — include char</span>
+    <span class="kw">else if</span> C[i-<span class="num">1</span>,j] &gt;= C[i,j-<span class="num">1</span>]:
+        <span class="kw">return</span> <span class="fn">BACKTRACK</span>(i-<span class="num">1</span>, j)               <span class="cm">// ↑ up — came from dropping X[i]</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="fn">BACKTRACK</span>(i, j-<span class="num">1</span>)               <span class="cm">// ← left — came from dropping Y[j]</span></pre></div>
+  </div>
+
+  <div class="arr-legend">
+    <span><div class="arr-dot" style="background:rgba(52,211,153,.45)"></div>↖ diagonal: X[i]=Y[j], include this character</span>
+    <span><div class="arr-dot" style="background:rgba(192,84,252,.45)"></div>↑ up: X[i]≠Y[j], came from dropping X[i]</span>
+    <span><div class="arr-dot" style="background:rgba(91,143,255,.45)"></div>← left: X[i]≠Y[j], came from dropping Y[j]</span>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">Multiple LCS Explanation</div>
+    <p>When C[i-1,j] = C[i,j-1] in Case 2, both paths are equally valid. Following different tie-breaking choices at these cells gives different LCS strings of the same length. This is why the example above has 3 valid LCS strings.</p>
+  </div>
+</section>
+
+<!-- ── INTERACTIVE ── -->
+<section id="interactive">
+  <div class="section-label">Try It Yourself</div>
+  <h2>Interactive LCS Visualizer</h2>
+
+  <div class="card">
+    <div class="ctrl-row">
+      <label>X:</label>
+      <input type="text" id="str-x" value="ABCBDAB" maxlength="12">
+      <label>Y:</label>
+      <input type="text" id="str-y" value="BDCABA" maxlength="12">
+      <button class="run-btn" onclick="runLCS()">▶ Compute</button>
+    </div>
+    <div class="ctrl-row">
+      <button class="run-btn sec" onclick="setEx(1)">ABCDE / ACE</button>
+      <button class="run-btn sec" onclick="setEx(2)">GATE 2009</button>
+      <button class="run-btn sec" onclick="setEx(3)">No common</button>
+      <button class="run-btn sec" onclick="setEx(4)">GATE 2014</button>
+    </div>
+    <div id="viz-result" style="margin-top:1rem"></div>
+  </div>
+</section>
+
+<!-- ── ALT WAY ── -->
+<section id="alt">
+  <div class="section-label">Optional</div>
+  <h2>Alternative: Start from First Instead of Last</h2>
+
+  <div class="card pb">
+    <p>The conventional approach compares <strong>last characters</strong> (decrement i,j). An equivalent formulation starts from <strong>first characters</strong> (increment i,j).</p>
+    <table class="tbl">
+      <thead><tr><th>Aspect</th><th>Traditional (from last)</th><th>Alternative (from first)</th></tr></thead>
+      <tbody>
+        <tr><td>Sub-problem</td><td>LCS(X[1..i], Y[1..j])</td><td>LCS(X[i..m], Y[j..n])</td></tr>
+        <tr><td>Match</td><td>1 + LCS[i-1, j-1]</td><td>1 + LCS[i+1, j+1]</td></tr>
+        <tr><td>No-match</td><td>max(LCS[i-1,j], LCS[i,j-1])</td><td>max(LCS[i+1,j], LCS[i,j+1])</td></tr>
+        <tr><td>Fill direction</td><td>top-left → bottom-right</td><td>bottom-right → top-left</td></tr>
+        <tr><td>Answer</td><td class="hl">C[m,n]</td><td class="hl">C[1,1]</td></tr>
+        <tr><td>Used in practice?</td><td class="match">Yes (conventional)</td><td>Rarely</td></tr>
+      </tbody>
+    </table>
+    <div class="insight">
+      <div class="insight-label">Why Prefer Starting from Last?</div>
+      <p>Convention and convenience. Table fills naturally top→bottom, left→right. The answer lands at the bottom-right corner C[m,n], which feels intuitive. Starting from first reverses the fill order and puts the answer at C[1,1]. Both are mathematically valid.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── APPLICATIONS ── -->
+<section id="apps">
+  <div class="section-label">Real World</div>
+  <h2>Applications of LCS</h2>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem">
+    <div class="card gb">
+      <div style="font-size:24px;margin-bottom:.5rem">🧬</div>
+      <h4>Bioinformatics</h4>
+      <p>Compare DNA/RNA/protein sequences. Similarity between two DNA strands is measured via LCS length. Used in phylogenetics and evolutionary biology.</p>
+    </div>
+    <div class="card ab">
+      <div style="font-size:24px;margin-bottom:.5rem">📄</div>
+      <h4>unix diff / GitHub</h4>
+      <p>The <code>diff</code> command compares file versions. Lines not in the LCS are the additions/deletions shown in diffs and GitHub pull-request reviews.</p>
+    </div>
+    <div class="card pb">
+      <div style="font-size:24px;margin-bottom:.5rem">🔤</div>
+      <h4>Edit Distance</h4>
+      <p>LCS relates to edit distance: edit_dist = m + n − 2×LCS_length (for insert/delete only). Used in spell checkers and fuzzy string matching.</p>
+    </div>
+    <div class="card wb">
+      <div style="font-size:24px;margin-bottom:.5rem">🔐</div>
+      <h4>Plagiarism Detection</h4>
+      <p>Long common subsequences between documents suggest shared source material — even after reordering or paraphrasing sentences.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── GATE ── -->
+<section id="gate">
+  <div class="section-label">Exam Practice</div>
+  <h2>GATE Questions — Fully Solved</h2>
+
+  <h3>GATE 2009</h3>
+  <div class="card wb">
+    <p><strong>Question:</strong></p>
+    <div class="code-block"><pre>l(i,j) = 0,      if i=0 or j=0
+       = expr1,  if i,j>0 and X[i-1] = Y[j-1]
+       = expr2,  if i,j>0 and X[i-1] ≠ Y[j-1]
+
+A. expr1 = l(i-1,j)+1
+B. expr1 = l(i,j-1)
+C. expr2 = max(l(i-1,j), l(i,j-1))  ← answer
+D. expr2 = max(l(i-1,j-1), l(i,j))</pre></div>
+    <div class="magic-box">
+      <div class="magic-label">Answer: C — Why?</div>
+      <p>The question uses <strong>0-indexed</strong> arrays (X[i-1], Y[j-1]). When X[i-1]=Y[j-1] → expr1 = l(i-1,j-1)+1 (diagonal+1). When X[i-1]≠Y[j-1] → expr2 = max(l(i-1,j), l(i,j-1)). Only option C correctly states expr2.</p>
+    </div>
+  </div>
+
+  <h3>GATE 2014</h3>
+  <div class="card ab">
+    <p><strong>Question:</strong> A = "qpqrr", B = "pqprqrp". x = LCS length, y = number of distinct LCS strings. Find x + 10y.</p>
+    <div class="magic-box">
+      <div class="magic-label">Solution</div>
+      <p><strong>Step 1:</strong> Fill the DP table (rows=B=pqprqrp, cols=A=qpqrr).</p>
+      <p><strong>Step 2:</strong> LCS length = x = 4. Candidates: pqrr (found in both), qprr, etc.</p>
+      <p><strong>Step 3:</strong> Trace all backtrack paths → y = 3 distinct LCS strings.</p>
+      <p><strong>Answer:</strong> x + 10y = 4 + 30 = <strong>34</strong></p>
+    </div>
+  </div>
+
+  <h3>Tricky Cases to Know</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <div class="card db">
+      <h4>No Common Characters</h4>
+      <p>X = "ABC", Y = "DEF" → LCS = "" (empty), length = 0. All cells stay 0. C[3,3] = 0.</p>
+    </div>
+    <div class="card gb">
+      <h4>One is Subseq of Other</h4>
+      <p>X = "ACE", Y = "ABCDEF" → LCS = "ACE", length = 3. The entire shorter string IS the LCS.</p>
+    </div>
+    <div class="card pb">
+      <h4>Identical Strings</h4>
+      <p>X = Y = "ABCD" → LCS = "ABCD", length = 4. The diagonal gets filled with 1,2,3,4.</p>
+    </div>
+    <div class="card wb">
+      <h4>LCS vs Substring!</h4>
+      <p>"AB<strong>C</strong>D<strong>E</strong>F" vs "A<strong>C</strong>G<strong>E</strong>" — LCS = "ACE" (length 3). But longest common <em>substring</em> would be shorter since substring must be contiguous.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── SUMMARY ── -->
+<section id="compare">
+  <div class="section-label">Final Summary</div>
+  <h2>All Approaches Compared</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Practical?</th></tr></thead>
+    <tbody>
+      <tr><td>Brute Force</td><td style="color:var(--danger)">O(n·2ᵐ)</td><td>O(1)</td><td style="color:var(--danger)">No — exponential</td></tr>
+      <tr><td>Pure Recursion (no memo)</td><td style="color:var(--danger)">O(2ᵐ)</td><td>O(m+n) stack</td><td style="color:var(--danger)">No — same</td></tr>
+      <tr><td>Memoization (top-down)</td><td class="hl">O(m·n)</td><td>O(m·n)</td><td style="color:var(--accent3)">Yes</td></tr>
+      <tr><td>Bottom-Up DP</td><td class="hl">O(m·n)</td><td>O(m·n)</td><td style="color:var(--accent3)">Yes (preferred)</td></tr>
+      <tr><td>Space-optimized DP</td><td class="hl">O(m·n)</td><td style="color:var(--accent3)">O(min(m,n))</td><td style="color:var(--accent3)">Yes (memory-critical)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>DP Properties</h3>
+  <div class="card ab">
+    <ol class="ri">
+      <li><strong>Optimal Substructure:</strong> LCS(m,n) = composed of optimal LCS(m-1,n-1/m-1,n/m,n-1).</li>
+      <li><strong>Overlapping Subproblems:</strong> Same (i,j) pairs needed by many parent calls → DP stores them.</li>
+      <li><strong>Multiple LCS:</strong> Same length, different strings — both valid. When C[i-1,j]=C[i,j-1], tie.</li>
+      <li><strong>LCS + Edit Distance:</strong> edit_dist = m + n − 2×LCS (for insert/delete only ops).</li>
+    </ol>
+  </div>
+
+  <h3>Space Optimization (2-row trick)</h3>
+  <div class="card">
+    <p>Each cell (i,j) only needs row i-1 and row i. So we can keep just 2 rows at a time → O(min(m,n)) space. Limitation: can't backtrack to find the actual LCS string (only length). Hirschberg's algorithm solves this in O(m·n) time and O(min(m,n)) space.</p>
+  </div>
+</section>
+
+</div><!-- /page -->
+
+<!-- ── QUICK REVISION MODAL ── -->
+<div id="quick-revision">
+  <div class="qr-inner">
+    <button class="qr-close" onclick="document.getElementById('quick-revision').style.display='none'">✕</button>
+    <h2>⚡ Quick Revision — LCS</h2>
+
+    <h3>Definitions</h3>
+    <ul>
+      <li><strong>Subsequence:</strong> Drop some symbols (keep order) from a sequence. 2ᵐ subsequences possible from string of length m.</li>
+      <li><strong>Common Subsequence:</strong> Appears as a subsequence in both X and Y.</li>
+      <li><strong>LCS:</strong> The longest common subsequence (may not be unique).</li>
+    </ul>
+
+    <h3>The Two Cases</h3>
+    <div class="qr-formula">Case 1: X[i]=Y[j]  →  LCS[i,j] = 1 + LCS[i-1, j-1]</div>
+    <div class="qr-formula">Case 2: X[i]≠Y[j]  →  LCS[i,j] = max(LCS[i-1,j], LCS[i,j-1])</div>
+    <div class="qr-formula">Base:               LCS[0,j] = LCS[i,0] = 0</div>
+    <ul>
+      <li><strong>CANNOT decrement both</strong> in Case 2 — you'd skip a hidden match.</li>
+      <li>Cell (i,j) depends on: (i-1,j-1) diagonal, (i-1,j) above, (i,j-1) left.</li>
+    </ul>
+
+    <h3>Complexity</h3>
+    <ul>
+      <li><strong>Brute force:</strong> O(n·2ᵐ) — unusable.</li>
+      <li><strong>Total recursive calls (no memo):</strong> 2ᵐ — exponential.</li>
+      <li><strong>Unique sub-problems:</strong> (m+1)×(n+1) ≈ m×n.</li>
+      <li><strong>DP time & space:</strong> O(m·n) — polynomial, feasible.</li>
+    </ul>
+
+    <h3>Table Filling</h3>
+    <ul>
+      <li>Size: (m+1)×(n+1). Row 0, Col 0 = all 0s (base cases).</li>
+      <li>Fill row-wise left→right (or column-wise, both work).</li>
+      <li>Answer at <strong>C[m,n]</strong>.</li>
+    </ul>
+
+    <h3>Backtracking</h3>
+    <ul>
+      <li>Start at C[m,n]. If X[i]=Y[j] → go <strong>↖ diagonal</strong>, add char to LCS.</li>
+      <li>If C[i-1,j] ≥ C[i,j-1] → go <strong>↑ up</strong>.</li>
+      <li>Else → go <strong>← left</strong>.</li>
+      <li>Tie at Case 2 → multiple valid LCS strings of same length.</li>
+    </ul>
+
+    <h3>Magic Insights</h3>
+    <ul>
+      <li>If last chars match, they ALWAYS appear in optimal LCS — never wasteful to include.</li>
+      <li>When no match, at most ONE of X[i] or Y[j] can be in LCS (since they differ) → try dropping each, take max.</li>
+      <li>2ᵐ calls shrink to m×n by noticing (i,j) fully identifies any sub-problem.</li>
+    </ul>
+
+    <h3>GATE Tips</h3>
+    <ul>
+      <li>0-indexed: X[i-1]=Y[j-1] ↔ 1-indexed: X[i]=Y[j]. Same formula, just index shift.</li>
+      <li>LCS ≠ Longest Common Substring (substring = contiguous; subsequence = non-contiguous ok).</li>
+      <li>GATE 2009: Answer C. | GATE 2014: x=4, y=3, answer=34.</li>
+      <li>LCS length + Edit distance: edit_dist = m + n − 2×LCS (insert/delete only).</li>
+    </ul>
+
+    <h3>Applications</h3>
+    <ul>
+      <li>DNA/RNA/protein similarity (Bioinformatics).</li>
+      <li>unix <code>diff</code>, GitHub PR diffs.</li>
+      <li>Plagiarism detection, spell-checking, edit distance.</li>
+    </ul>
+  </div>
+</div>
+
+<button id="qr-open-btn" onclick="document.getElementById('quick-revision').style.display='block'">⚡ Quick Revision</button>
+
+<script>
+// Demo table: X=ABCBDAB, Y=BDCABA
+const DX=['','A','B','C','B','D','A','B'];
+const DY=['','B','D','C','A','B','A'];
+function buildDemoTable(){
+  const m=7,n=6;
+  const C=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+    if(DX[i]===DY[j]) C[i][j]=C[i-1][j-1]+1;
+    else C[i][j]=Math.max(C[i-1][j],C[i][j-1]);
+  }
+  const t=document.getElementById('demo-table');
+  if(!t) return;
+  let head=`<thead><tr><th></th><th style="color:var(--text3)">j=0</th>`;
+  for(let j=1;j<=n;j++) head+=`<th><span style="color:var(--accent)">${DY[j]}</span><br><small style="color:var(--text3)">${j}</small></th>`;
+  head+=`</tr></thead>`;
+  let body='<tbody>';
+  for(let i=0;i<=m;i++){
+    const rLabel=i===0?`<td style="color:var(--text3);font-size:11px">i=0</td>`:`<td style="color:var(--accent);font-family:var(--mono);font-weight:700">${DX[i]}<small style="color:var(--text3)">(${i})</small></td>`;
+    body+=`<tr>${rLabel}`;
+    for(let j=0;j<=n;j++){
+      let s='';
+      if(i===m&&j===n) s='style="color:var(--warn);font-weight:700;background:rgba(251,191,36,.14)"';
+      else if(i>0&&j>0&&DX[i]===DY[j]) s='style="color:var(--accent3);font-weight:700"';
+      else if(i===0||j===0) s='style="color:var(--text3)"';
+      else s='style="color:var(--text2)"';
+      body+=`<td ${s}>${C[i][j]}</td>`;
+    }
+    body+=`</tr>`;
+  }
+  body+='</tbody>';
+  t.innerHTML=head+body;
+}
+
+// Interactive LCS
+function setEx(n){
+  const ex=[null,['ABCDE','ACE'],['ABCBDAB','BDCABA'],['ABC','DEF'],['QPQRR','PQPRQRP']];
+  document.getElementById('str-x').value=ex[n][0];
+  document.getElementById('str-y').value=ex[n][1];
+  runLCS();
+}
+
+function runLCS(){
+  const xr=document.getElementById('str-x').value.toUpperCase().replace(/[^A-Z]/g,'');
+  const yr=document.getElementById('str-y').value.toUpperCase().replace(/[^A-Z]/g,'');
+  document.getElementById('str-x').value=xr; document.getElementById('str-y').value=yr;
+  const X=['',...xr.split('')], Y=['',...yr.split('')];
+  const m=xr.length, n=yr.length;
+  const res=document.getElementById('viz-result');
+  if(!m||!n){res.innerHTML='<p style="color:var(--danger)">Enter non-empty strings.</p>';return;}
+  if(m>13||n>13){res.innerHTML='<p style="color:var(--warn)">Keep strings ≤ 13 chars for readability.</p>';return;}
+
+  const C=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+    if(X[i]===Y[j]) C[i][j]=C[i-1][j-1]+1;
+    else C[i][j]=Math.max(C[i-1][j],C[i][j-1]);
+  }
+
+  // Get all LCS (capped)
+  const memo={};
+  function bt(i,j){
+    const k=`${i},${j}`;
+    if(memo[k]) return memo[k];
+    if(i===0||j===0){memo[k]=[''];return[''];}
+    let r=[];
+    if(X[i]===Y[j]){r=bt(i-1,j-1).map(s=>s+X[i]);}
+    else{
+      if(C[i-1][j]>=C[i][j-1]) r=[...r,...bt(i-1,j)];
+      if(C[i][j-1]>=C[i-1][j]) r=[...r,...bt(i,j-1)];
+    }
+    r=[...new Set(r)];
+    memo[k]=r; return r;
+  }
+  const allLCS=bt(m,n).slice(0,6);
+  const lcs1=allLCS[0]||'';
+
+  // Highlight chars in sequences
+  function hiSeq(s,lcsStr){
+    let idx=0;
+    return s.split('').map(c=>{
+      const found=idx<lcsStr.length&&c===lcsStr[idx];
+      if(found) idx++;
+      return `<div><div class="seq-char${found?' lcs':''}">${c}</div></div>`;
+    }).join('');
+  }
+
+  // Build mini table
+  let th=`<tr><td class="gc hdr" style="width:38px"></td><td class="gc zero" style="font-size:10px">∅</td>`;
+  for(let j=1;j<=n;j++) th+=`<td class="gc hdr">${Y[j]}</td>`;
+  th=`<tr>${th}</tr>`;
+  let rows='';
+  for(let i=0;i<=m;i++){
+    const lab=i===0?`<td class="gc zero" style="font-size:10px">∅</td>`:`<td class="gc hdr">${X[i]}</td>`;
+    let row=lab;
+    for(let j=0;j<=n;j++){
+      let cl='gc norm';
+      if(i===0||j===0) cl='gc zero';
+      else if(i===m&&j===n) cl='gc ans';
+      else if(X[i]===Y[j]) cl='gc match2';
+      row+=`<td><div class="${cl}">${C[i][j]}</div></td>`;
+    }
+    rows+=`<tr>${row}</tr>`;
+  }
+
+  res.innerHTML=`
+  <div style="margin-bottom:.8rem">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">X = ${xr}</div>
+    <div class="seq">${hiSeq(xr,lcs1)}</div>
+    <div style="font-size:11px;color:var(--text3);margin:.6rem 0 4px">Y = ${yr}</div>
+    <div class="seq">${hiSeq(yr,lcs1)}</div>
+  </div>
+  <div style="overflow-x:auto;margin-bottom:.8rem">
+    <table style="border-collapse:separate;border-spacing:3px">${th}${rows}</table>
+  </div>
+  <div class="arr-legend">
+    <span><div class="arr-dot" style="background:rgba(52,211,153,.5)"></div>Case 1 match</span>
+    <span><div class="arr-dot" style="background:rgba(91,143,255,.4)"></div>Case 2 (max)</span>
+    <span><div class="arr-dot" style="background:rgba(251,191,36,.5)"></div>Final answer</span>
+  </div>
+  <div class="magic-box" style="margin-top:.7rem">
+    <div class="magic-label">Result</div>
+    <p><strong>LCS Length = ${C[m][n]}</strong></p>
+    <p><strong>LCS string(s):</strong> ${allLCS.map(s=>`<code>${s||'(empty)'}</code>`).join(' , ')} ${allLCS.length>=6?' &hellip;':''}</p>
+  </div>`;
+}
+
+// Nav active state
+const sects=document.querySelectorAll('section[id]');
+const nav=document.querySelectorAll('.topnav a[href^="#"]');
+const obs=new IntersectionObserver(e=>{
+  e.forEach(en=>{
+    if(en.isIntersecting) nav.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+en.target.id));
+  });
+},{threshold:0.15,rootMargin:'-40px 0px -65% 0px'});
+sects.forEach(s=>obs.observe(s));
+
+window.addEventListener('load',()=>{setTimeout(buildDemoTable,200);setTimeout(runLCS,400);});
+</script>
+</body>
+</html>
