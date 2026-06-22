@@ -30,13 +30,17 @@ Recursive factorial(10) executing on the CPU in Logisim:
 
 ### Circuit Diagrams
 
-| Top-Level CPU | ALU |
-|---|---|
-| ![](simple_risc_cpu_circuit_images/simple_risc_cpu.png) | ![](simple_risc_cpu_circuit_images/simple_risc_cpu_ALU.png) |
+| Control Unit |
+|---|
+| ![](simple_risc_cpu_circuit_images/simple_risc_cpu_CU.png) |
 
-| Control Unit | Register File |
-|---|---|
-| ![](simple_risc_cpu_circuit_images/simple_risc_cpu_CU.png) | ![](simple_risc_cpu_circuit_images/simple_risc_cpu_REG_FILE.png) |
+| ALU |
+|---|
+| ![](simple_risc_cpu_circuit_images/simple_risc_cpu_ALU.png) |
+
+| Register File |
+|---|
+| ![](simple_risc_cpu_circuit_images/simple_risc_cpu_REG_FILE.png) |
 
 ## Instruction Set Architecture
 
