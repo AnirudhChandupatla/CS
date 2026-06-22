@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVL Tree — Deep Study Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2333;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #f78166;
+    --accent2: #79c0ff;
+    --accent3: #56d364;
+    --accent4: #ffa657;
+    --accent5: #d2a8ff;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Fraunces', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1c2333 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+  .header-title { font-family: var(--serif); font-size: 1.6rem; font-weight: 700; color: var(--accent2); }
+  .header-sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+  .btn-quickrev {
+    background: var(--accent); color: #000; border: none; padding: 0.6rem 1.4rem;
+    font-family: var(--mono); font-size: 0.8rem; font-weight: 700; border-radius: 6px;
+    cursor: pointer; letter-spacing: 0.05em; transition: all 0.2s;
+  }
+  .btn-quickrev:hover { background: #ff9580; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(247,129,102,0.3); }
+
+  /* ─── NAV TABS ─── */
+  .nav-tabs {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; gap: 0.3rem; padding: 1rem 2rem 0;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); padding: 0.45rem 1rem;
+    font-family: var(--mono); font-size: 0.75rem;
+    border-radius: 6px 6px 0 0; cursor: pointer;
+    transition: all 0.2s; border-bottom: none;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active { color: var(--accent2); background: var(--surface2); border-color: var(--accent2); border-bottom-color: var(--surface2); }
+
+  /* ─── MAIN LAYOUT ─── */
+  .content-wrap { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  .tab-panel { display: none; padding-top: 2rem; }
+  .tab-panel.active { display: block; }
+
+  /* ─── SECTIONS ─── */
+  section { margin-bottom: 3rem; }
+  .section-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 1.2rem;
+  }
+  .section-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  h2 { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; color: var(--text); }
+  h3 { font-family: var(--sans); font-size: 1rem; font-weight: 600; color: var(--accent4); margin: 1.4rem 0 0.6rem; }
+  h4 { font-family: var(--mono); font-size: 0.85rem; color: var(--accent5); margin: 1rem 0 0.4rem; }
+  p { margin-bottom: 0.8rem; color: var(--text); }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+  }
+  .card.highlight { border-color: var(--accent2); }
+  .card.warn { border-color: var(--red); }
+  .card.success { border-color: var(--accent3); }
+  .card.tip { border-color: var(--accent5); background: rgba(210,168,255,0.04); }
+  .card-label {
+    font-family: var(--mono); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.1em; margin-bottom: 0.6rem; text-transform: uppercase;
+  }
+
+  /* ─── CALLOUTS ─── */
+  .callout {
+    border-left: 3px solid; padding: 0.8rem 1rem;
+    border-radius: 0 8px 8px 0; margin: 1rem 0;
+    background: rgba(255,255,255,0.02);
+  }
+  .callout.info { border-color: var(--accent2); }
+  .callout.warn { border-color: var(--yellow); }
+  .callout.danger { border-color: var(--red); }
+  .callout.magic { border-color: var(--accent5); }
+  .callout-title { font-family: var(--mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .callout.info .callout-title { color: var(--accent2); }
+  .callout.warn .callout-title { color: var(--yellow); }
+  .callout.danger .callout-title { color: var(--red); }
+  .callout.magic .callout-title { color: var(--accent5); }
+
+  /* ─── TREE DIAGRAMS (SVG/ASCII) ─── */
+  .tree-wrap {
+    background: #0a0f16; border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.2rem; margin: 1rem 0;
+    overflow-x: auto;
+  }
+  .tree-wrap svg { display: block; }
+
+  /* ─── CODE ─── */
+  pre, code {
+    font-family: var(--mono); font-size: 0.8rem;
+  }
+  pre {
+    background: #070b10; border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.2rem; overflow-x: auto;
+    margin: 0.8rem 0; line-height: 1.6;
+    color: #cdd9e5;
+  }
+  code { background: rgba(110,118,129,0.15); padding: 0.15em 0.4em; border-radius: 4px; color: var(--accent4); }
+
+  /* ─── TABLES ─── */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th { background: var(--surface2); color: var(--accent2); font-family: var(--mono); font-size: 0.75rem; padding: 0.6rem 1rem; border: 1px solid var(--border); text-align: left; }
+  td { padding: 0.55rem 1rem; border: 1px solid var(--border); color: var(--text); }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+
+  /* ─── STEP BOXES ─── */
+  .steps { list-style: none; margin: 0.8rem 0; }
+  .steps li {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent2); color: #000;
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-why { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; font-style: italic; }
+
+  /* ─── FORMULA BOX ─── */
+  .formula {
+    background: #0a0f16; border: 2px solid var(--accent5);
+    border-radius: 10px; padding: 1.2rem; margin: 1rem 0;
+    text-align: center; font-family: var(--mono); font-size: 1rem; color: var(--accent5);
+  }
+  .formula .label { font-size: 0.7rem; color: var(--muted); margin-top: 0.5rem; }
+
+  /* ─── COMPARISON ─── */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  @media(max-width:640px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  /* ─── BADGE ─── */
+  .badge {
+    display: inline-block; padding: 0.2em 0.6em; border-radius: 4px;
+    font-family: var(--mono); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .badge.green { background: rgba(86,211,100,0.15); color: var(--accent3); }
+  .badge.blue { background: rgba(121,192,255,0.15); color: var(--accent2); }
+  .badge.orange { background: rgba(255,166,87,0.15); color: var(--accent4); }
+  .badge.red { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge.purple { background: rgba(210,168,255,0.15); color: var(--accent5); }
+
+  /* ─── EXAMPLE WALKTHROUGH ─── */
+  .example-box {
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin: 1.2rem 0;
+  }
+  .example-header {
+    background: var(--surface2); padding: 0.6rem 1rem;
+    font-family: var(--mono); font-size: 0.78rem;
+    display: flex; align-items: center; gap: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .example-body { padding: 1rem 1.2rem; }
+  .example-tag { font-size: 0.65rem; padding: 0.2em 0.5em; }
+
+  /* ─── QUICK REVISION MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 1000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; width: 90vw; max-width: 780px;
+    max-height: 85vh; overflow-y: auto;
+    padding: 2rem;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .modal-title { font-family: var(--serif); font-size: 1.3rem; color: var(--accent2); }
+  .modal-close { background: none; border: 1px solid var(--border); color: var(--muted); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+  .modal-close:hover { color: var(--text); border-color: var(--text); }
+  .rev-section { margin-bottom: 1.4rem; }
+  .rev-section h4 { font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent4); margin-bottom: 0.6rem; }
+  .rev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  @media(max-width:500px){ .rev-grid { grid-template-columns: 1fr; } }
+  .rev-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.5rem 0.8rem; font-size: 0.82rem;
+  }
+  .rev-item strong { color: var(--accent2); font-family: var(--mono); font-size: 0.78rem; }
+
+  /* ─── ANIMATION ─── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .tab-panel.active { animation: fadeIn 0.25s ease; }
+
+  /* Subtle highlight on hover for cards */
+  .card { transition: border-color 0.2s; }
+  .card:hover { border-color: rgba(121,192,255,0.35); }
+
+  /* ─── INLINE NOTE ─── */
+  .inline-note { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+  mark { background: rgba(227,179,65,0.2); color: var(--yellow); padding: 0.1em 0.3em; border-radius: 3px; }
+  strong { color: var(--accent4); }
+  em { color: var(--accent5); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════ -->
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-title">AVL Tree</div>
+      <div class="header-sub">Self-Balancing BST · Deep Study Notes · From lecture + standard material</div>
+    </div>
+    <button class="btn-quickrev" onclick="document.getElementById('quickrev').classList.add('open')">⚡ Quick Revision</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════ TABS ═══════════════════════ -->
+<div class="nav-tabs" id="navTabs">
+  <button class="tab-btn active" onclick="showTab('overview',this)">00 Overview</button>
+  <button class="tab-btn" onclick="showTab('definition',this)">01 Definition</button>
+  <button class="tab-btn" onclick="showTab('rotations',this)">02 Rotations</button>
+  <button class="tab-btn" onclick="showTab('insertion',this)">03 Insertion</button>
+  <button class="tab-btn" onclick="showTab('deletion',this)">04 Deletion</button>
+  <button class="tab-btn" onclick="showTab('analysis',this)">05 Height Analysis</button>
+  <button class="tab-btn" onclick="showTab('counting',this)">06 Counting</button>
+  <button class="tab-btn" onclick="showTab('practice',this)">07 Practice</button>
+</div>
+
+<!-- ═══════════════════════ CONTENT ═══════════════════════ -->
+<div class="content-wrap">
+
+<!-- ────────── TAB 0: OVERVIEW ────────── -->
+<div id="tab-overview" class="tab-panel active">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(121,192,255,0.15)">🗺️</div>
+      <h2>10,000 Feet View — What & Why AVL?</h2>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">🔑 The Core Problem</div>
+      <p>A Binary Search Tree (BST) gives us <strong>O(log n)</strong> for search, insert, delete — <em>only if the tree is balanced</em>. But if you insert sorted data like 1, 2, 3, 4, 5… the BST becomes a <strong>linked list</strong> (height = n), making all operations O(n). That is terrible!</p>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card warn">
+        <div class="card-label" style="color:var(--red)">❌ BST — Worst Case</div>
+        <div class="tree-wrap">
+<svg viewBox="0 0 130 210" width="130" height="210" xmlns="http://www.w3.org/2000/svg">
+  <text x="10" y="22" font-family="JetBrains Mono" font-size="11" fill="#f85149">Inserting 1,2,3,4,5</text>
+  <circle cx="20" cy="50" r="14" fill="none" stroke="#f85149" stroke-width="1.5"/>
+  <text x="20" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">1</text>
+  <line x1="30" y1="60" x2="46" y2="76" stroke="#30363d" stroke-width="1.2"/>
+  <circle cx="56" cy="90" r="14" fill="none" stroke="#f85149" stroke-width="1.5"/>
+  <text x="56" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">2</text>
+  <line x1="66" y1="100" x2="82" y2="116" stroke="#30363d" stroke-width="1.2"/>
+  <circle cx="92" cy="130" r="14" fill="none" stroke="#f85149" stroke-width="1.5"/>
+  <text x="92" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">3</text>
+  <line x1="100" y1="142" x2="108" y2="154" stroke="#30363d" stroke-width="1.2"/>
+  <circle cx="114" cy="168" r="14" fill="none" stroke="#f85149" stroke-width="1.5"/>
+  <text x="114" y="173" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">4</text>
+  <text x="5" y="200" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Height = n = 4 → O(n)</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem; color:var(--muted)">Looks like a linked list. Search is O(n). Useless!</p>
+      </div>
+      <div class="card success">
+        <div class="card-label" style="color:var(--accent3)">✅ AVL Tree — Guaranteed</div>
+        <div class="tree-wrap">
+<svg viewBox="0 0 160 180" width="160" height="180" xmlns="http://www.w3.org/2000/svg">
+  <text x="5" y="16" font-family="JetBrains Mono" font-size="10" fill="#56d364">Same 4 nodes, balanced!</text>
+  <circle cx="80" cy="50" r="14" fill="none" stroke="#56d364" stroke-width="1.5"/>
+  <text x="80" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">2</text>
+  <line x1="70" y1="60" x2="50" y2="80" stroke="#30363d" stroke-width="1.2"/>
+  <line x1="90" y1="60" x2="110" y2="80" stroke="#30363d" stroke-width="1.2"/>
+  <circle cx="40" cy="94" r="14" fill="none" stroke="#56d364" stroke-width="1.5"/>
+  <text x="40" y="99" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">1</text>
+  <circle cx="120" cy="94" r="14" fill="none" stroke="#56d364" stroke-width="1.5"/>
+  <text x="120" y="99" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">3</text>
+  <line x1="128" y1="104" x2="136" y2="118" stroke="#30363d" stroke-width="1.2"/>
+  <circle cx="142" cy="132" r="14" fill="none" stroke="#56d364" stroke-width="1.5"/>
+  <text x="142" y="137" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#cdd9e5">4</text>
+  <text x="5" y="170" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Height = log n = 2 → O(log n)</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem; color:var(--muted)">Height is always O(log n). All operations fast!</p>
+      </div>
+    </div>
+
+    <h3>How All Concepts Connect Together</h3>
+    <div class="card">
+<svg viewBox="0 0 700 180" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:700px;display:block;margin:0 auto">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
+    </marker>
+  </defs>
+  <!-- Boxes -->
+  <rect x="5" y="70" width="100" height="40" rx="6" fill="#1c2333" stroke="#30363d"/>
+  <text x="55" y="86" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#79c0ff">BST Problem</text>
+  <text x="55" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">skewed → O(n)</text>
+
+  <rect x="140" y="70" width="110" height="40" rx="6" fill="#1c2333" stroke="#30363d"/>
+  <text x="195" y="86" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#ffa657">Balance Condition</text>
+  <text x="195" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">BF ∈ {-1,0,+1}</text>
+
+  <rect x="285" y="70" width="110" height="40" rx="6" fill="#1c2333" stroke="#d2a8ff"/>
+  <text x="340" y="86" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#d2a8ff">AVL Property</text>
+  <text x="340" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">BST + BF rule</text>
+
+  <rect x="430" y="40" width="110" height="40" rx="6" fill="#1c2333" stroke="#56d364"/>
+  <text x="485" y="56" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#56d364">Insertion</text>
+  <text x="485" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">BST + 1 rotation</text>
+
+  <rect x="430" y="100" width="110" height="40" rx="6" fill="#1c2333" stroke="#f85149"/>
+  <text x="485" y="116" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#f85149">Deletion</text>
+  <text x="485" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">BST + ≤log n rot.</text>
+
+  <rect x="575" y="70" width="110" height="40" rx="6" fill="#1c2333" stroke="#e3b341"/>
+  <text x="630" y="86" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#e3b341">Rotations</text>
+  <text x="630" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">LL/RR/LR/RL</text>
+
+  <!-- Arrows -->
+  <line x1="105" y1="90" x2="138" y2="90" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="250" y1="90" x2="283" y2="90" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="392" y1="80" x2="428" y2="62" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="392" y1="100" x2="428" y2="118" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="540" y1="60" x2="573" y2="80" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="540" y1="120" x2="573" y2="100" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Labels on arrows -->
+  <text x="120" y="85" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">fix</text>
+  <text x="258" y="85" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">gives</text>
+</svg>
+    </div>
+    <p class="inline-note">Every concept builds on the previous one. Master each step and the whole picture becomes clear.</p>
+  </section>
+
+  <section>
+    <h3>The Journey of Suggestions Before AVL</h3>
+    <p>Before AVL, people tried simpler balance conditions. All failed (or were too strict):</p>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Suggestion</th><th>Idea</th><th>Problem</th><th>Verdict</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge red">S1</span></td>
+          <td>Equal nodes at root</td>
+          <td>Left & right subtree of root have same #nodes</td>
+          <td>Subtrees can still be internally skewed (7 nodes on left, all in a line!)</td>
+          <td><span class="badge red">FAIL</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge red">S2</span></td>
+          <td>Equal nodes + height at root</td>
+          <td>Same #nodes AND same height at root</td>
+          <td>Still not recursive — deep subtrees can be skewed</td>
+          <td><span class="badge red">FAIL</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge orange">S3</span></td>
+          <td>Equal nodes at every node</td>
+          <td>For every node, left and right have same #nodes</td>
+          <td>Height IS always log n, but you can only make perfect trees! Can't add/remove freely.</td>
+          <td><span class="badge orange">TOO STRICT</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge green">AVL</span></td>
+          <td>Balance factor ∈ {-1,0,+1}</td>
+          <td>For every node: |height(left) - height(right)| ≤ 1</td>
+          <td>None — works for all shapes, ensures O(log n)</td>
+          <td><span class="badge green">✅ PERFECT</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout magic">
+      <div class="callout-title">✨ Key Insight</div>
+      <p>AVL found the sweet spot: <strong>not too strict</strong> (like S3 which forces perfect trees) and <strong>not too loose</strong> (like S1/S2 which allow skew). The balance factor trick is the magic!</p>
+    </div>
+  </section>
+
+  <section>
+    <h3>Complexity Summary</h3>
+    <table>
+      <thead>
+        <tr><th>Operation</th><th>BST Worst Case</th><th>AVL Tree</th><th>Why AVL is Better</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Search</td><td><span class="badge red">O(n)</span></td><td><span class="badge green">O(log n)</span></td><td>Height guaranteed ≤ 1.44 log n</td></tr>
+        <tr><td>Insert</td><td><span class="badge red">O(n)</span></td><td><span class="badge green">O(log n)</span></td><td>BST insert + O(1) rotation</td></tr>
+        <tr><td>Delete</td><td><span class="badge red">O(n)</span></td><td><span class="badge green">O(log n)</span></td><td>BST delete + O(log n) rotations</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ────────── TAB 1: DEFINITION ────────── -->
+<div id="tab-definition" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(255,166,87,0.15)">📐</div>
+      <h2>AVL Tree — Definition & Balance Factor</h2>
+    </div>
+
+    <div class="card highlight">
+      <div class="card-label" style="color:var(--accent2)">Official Definition</div>
+      <p>An AVL tree is a <strong>Binary Search Tree</strong> where for every node:</p>
+      <div class="formula">
+        Balance Factor (BF) = Height(Left Subtree) − Height(Right Subtree)
+        <br>
+        BF must be ∈ { −1, 0, +1 } for ALL nodes
+        <div class="label">If any node has |BF| > 1 → NOT an AVL tree → needs rebalancing</div>
+      </div>
+    </div>
+
+    <h3>Height Convention</h3>
+    <div class="card">
+      <p>⚠️ Height of a <strong>null (empty) subtree</strong> = <mark>−1</mark> (some books use 0 for leaf, −1 for null)</p>
+      <p>Height of a <strong>single leaf node</strong> = <mark>0</mark></p>
+      <p>Height of a node = 1 + max(height of left child, height of right child)</p>
+    </div>
+
+    <h3>Node Structure</h3>
+    <p>The AVL tree node has one extra field compared to a normal BST node — the <strong>height</strong>:</p>
+    <pre>// BST Node
+struct BSTNode {
+  int data;
+  BSTNode* left;
+  BSTNode* right;
+};
+
+// AVL Node — just one extra field!
+struct AVLNode {
+  int data;
+  AVLNode* left;
+  AVLNode* right;
+  int height;   // ← this is the key addition!
+};</pre>
+
+    <h3>Examples: Is it an AVL Tree?</h3>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge green example-tag">Example 1</span> Simple valid AVL tree — compute balance factors
+      </div>
+      <div class="example-body">
+        <div class="tree-wrap">
+<svg viewBox="0 0 400 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:400px">
+  <!-- Tree structure: root=5, left=3(1,4), right=8(6,9) -->
+  <text x="5" y="18" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Balance Factor = H(left) - H(right)</text>
+
+  <!-- root 5 -->
+  <circle cx="200" cy="50" r="18" fill="#1c2333" stroke="#79c0ff" stroke-width="2"/>
+  <text x="200" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e6edf3">5</text>
+  <text x="228" y="44" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0</text>
+  <text x="228" y="56" font-family="JetBrains Mono" font-size="8" fill="#8b949e">h=2</text>
+
+  <line x1="186" y1="64" x2="130" y2="100" stroke="#30363d" stroke-width="1.5"/>
+  <line x1="214" y1="64" x2="270" y2="100" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- left 3 -->
+  <circle cx="120" cy="118" r="18" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="120" y="124" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e6edf3">3</text>
+  <text x="148" y="112" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0</text>
+  <text x="148" y="124" font-family="JetBrains Mono" font-size="8" fill="#8b949e">h=1</text>
+
+  <line x1="108" y1="132" x2="70" y2="158" stroke="#30363d" stroke-width="1.5"/>
+  <line x1="132" y1="132" x2="160" y2="158" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- right 8 -->
+  <circle cx="280" cy="118" r="18" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="280" y="124" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e6edf3">8</text>
+  <text x="308" y="112" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0</text>
+  <text x="308" y="124" font-family="JetBrains Mono" font-size="8" fill="#8b949e">h=1</text>
+
+  <line x1="268" y1="132" x2="230" y2="158" stroke="#30363d" stroke-width="1.5"/>
+  <line x1="292" y1="132" x2="330" y2="158" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- leaves -->
+  <circle cx="60" cy="176" r="16" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="60" y="181" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">1</text>
+  <text x="36" y="198" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0,h=0</text>
+
+  <circle cx="170" cy="176" r="16" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="170" y="181" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">4</text>
+  <text x="152" y="198" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0</text>
+
+  <circle cx="220" cy="176" r="16" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="220" y="181" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">6</text>
+  <text x="202" y="198" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0</text>
+
+  <circle cx="340" cy="176" r="16" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="340" y="181" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">9</text>
+  <text x="322" y="198" font-family="JetBrains Mono" font-size="9" fill="#56d364">BF=0</text>
+
+  <text x="5" y="215" font-family="JetBrains Mono" font-size="9" fill="#56d364">✅ All BF ∈ {-1,0,+1} → Valid AVL Tree</text>
+</svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge red example-tag">Example 2</span> NOT an AVL tree — find the bad node
+      </div>
+      <div class="example-body">
+        <div class="tree-wrap">
+<svg viewBox="0 0 320 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:320px">
+  <!-- skewed on left side -->
+  <circle cx="200" cy="40" r="16" fill="#1c2333" stroke="#f85149" stroke-width="2"/>
+  <text x="200" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">10</text>
+  <text x="220" y="36" font-family="JetBrains Mono" font-size="9" fill="#f85149">BF=3 ❌</text>
+
+  <line x1="190" y1="54" x2="150" y2="82" stroke="#30363d" stroke-width="1.5"/>
+  <!-- no right child -->
+
+  <circle cx="140" cy="98" r="16" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="140" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">7</text>
+  <text x="160" y="94" font-family="JetBrains Mono" font-size="9" fill="#ffa657">BF=2 ❌</text>
+
+  <line x1="130" y1="112" x2="100" y2="136" stroke="#30363d" stroke-width="1.5"/>
+
+  <circle cx="90" cy="152" r="16" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="90" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#e6edf3">4</text>
+  <text x="110" y="148" font-family="JetBrains Mono" font-size="9" fill="#ffa657">BF=1</text>
+
+  <line x1="80" y1="165" x2="55" y2="186" stroke="#30363d" stroke-width="1.5"/>
+
+  <circle cx="46" cy="198" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="46" y="204" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">2</text>
+  <text x="20" y="216" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=0</text>
+
+  <text x="5" y="215" font-family="JetBrains Mono" font-size="9" fill="#f85149">❌ Nodes 10 and 7 have BF > 1 → NOT AVL</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem; margin-top:0.5rem">Node <code>10</code> has left height = 3, right height = -1 (null), so BF = 3 − (−1) = <mark>4 ❌</mark></p>
+        <p style="font-size:0.82rem">Node <code>7</code> has BF = 2 ❌. Both violate the AVL property.</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-title">⚠️ Common Mistake</div>
+      <p>Always check <strong>every single node</strong>, not just the root! A tree can look balanced at the root but have an internal node with BF = ±2.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ────────── TAB 2: ROTATIONS ────────── -->
+<div id="tab-rotations" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(210,168,255,0.15)">🔄</div>
+      <h2>Rotations — The Balancing Mechanism</h2>
+    </div>
+
+    <div class="callout magic">
+      <div class="callout-title">✨ The Ingenious Idea — "Stick to Mountain"</div>
+      <p>When a subtree is unbalanced, it forms either a <strong>Stick</strong> (straight line) or an <strong>Elbow</strong> (bent). The fix is always: <mark>convert to a Mountain (balanced subtree)</mark>.</p>
+      <p>The lecture introduces this as the <em>"LO-STIC method"</em> — much more intuitive than memorizing LL/RR/LR/RL names!</p>
+    </div>
+
+    <h3>The Two Shapes That Cause Imbalance</h3>
+    <div class="compare-grid">
+      <div class="card">
+        <div class="card-label" style="color:var(--accent3)">🪄 STICK (Single Rotation)</div>
+        <div class="tree-wrap">
+<svg viewBox="0 0 260 200" width="260" height="200" xmlns="http://www.w3.org/2000/svg">
+  <text x="5" y="15" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Left-Left (LL) Stick</text>
+  <!-- Z at top -->
+  <circle cx="200" cy="35" r="15" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="200" y="41" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#ffa657">Z</text>
+  <line x1="190" y1="48" x2="158" y2="74" stroke="#8b949e" stroke-width="1.2"/>
+  <!-- Y -->
+  <circle cx="148" cy="88" r="15" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="148" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#ffa657">Y</text>
+  <line x1="138" y1="101" x2="110" y2="122" stroke="#8b949e" stroke-width="1.2"/>
+  <!-- X -->
+  <circle cx="100" cy="136" r="15" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="100" y="142" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#ffa657">X</text>
+  <!-- ARROW -->
+  <text x="110" y="175" font-family="JetBrains Mono" font-size="20" fill="#56d364">→</text>
+  <!-- Mountain after -->
+  <text x="5" y="92" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Goes straight: STICK</text>
+  <!-- Result Mountain -->
+  <circle cx="50" cy="50" r="13" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="50" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#56d364">Y</text>
+  <line x1="40" y1="62" x2="22" y2="80" stroke="#56d364" stroke-width="1"/>
+  <line x1="60" y1="62" x2="78" y2="80" stroke="#56d364" stroke-width="1"/>
+  <circle cx="14" cy="92" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1"/>
+  <text x="14" y="97" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#56d364">X</text>
+  <circle cx="86" cy="92" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1"/>
+  <text x="86" y="97" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#56d364">Z</text>
+  <text x="5" y="125" font-family="JetBrains Mono" font-size="9" fill="#56d364">Mountain ✓</text>
+  <text x="5" y="170" font-family="JetBrains Mono" font-size="8" fill="#ffa657">Rule: Y comes to top!</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem; color:var(--muted)">All 3 nodes in one direction. Middle node (Y) becomes root = single rotation.</p>
+      </div>
+      <div class="card">
+        <div class="card-label" style="color:var(--accent2)">🪄 ELBOW (Double Rotation)</div>
+        <div class="tree-wrap">
+<svg viewBox="0 0 260 200" width="260" height="200" xmlns="http://www.w3.org/2000/svg">
+  <text x="5" y="15" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Left-Right (LR) Elbow</text>
+  <!-- Z at top -->
+  <circle cx="200" cy="35" r="15" fill="#1c2333" stroke="#79c0ff" stroke-width="1.5"/>
+  <text x="200" y="41" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#79c0ff">Z</text>
+  <line x1="188" y1="48" x2="158" y2="74" stroke="#8b949e" stroke-width="1.2"/>
+  <!-- X -->
+  <circle cx="148" cy="88" r="15" fill="#1c2333" stroke="#79c0ff" stroke-width="1.5"/>
+  <text x="148" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#79c0ff">X</text>
+  <line x1="160" y1="100" x2="185" y2="120" stroke="#8b949e" stroke-width="1.2"/>
+  <!-- Y (bent right) -->
+  <circle cx="192" cy="134" r="15" fill="#1c2333" stroke="#79c0ff" stroke-width="1.5"/>
+  <text x="192" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#79c0ff">Y</text>
+  <text x="30" y="92" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Bends: ELBOW</text>
+  <!-- Arrow -->
+  <text x="115" y="175" font-family="JetBrains Mono" font-size="20" fill="#56d364">→</text>
+  <!-- Mountain -->
+  <circle cx="50" cy="50" r="13" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="50" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#56d364">Y</text>
+  <line x1="40" y1="62" x2="22" y2="80" stroke="#56d364" stroke-width="1"/>
+  <line x1="60" y1="62" x2="78" y2="80" stroke="#56d364" stroke-width="1"/>
+  <circle cx="14" cy="92" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1"/>
+  <text x="14" y="97" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#56d364">X</text>
+  <circle cx="86" cy="92" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1"/>
+  <text x="86" y="97" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#56d364">Z</text>
+  <text x="5" y="125" font-family="JetBrains Mono" font-size="9" fill="#56d364">Mountain ✓ (Y still on top!)</text>
+  <text x="5" y="170" font-family="JetBrains Mono" font-size="8" fill="#79c0ff">Rule: Y ALWAYS comes to top!</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem; color:var(--muted)">Nodes go left-then-right (or vice versa) = elbow shape. Z (middle by value) becomes root.</p>
+      </div>
+    </div>
+
+    <h3>The 4 Rotation Types</h3>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Shape</th><th>Path from imbalanced node</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge orange">LL Rotation</span></td>
+          <td>Left-Left Stick</td>
+          <td>Go left, then left</td>
+          <td>Single right rotation (stick → mountain)</td>
+        </tr>
+        <tr>
+          <td><span class="badge orange">RR Rotation</span></td>
+          <td>Right-Right Stick</td>
+          <td>Go right, then right</td>
+          <td>Single left rotation (stick → mountain)</td>
+        </tr>
+        <tr>
+          <td><span class="badge blue">LR Rotation</span></td>
+          <td>Left-Right Elbow</td>
+          <td>Go left, then right</td>
+          <td>RR on left child, then LL on root (elbow → mountain)</td>
+        </tr>
+        <tr>
+          <td><span class="badge blue">RL Rotation</span></td>
+          <td>Right-Left Elbow</td>
+          <td>Go right, then left</td>
+          <td>LL on right child, then RR on root (elbow → mountain)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>General Rotation with Subtrees A, B, C, D</h3>
+    <p>In real trees, each X/Y/Z node has subtrees attached. Here's how they move:</p>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge orange">LL / Right Rotation</span> — Before and After with subtrees
+      </div>
+      <div class="example-body">
+        <div class="tree-wrap">
+<svg viewBox="0 0 580 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:580px">
+  <!-- BEFORE: Z at top -->
+  <text x="5" y="16" font-family="JetBrains Mono" font-size="10" fill="#ffa657">BEFORE (LL Stick)</text>
+  <circle cx="210" cy="40" r="16" fill="#1c2333" stroke="#ffa657" stroke-width="2"/>
+  <text x="210" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#ffa657">Z</text>
+  <line x1="198" y1="54" x2="160" y2="78" stroke="#8b949e" stroke-width="1.3"/>
+  <line x1="222" y1="54" x2="248" y2="74" stroke="#8b949e" stroke-width="1.3"/>
+  <rect x="234" y="74" width="28" height="20" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="248" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">D</text>
+
+  <circle cx="150" cy="96" r="16" fill="#1c2333" stroke="#ffa657" stroke-width="2"/>
+  <text x="150" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#ffa657">Y</text>
+  <line x1="138" y1="110" x2="108" y2="130" stroke="#8b949e" stroke-width="1.3"/>
+  <line x1="162" y1="110" x2="192" y2="130" stroke="#8b949e" stroke-width="1.3"/>
+  <rect x="178" y="130" width="28" height="20" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="192" y="144" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">C</text>
+
+  <circle cx="96" cy="148" r="16" fill="#1c2333" stroke="#ffa657" stroke-width="2"/>
+  <text x="96" y="154" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#ffa657">X</text>
+  <line x1="84" y1="162" x2="58" y2="182" stroke="#8b949e" stroke-width="1.3"/>
+  <line x1="108" y1="162" x2="130" y2="182" stroke="#8b949e" stroke-width="1.3"/>
+  <rect x="44" y="182" width="26" height="18" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="57" y="195" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">A</text>
+  <rect x="118" y="182" width="26" height="18" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="131" y="195" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">B</text>
+
+  <!-- Arrow -->
+  <text x="275" y="100" font-family="JetBrains Mono" font-size="26" fill="#56d364">⟹</text>
+
+  <!-- AFTER: Y at top -->
+  <text x="330" y="16" font-family="JetBrains Mono" font-size="10" fill="#56d364">AFTER (Mountain)</text>
+  <circle cx="460" cy="40" r="16" fill="#1c2333" stroke="#56d364" stroke-width="2"/>
+  <text x="460" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#56d364">Y</text>
+  <line x1="448" y1="54" x2="408" y2="78" stroke="#56d364" stroke-width="1.3"/>
+  <line x1="472" y1="54" x2="510" y2="78" stroke="#56d364" stroke-width="1.3"/>
+
+  <circle cx="398" cy="96" r="16" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="398" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#56d364">X</text>
+  <line x1="386" y1="110" x2="358" y2="130" stroke="#56d364" stroke-width="1.3"/>
+  <line x1="410" y1="110" x2="438" y2="130" stroke="#56d364" stroke-width="1.3"/>
+  <rect x="344" y="130" width="26" height="18" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="357" y="143" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">A</text>
+  <rect x="428" y="130" width="26" height="18" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="441" y="143" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">B</text>
+
+  <circle cx="520" cy="96" r="16" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="520" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#56d364">Z</text>
+  <line x1="508" y1="110" x2="490" y2="130" stroke="#56d364" stroke-width="1.3"/>
+  <line x1="532" y1="110" x2="550" y2="130" stroke="#56d364" stroke-width="1.3"/>
+  <rect x="476" y="130" width="26" height="18" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="489" y="143" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">C</text>
+  <rect x="540" y="130" width="26" height="18" rx="4" fill="#1c2333" stroke="#30363d"/>
+  <text x="553" y="143" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#8b949e">D</text>
+
+  <text x="330" y="200" font-family="JetBrains Mono" font-size="9" fill="#56d364">A stays left of X; D stays right of Z; B&C move to fill gaps</text>
+</svg>
+        </div>
+        <div class="callout info">
+          <div class="callout-title">How to remember subtree placement</div>
+          <p>In-order traversal must stay sorted. So the sorted order is always: <code>A &lt; X &lt; B &lt; Y &lt; C &lt; Z &lt; D</code>. After rotation, just place each subtree where BST property requires it.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Rotation Code (LL Rotation)</h3>
+    <pre>// LL Rotation — right rotation around X
+AVLNode* LL_Rotation(AVLNode* X) {
+    AVLNode* t = X->left;        // t = Y
+    X->left = t->right;          // X's left = C (Y's right subtree)
+    t->right = X;                // Y's right = X
+
+    // Update heights (IMPORTANT!)
+    X->height = max(height(X->left), height(X->right)) + 1;
+    t->height = max(height(t->left), height(t->right)) + 1;
+
+    return t;  // Y is new root
+}
+
+// LR Rotation — double rotation
+AVLNode* LR_Rotation(AVLNode* X) {
+    X->left = RR_Rotation(X->left);  // First: RR on left child
+    return LL_Rotation(X);            // Then: LL on X
+}</pre>
+
+    <div class="callout warn">
+      <div class="callout-title">⚠️ Critical: Update Heights!</div>
+      <p>After every rotation, you <strong>must update the height</strong> of X first, then Y (bottom-up). Forgetting this will break the entire tree.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ────────── TAB 3: INSERTION ────────── -->
+<div id="tab-insertion" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(86,211,100,0.15)">➕</div>
+      <h2>AVL Insertion</h2>
+    </div>
+
+    <div class="card highlight">
+      <div class="card-label" style="color:var(--accent2)">Algorithm Overview</div>
+      <p><strong>AVL Insert = BST Insert + Balancing</strong></p>
+      <p>After inserting, check balance factors <strong>starting from the inserted node, going up to root</strong>. Find the first imbalanced node. Determine if it's a <em>Stick</em> or <em>Elbow</em>. Rotate once. Done!</p>
+    </div>
+
+    <div class="callout magic">
+      <div class="callout-title">✨ Magic Fact for Insertion</div>
+      <p>In insertion, you only ever need <strong>at most ONE rotation</strong> (either stick or elbow). After fixing the first imbalanced node, all ancestors automatically become balanced. This is why insertion is O(1) extra work beyond BST insert!</p>
+    </div>
+
+    <h3>Step-by-Step Algorithm</h3>
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>BST Insert</strong> — insert the new node exactly like a normal BST (compare and go left/right until null)
+          <div class="step-why">This places the node in the correct position to maintain BST property</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Walk up from inserted node to root</strong> — check balance factor at each ancestor
+          <div class="step-why">Only ancestors can be affected by the new node</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Find first imbalanced node</strong> (BF = ±2) — call it Z
+          <div class="step-why">This is the lowest unbalanced ancestor</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Identify shape</strong>: Go from Z toward inserted node. Is it a stick (LL/RR) or elbow (LR/RL)?
+          <div class="step-why">The shape determines which rotation to apply</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>Rotate</strong> — convert stick/elbow to mountain. Update heights.
+          <div class="step-why">One rotation fixes everything for insertion</div>
+        </div>
+      </li>
+    </ul>
+
+    <h3>Worked Examples</h3>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge green example-tag">Basic</span> Insert 3, 2, 1 — LL Rotation
+      </div>
+      <div class="example-body">
+        <div class="tree-wrap">
+<svg viewBox="0 0 580 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:580px">
+  <!-- Step 1: Just 3 -->
+  <text x="10" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Step 1: Insert 3</text>
+  <circle cx="50" cy="45" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="50" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">3</text>
+  <text x="36" y="72" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=0 ✓</text>
+
+  <!-- Step 2: Insert 2 -->
+  <text x="120" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Step 2: Insert 2</text>
+  <circle cx="165" cy="45" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="165" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">3</text>
+  <text x="183" y="41" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=1 ✓</text>
+  <line x1="155" y1="57" x2="135" y2="80" stroke="#8b949e" stroke-width="1.3"/>
+  <circle cx="126" cy="93" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="126" y="99" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">2</text>
+  <text x="110" y="120" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=0 ✓</text>
+
+  <!-- Step 3: Insert 1 — imbalance -->
+  <text x="230" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Step 3: Insert 1 — IMBALANCE!</text>
+  <circle cx="290" cy="35" r="14" fill="#1c2333" stroke="#f85149" stroke-width="2"/>
+  <text x="290" y="41" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#f85149">3</text>
+  <text x="308" y="31" font-family="JetBrains Mono" font-size="8" fill="#f85149">BF=2 ❌</text>
+  <line x1="278" y1="47" x2="258" y2="72" stroke="#8b949e" stroke-width="1.3"/>
+  <circle cx="248" cy="85" r="14" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="248" y="91" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">2</text>
+  <text x="265" y="82" font-family="JetBrains Mono" font-size="8" fill="#ffa657">BF=1</text>
+  <line x1="238" y1="97" x2="225" y2="118" stroke="#8b949e" stroke-width="1.3"/>
+  <circle cx="216" cy="131" r="14" fill="#1c2333" stroke="#ffa657" stroke-width="1.5"/>
+  <text x="216" y="137" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#ffa657">1</text>
+  <text x="198" y="155" font-family="JetBrains Mono" font-size="7" fill="#8b949e">new node</text>
+
+  <!-- Shape label -->
+  <text x="235" y="175" font-family="JetBrains Mono" font-size="9" fill="#f85149">LL STICK at Z=3</text>
+
+  <!-- Arrow -->
+  <text x="328" y="95" font-family="JetBrains Mono" font-size="24" fill="#56d364">⟹</text>
+  <text x="330" y="115" font-family="JetBrains Mono" font-size="8" fill="#56d364">LL rotate</text>
+
+  <!-- Result -->
+  <text x="380" y="14" font-family="JetBrains Mono" font-size="9" fill="#56d364">Result: Balanced!</text>
+  <circle cx="460" cy="50" r="14" fill="#1c2333" stroke="#56d364" stroke-width="2"/>
+  <text x="460" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#56d364">2</text>
+  <text x="477" y="47" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=0</text>
+  <line x1="448" y1="62" x2="418" y2="88" stroke="#56d364" stroke-width="1.3"/>
+  <line x1="472" y1="62" x2="502" y2="88" stroke="#56d364" stroke-width="1.3"/>
+  <circle cx="408" cy="102" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="408" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">1</text>
+  <circle cx="512" cy="102" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="512" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">3</text>
+  <text x="390" y="130" font-family="JetBrains Mono" font-size="8" fill="#8b949e">BF=0</text>
+  <text x="495" y="130" font-family="JetBrains Mono" font-size="8" fill="#8b949e">BF=0</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem"><strong>What happened:</strong> Inserted 1 → walked up: 2 balanced (BF=1→now 1), 3 is <mark>first imbalanced</mark> (BF=2). Path from 3 to 1 = 3→2→1 = Left-Left = STICK. Y=2 comes to top. Result: 2 is root, 1 and 3 are children.</p>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge orange example-tag">Medium</span> Insert 30, 10, 20 — LR (Elbow) Rotation
+      </div>
+      <div class="example-body">
+        <div class="tree-wrap">
+<svg viewBox="0 0 620 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:620px">
+  <text x="5" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Insert 30</text>
+  <circle cx="50" cy="45" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="50" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">30</text>
+
+  <text x="100" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Insert 10</text>
+  <circle cx="170" cy="35" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="170" y="41" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">30</text>
+  <text x="185" y="32" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=1✓</text>
+  <line x1="158" y1="47" x2="138" y2="67" stroke="#8b949e" stroke-width="1.2"/>
+  <circle cx="128" cy="81" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="128" y="87" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">10</text>
+
+  <text x="260" y="14" font-family="JetBrains Mono" font-size="9" fill="#f85149">Insert 20 → ELBOW!</text>
+  <circle cx="330" cy="30" r="14" fill="#1c2333" stroke="#f85149" stroke-width="2"/>
+  <text x="330" y="36" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#f85149">30</text>
+  <text x="348" y="26" font-family="JetBrains Mono" font-size="8" fill="#f85149">BF=2❌ Z</text>
+  <line x1="318" y1="42" x2="296" y2="62" stroke="#8b949e" stroke-width="1.2"/>
+  <circle cx="286" cy="76" r="14" fill="#1c2333" stroke="#79c0ff" stroke-width="1.5"/>
+  <text x="286" y="82" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#79c0ff">10</text>
+  <text x="258" y="73" font-family="JetBrains Mono" font-size="8" fill="#79c0ff">X</text>
+  <line x1="298" y1="88" x2="318" y2="108" stroke="#8b949e" stroke-width="1.2"/>
+  <circle cx="328" cy="122" r="14" fill="#1c2333" stroke="#79c0ff" stroke-width="1.5"/>
+  <text x="328" y="128" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#79c0ff">20</text>
+  <text x="346" y="119" font-family="JetBrains Mono" font-size="8" fill="#79c0ff">Y</text>
+  <text x="266" y="155" font-family="JetBrains Mono" font-size="8.5" fill="#79c0ff">Path: Z(30)→X(10)→Y(20)</text>
+  <text x="266" y="168" font-family="JetBrains Mono" font-size="8.5" fill="#79c0ff">Left then Right = LR ELBOW</text>
+
+  <text x="385" y="95" font-family="JetBrains Mono" font-size="22" fill="#56d364">⟹</text>
+  <text x="382" y="114" font-family="JetBrains Mono" font-size="8" fill="#56d364">LR rotate</text>
+
+  <text x="440" y="14" font-family="JetBrains Mono" font-size="9" fill="#56d364">Result: Y(20) on top!</text>
+  <circle cx="520" cy="45" r="14" fill="#1c2333" stroke="#56d364" stroke-width="2"/>
+  <text x="520" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#56d364">20</text>
+  <text x="538" y="42" font-family="JetBrains Mono" font-size="8" fill="#56d364">BF=0</text>
+  <line x1="508" y1="57" x2="478" y2="80" stroke="#56d364" stroke-width="1.3"/>
+  <line x1="532" y1="57" x2="562" y2="80" stroke="#56d364" stroke-width="1.3"/>
+  <circle cx="468" cy="94" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="468" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">10</text>
+  <circle cx="572" cy="94" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="572" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">30</text>
+  <text x="450" y="115" font-family="JetBrains Mono" font-size="8" fill="#8b949e">X</text>
+  <text x="555" y="115" font-family="JetBrains Mono" font-size="8" fill="#8b949e">Z</text>
+</svg>
+        </div>
+        <p style="font-size:0.82rem"><strong>What happened:</strong> Path from Z(30) to new node 20: 30 → 10 → 20 = Left then Right = LR Elbow. Z=Y in elbow notation = 20 goes to top. Result: 20 is root, 10 left, 30 right.</p>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge purple example-tag">Hard (University Level)</span> Insert 9, 27, 50, 15, 2, 21, 36 — Multiple Rotations (UCSD exam question)
+      </div>
+      <div class="example-body">
+        <p style="font-size:0.82rem; margin-bottom:0.8rem">Follow each insertion carefully, checking balance after each:</p>
+        <ol style="font-size:0.83rem; line-height:2; padding-left:1.2rem">
+          <li><strong>Insert 9</strong> → single node, BF=0 ✓</li>
+          <li><strong>Insert 27</strong> → 27 right of 9, BF of 9 = -1 ✓</li>
+          <li><strong>Insert 50</strong> → 50 right of 27 → <mark>9 has BF=-2 (RR Stick!)</mark> → RR rotation → <strong>27 becomes root, 9 left, 50 right</strong> ✓</li>
+          <li><strong>Insert 15</strong> → 15 goes left of 27, right of 9. All BFs okay ✓</li>
+          <li><strong>Insert 2</strong> → 2 goes left of 9, left of 15. All BFs okay ✓</li>
+          <li><strong>Insert 21</strong> → 21 goes right of 15 → <mark>27 has BF=2 (LR Elbow!)</mark>. Path: 27→9→15→21, key 3 nodes: Z=27, X=9, Y=15. LR rotation → <strong>15 becomes root of this subtree, 9 left, 27 right</strong></li>
+          <li><strong>Insert 36</strong> → goes between 27 and 50. Check all BFs → balanced ✓</li>
+        </ol>
+        <div class="callout info">
+          <div class="callout-title">Final Tree Structure</div>
+          <pre style="font-size:0.75rem">         15
+        /  \
+       9    27
+      / \  /  \
+     2  (empty)21 36
+              \
+               50</pre>
+          <p style="font-size:0.8rem">Wait — actual final: root=15, left subtree has 9(2,∅) and right subtree has 27(21,50) with 36 left of 50.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ────────── TAB 4: DELETION ────────── -->
+<div id="tab-deletion" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(248,81,73,0.15)">➖</div>
+      <h2>AVL Deletion</h2>
+    </div>
+
+    <div class="card highlight">
+      <div class="card-label" style="color:var(--accent2)">Algorithm Overview</div>
+      <p><strong>AVL Delete = BST Delete + Balancing</strong></p>
+      <p>Key difference from insertion: <mark>after deletion, you may need to rotate multiple times all the way up to root</mark>. Up to O(log n) rotations!</p>
+    </div>
+
+    <h3>The Critical Challenge in Deletion — How to Identify Stick vs. Elbow?</h3>
+    <div class="callout magic">
+      <div class="callout-title">✨ The Ingenious Rule for Deletion</div>
+      <p>In <strong>insertion</strong>, you know which direction the imbalance came from (the inserted node tells you). But in <strong>deletion</strong>, the imbalance direction isn't obvious — you deleted a node, so you can't "trace" to the inserted node.</p>
+      <p><strong>Solution:</strong> From the imbalanced node Z, always go to the <mark>child with the HIGHER height</mark>. Then from that child, again go to the child with the higher height. This path defines stick or elbow.</p>
+    </div>
+
+    <h3>Step-by-Step Algorithm</h3>
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>BST Delete</strong> — delete the node as in normal BST (replace with in-order successor/predecessor if internal node)
+          <div class="step-why">Maintains BST ordering</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Walk from deleted node up to root</strong> — check balance at each ancestor
+          <div class="step-why">Any ancestor can become imbalanced</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Find first imbalanced node Z</strong> (BF = ±2)
+          <div class="step-why">Lowest unbalanced point</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Identify shape:</strong> At Z, choose child with <em>higher height</em> (call it Y). At Y, choose child with <em>higher height</em> (call it X). If heights are equal at Y's children → always choose the <mark>stick direction</mark> (same side as Y relative to Z).
+          <div class="step-why">Equal heights: elbow rotation would leave Y still imbalanced!</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>Rotate</strong> to fix Z. Update heights.
+          <div class="step-why">Fixes local imbalance</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <strong>Continue going up</strong> — do NOT stop! Check every ancestor until root.
+          <div class="step-why">Unlike insertion, a fix here doesn't guarantee ancestors are balanced</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="card warn" style="margin-top:1rem">
+      <div class="card-label" style="color:var(--red)">⚠️ THE KEY RULE for equal heights</div>
+      <p>When you are at node Y and its two children have <strong>equal heights</strong>:</p>
+      <p>→ Always choose the <strong>stick</strong> path (same side as Y relative to Z)</p>
+      <p>→ NEVER choose elbow — it would result in Y being imbalanced after rotation!</p>
+      <p><span class="badge red">WRONG</span> Choosing elbow when heights are equal → Y becomes imbalanced after rotation → broken tree!</p>
+    </div>
+
+    <h3>Insertion vs. Deletion — Key Difference</h3>
+    <table>
+      <thead>
+        <tr><th></th><th>Insertion</th><th>Deletion</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Rotations needed</td>
+          <td><span class="badge green">At most 1 rotation</span></td>
+          <td><span class="badge orange">Up to O(log n) rotations</span></td>
+        </tr>
+        <tr>
+          <td>How to find stick/elbow</td>
+          <td>Trace path from imbalanced node to newly inserted node</td>
+          <td>Follow the <strong>higher-height child</strong> at each step</td>
+        </tr>
+        <tr>
+          <td>After fixing one imbalance</td>
+          <td>STOP — tree is balanced</td>
+          <td>Keep going up to root</td>
+        </tr>
+        <tr>
+          <td>Equal-height tie-break</td>
+          <td>N/A (path is clear)</td>
+          <td>Always choose STICK</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Worked Example</h3>
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge orange example-tag">Medium</span> Delete node 1 from this AVL tree
+      </div>
+      <div class="example-body">
+        <div class="tree-wrap">
+<svg viewBox="0 0 600 240" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:600px">
+  <!-- Before deletion -->
+  <text x="5" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">Before: Delete node 1</text>
+  <!-- Tree: 3 at root, left=2(1,∅), right=5(4,6(∅,7)) -->
+  <circle cx="100" cy="35" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="100" y="41" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">3</text>
+  <line x1="90" y1="47" x2="64" y2="68" stroke="#8b949e" stroke-width="1.2"/>
+  <line x1="110" y1="47" x2="140" y2="68" stroke="#8b949e" stroke-width="1.2"/>
+
+  <circle cx="54" cy="82" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="54" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">2</text>
+  <line x1="44" y1="94" x2="26" y2="114" stroke="#8b949e" stroke-width="1.2"/>
+
+  <circle cx="18" cy="128" r="12" fill="#f85149" stroke="#f85149" stroke-width="1.5"/>
+  <text x="18" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#000">1</text>
+  <text x="4" y="152" font-family="JetBrains Mono" font-size="8" fill="#f85149">DELETE</text>
+
+  <circle cx="150" cy="82" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="150" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">5</text>
+  <line x1="140" y1="94" x2="120" y2="114" stroke="#8b949e" stroke-width="1.2"/>
+  <line x1="160" y1="94" x2="178" y2="114" stroke="#8b949e" stroke-width="1.2"/>
+
+  <circle cx="110" cy="128" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="110" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">4</text>
+
+  <circle cx="188" cy="128" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="188" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">6</text>
+  <line x1="198" y1="140" x2="210" y2="158" stroke="#8b949e" stroke-width="1.2"/>
+  <circle cx="216" cy="172" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="216" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#e6edf3">7</text>
+
+  <!-- After deletion: 1 removed, 3 becomes imbalanced -->
+  <text x="270" y="14" font-family="JetBrains Mono" font-size="9" fill="#f85149">After BST delete: 3 is imbalanced!</text>
+  <circle cx="340" cy="35" r="14" fill="#1c2333" stroke="#f85149" stroke-width="2"/>
+  <text x="340" y="41" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#f85149">3</text>
+  <text x="358" y="31" font-family="JetBrains Mono" font-size="8" fill="#f85149">BF=-2 ❌ Z</text>
+  <line x1="330" y1="47" x2="310" y2="68" stroke="#8b949e" stroke-width="1.2"/>
+  <line x1="350" y1="47" x2="380" y2="68" stroke="#8b949e" stroke-width="1.2"/>
+
+  <circle cx="300" cy="82" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="300" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">2</text>
+  <text x="284" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">h=0</text>
+
+  <circle cx="390" cy="82" r="14" fill="#1c2333" stroke="#79c0ff" stroke-width="2"/>
+  <text x="390" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#79c0ff">5</text>
+  <text x="408" y="78" font-family="JetBrains Mono" font-size="8" fill="#79c0ff">Y (h=2)</text>
+  <line x1="380" y1="94" x2="362" y2="114" stroke="#8b949e" stroke-width="1.2"/>
+  <line x1="400" y1="94" x2="420" y2="114" stroke="#8b949e" stroke-width="1.2"/>
+
+  <circle cx="352" cy="128" r="14" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="352" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e6edf3">4</text>
+  <text x="336" y="148" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">h=0</text>
+
+  <circle cx="430" cy="128" r="14" fill="#1c2333" stroke="#d2a8ff" stroke-width="2"/>
+  <text x="430" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#d2a8ff">6</text>
+  <text x="447" y="124" font-family="JetBrains Mono" font-size="8" fill="#d2a8ff">X (h=1)</text>
+  <line x1="440" y1="140" x2="450" y2="158" stroke="#8b949e" stroke-width="1.2"/>
+  <circle cx="456" cy="172" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="456" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#e6edf3">7</text>
+  <text x="430" y="198" font-family="JetBrains Mono" font-size="8" fill="#d2a8ff">6's right h=0, left=null h=-1</text>
+  <text x="280" y="215" font-family="JetBrains Mono" font-size="8.5" fill="#79c0ff">Z=3, higher child=5(Y), higher child of Y=6(X) → STICK (right-right)!</text>
+</svg>
+        </div>
+        <div class="steps" style="margin-top:0.8rem">
+          <li style="display:flex;gap:1rem;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div class="step-num" style="background:var(--red)">1</div>
+            <div>BST delete node 1. Node 2 becomes leaf.</div>
+          </li>
+          <li style="display:flex;gap:1rem;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div class="step-num" style="background:var(--red)">2</div>
+            <div>Walk up: 2 is OK. <strong>3 is imbalanced</strong> (BF = -2). This is Z.</div>
+          </li>
+          <li style="display:flex;gap:1rem;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div class="step-num" style="background:var(--red)">3</div>
+            <div>At Z=3: left child=2 (h=0), right child=5 (h=2). <strong>5 has higher height → Y=5</strong></div>
+          </li>
+          <li style="display:flex;gap:1rem;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div class="step-num" style="background:var(--red)">4</div>
+            <div>At Y=5: left=4 (h=0), right=6 (h=1). <strong>6 has higher height → X=6</strong></div>
+          </li>
+          <li style="display:flex;gap:1rem;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <div class="step-num" style="background:var(--accent3)">5</div>
+            <div>Path Z→Y→X is 3→5→6 = Right-Right = <strong>RR Stick</strong>. Rotate: 5 to top, 3 left, 6 right.</div>
+          </li>
+          <li style="display:flex;gap:1rem;padding:0.4rem 0">
+            <div class="step-num" style="background:var(--accent3)">6</div>
+            <div>Check 5's parent (root). Root 5 is balanced. Done! (O(1) this time, but must always check to root)</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ────────── TAB 5: HEIGHT ANALYSIS ────────── -->
+<div id="tab-analysis" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(227,179,65,0.15)">📊</div>
+      <h2>Maximum & Minimum Nodes — Height Analysis</h2>
+    </div>
+
+    <h3>Question 1: Maximum Nodes in AVL Tree of Height h</h3>
+    <div class="callout info">
+      <div class="callout-title">Intuition</div>
+      <p>To <strong>maximize</strong> nodes for a given height h → fill every level as much as possible → use a <strong>perfect binary tree</strong> (all leaves at same level, every internal node has 2 children).</p>
+    </div>
+    <div class="formula">
+      N_max(h) = 2<sup>h+1</sup> − 1
+      <div class="label">Derived as: 2⁰ + 2¹ + 2² + ... + 2ʰ = 2^(h+1) − 1 (geometric series)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="color:var(--accent2)">Recurrence Form</div>
+      <p>N(h) = N(h-1) + N(h-1) + 1 = <strong>2·N(h-1) + 1</strong></p>
+      <p>Where: N(0) = 1 (single node), N(-1) = 0 (empty)</p>
+    </div>
+
+    <table>
+      <thead><tr><th>Height h</th><th>Max Nodes = 2^(h+1)−1</th><th>Tree Shape</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>1</td><td>○ (single node)</td></tr>
+        <tr><td>1</td><td>3</td><td>○ with 2 children</td></tr>
+        <tr><td>2</td><td>7</td><td>Perfect tree, 3 levels</td></tr>
+        <tr><td>3</td><td>15</td><td>Perfect tree, 4 levels</td></tr>
+        <tr><td>4</td><td>31</td><td>Perfect tree, 5 levels</td></tr>
+        <tr><td>5</td><td>63</td><td>Perfect tree, 6 levels</td></tr>
+        <tr><td>8</td><td>511</td><td>Perfect tree, 9 levels</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Question 2: Minimum Nodes in AVL Tree of Height h</h3>
+    <div class="callout magic">
+      <div class="callout-title">✨ The Interesting One!</div>
+      <p>To <strong>minimize</strong> nodes for a given height h → make the tree as sparse as possible while still maintaining AVL property. The AVL rule forces at least one subtree to have height h-1 (to keep the height = h). The other can be as small as h-2.</p>
+    </div>
+
+    <div class="tree-wrap" style="margin:1rem 0">
+<svg viewBox="0 0 500 190" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:500px">
+  <text x="5" y="16" font-family="JetBrains Mono" font-size="10" fill="#8b949e">Minimal AVL trees of increasing height:</text>
+
+  <!-- h=0 -->
+  <text x="20" y="40" font-family="JetBrains Mono" font-size="8.5" fill="#d2a8ff">h=0, N=1</text>
+  <circle cx="33" cy="60" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="33" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e6edf3">•</text>
+
+  <!-- h=1 -->
+  <text x="80" y="40" font-family="JetBrains Mono" font-size="8.5" fill="#d2a8ff">h=1, N=2</text>
+  <circle cx="96" cy="60" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="96" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e6edf3">•</text>
+  <line x1="86" y1="70" x2="72" y2="85" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="64" cy="96" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <text x="64" y="101" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e6edf3">•</text>
+  <text x="65" y="118" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">BF=1</text>
+
+  <!-- h=2 -->
+  <text x="150" y="40" font-family="JetBrains Mono" font-size="8.5" fill="#d2a8ff">h=2, N=4</text>
+  <circle cx="178" cy="60" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.5"/>
+  <line x1="168" y1="70" x2="148" y2="88" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="188" y1="70" x2="208" y2="88" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="140" cy="100" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="216" cy="100" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="130" y1="110" x2="118" y2="125" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="110" cy="137" r="11" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <text x="148" y="155" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">one subtree h=1, other h=0</text>
+
+  <!-- h=3 -->
+  <text x="290" y="40" font-family="JetBrains Mono" font-size="8.5" fill="#d2a8ff">h=3, N=7</text>
+  <circle cx="360" cy="55" r="12" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.5"/>
+  <line x1="350" y1="65" x2="328" y2="82" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="370" y1="65" x2="390" y2="82" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="320" cy="95" r="11" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="310" y1="104" x2="292" y2="120" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="330" y1="104" x2="348" y2="120" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="284" cy="132" r="11" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="355" cy="132" r="11" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="274" y1="142" x2="260" y2="156" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="252" cy="167" r="10" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+
+  <circle cx="397" cy="95" r="11" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="406" y1="104" x2="418" y2="120" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="425" cy="132" r="11" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+</svg>
+    </div>
+
+    <div class="formula">
+      N_min(h) = N_min(h-1) + N_min(h-2) + 1
+      <div class="label">Base cases: N(0) = 1, N(1) = 2 — very similar to Fibonacci!</div>
+    </div>
+
+    <table>
+      <thead><tr><th>Height h</th><th>Min Nodes N(h)</th><th>Max Nodes</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>1</td><td>1</td></tr>
+        <tr><td>1</td><td>2</td><td>3</td></tr>
+        <tr><td>2</td><td>4</td><td>7</td></tr>
+        <tr><td>3</td><td>7</td><td>15</td></tr>
+        <tr><td>4</td><td>12</td><td>31</td></tr>
+        <tr><td>5</td><td>20</td><td>63</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Question 3: Minimum Height Given n Nodes</h3>
+    <div class="callout info">
+      <div class="callout-title">Intuition — The "Brick" Analogy</div>
+      <p>Think of nodes as bricks. If you want to minimize height, pack as many bricks per row as possible (perfect tree). Use the formula: find the smallest h such that <code>2^(h+1) - 1 ≥ n</code>.</p>
+    </div>
+    <p>Equivalently: <strong>h = ⌈log₂(n+1)⌉ − 1</strong></p>
+
+    <div class="example-box">
+      <div class="example-header"><span class="badge blue">Exam Practice</span> Find minimum height for n = 63 nodes</div>
+      <div class="example-body">
+        <p>From the table: N_max(5) = 63. So <strong>minimum height = 5</strong>.</p>
+        <p>For n = 64 nodes: N_max(5) = 63 &lt; 64, N_max(6) = 127 ≥ 64 → minimum height = <strong>6</strong>.</p>
+        <p>For n = 16 nodes: N_max(3) = 15 &lt; 16, N_max(4) = 31 ≥ 16 → minimum height = <strong>4</strong>.</p>
+      </div>
+    </div>
+
+    <h3>Height is Always O(log n) — The Proof Sketch</h3>
+    <div class="card tip">
+      <div class="card-label" style="color:var(--accent5)">Why height ≤ 1.44 log₂(n)?</div>
+      <p>From the Fibonacci-like recurrence N_min(h) ≈ φʰ/√5 (where φ ≈ 1.618), we get:</p>
+      <p>n ≥ N_min(h) → n ≥ φʰ/√5 → h ≤ 1.44 log₂(n)</p>
+      <p>So AVL tree height is at most <strong>1.44 × log₂(n)</strong> — barely more than perfectly balanced!</p>
+    </div>
+  </section>
+</div>
+
+<!-- ────────── TAB 6: COUNTING ────────── -->
+<div id="tab-counting" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(86,211,100,0.15)">🔢</div>
+      <h2>Counting AVL Trees — Shapes & Structures</h2>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Two Different Questions People Confuse</div>
+      <p><strong>Q1:</strong> How many distinct <em>shapes</em> of minimal AVL trees of height h exist? (structural shapes, no values)</p>
+      <p><strong>Q2:</strong> How many distinct AVL trees with keys 1..n and height h? (shapes × only 1 way to fill keys into each shape)</p>
+      <p>The clever insight: <mark>given a shape (structure), there's only ONE way to fill BST keys</mark> (in-order traversal must match sorted order). So counting shapes = counting trees!</p>
+    </div>
+
+    <h3>NS(h) — Number of Distinct Minimal AVL Shapes of Height h</h3>
+    <p>A "minimal" AVL tree of height h is one with the minimum number of nodes (the Fibonacci AVL tree).</p>
+
+    <div class="compare-grid">
+      <div>
+        <div class="tree-wrap">
+<svg viewBox="0 0 280 160" width="280" height="160" xmlns="http://www.w3.org/2000/svg">
+  <text x="5" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">h=1: 2 distinct shapes</text>
+  <!-- Shape 1: left-heavy -->
+  <circle cx="50" cy="45" r="13" fill="#1c2333" stroke="#56d364" stroke-width="1.5"/>
+  <text x="50" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#56d364">•</text>
+  <line x1="40" y1="56" x2="26" y2="72" stroke="#56d364" stroke-width="1"/>
+  <circle cx="18" cy="84" r="12" fill="#1c2333" stroke="#56d364" stroke-width="1"/>
+  <text x="18" y="89" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e6edf3">•</text>
+  <text x="30" y="110" font-family="JetBrains Mono" font-size="8" fill="#8b949e">Left-heavy</text>
+
+  <!-- Shape 2: right-heavy -->
+  <circle cx="130" cy="45" r="13" fill="#1c2333" stroke="#79c0ff" stroke-width="1.5"/>
+  <text x="130" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#79c0ff">•</text>
+  <line x1="140" y1="56" x2="154" y2="72" stroke="#79c0ff" stroke-width="1"/>
+  <circle cx="162" cy="84" r="12" fill="#1c2333" stroke="#79c0ff" stroke-width="1"/>
+  <text x="162" y="89" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e6edf3">•</text>
+  <text x="110" y="110" font-family="JetBrains Mono" font-size="8" fill="#8b949e">Right-heavy</text>
+
+  <text x="60" y="140" font-family="JetBrains Mono" font-size="9" fill="#56d364">NS(1) = 2</text>
+  <text x="5" y="155" font-family="JetBrains Mono" font-size="8" fill="#8b949e">These are mirror images of each other</text>
+</svg>
+        </div>
+      </div>
+      <div>
+        <div class="tree-wrap">
+<svg viewBox="0 0 300 180" width="300" height="180" xmlns="http://www.w3.org/2000/svg">
+  <text x="5" y="14" font-family="JetBrains Mono" font-size="9" fill="#8b949e">h=2: 4 distinct shapes</text>
+  <!-- 4 shapes side by side, smaller -->
+  <!-- Shape 1 -->
+  <circle cx="28" cy="35" r="10" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.2"/>
+  <line x1="20" y1="43" x2="10" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="36" y1="43" x2="46" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="7" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="49" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="2" y1="74" x2="2" y2="84" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="2" cy="92" r="8" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <text x="10" y="115" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">LL</text>
+
+  <!-- Shape 2 -->
+  <circle cx="105" cy="35" r="10" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.2"/>
+  <line x1="97" y1="43" x2="87" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="113" y1="43" x2="123" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="84" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="126" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="130" y1="74" x2="134" y2="84" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="136" cy="92" r="8" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <text x="87" y="115" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">LR</text>
+
+  <!-- Shape 3 -->
+  <circle cx="178" cy="35" r="10" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.2"/>
+  <line x1="170" y1="43" x2="160" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="186" y1="43" x2="196" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="157" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="199" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="152" y1="74" x2="148" y2="84" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="145" cy="92" r="8" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <text x="155" y="115" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">RL</text>
+
+  <!-- Shape 4 -->
+  <circle cx="255" cy="35" r="10" fill="#1c2333" stroke="#d2a8ff" stroke-width="1.2"/>
+  <line x1="247" y1="43" x2="237" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="263" y1="43" x2="273" y2="56" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="234" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="276" cy="66" r="9" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="280" y1="74" x2="284" y2="84" stroke="#d2a8ff" stroke-width="1"/>
+  <circle cx="287" cy="92" r="8" fill="#1c2333" stroke="#d2a8ff" stroke-width="1"/>
+  <text x="240" y="115" font-family="JetBrains Mono" font-size="7.5" fill="#8b949e">RR</text>
+
+  <text x="80" y="140" font-family="JetBrains Mono" font-size="9" fill="#d2a8ff">NS(2) = 4</text>
+</svg>
+        </div>
+      </div>
+    </div>
+
+    <h3>The NS(h) Formula</h3>
+    <div class="callout magic">
+      <div class="callout-title">✨ Key Insight — Product Rule!</div>
+      <p>A minimal AVL tree of height h has one subtree of height h-1 and one of height h-2.</p>
+      <p>For each shape of the h-1 subtree, there are NS(h-2) shapes for the h-2 subtree. So multiply! Also double for mirror images.</p>
+    </div>
+    <div class="formula">
+      NS(h) = 2 × NS(h-1) × NS(h-2)
+      <div class="label">Base cases: NS(0) = 1, NS(1) = 2</div>
+    </div>
+
+    <table>
+      <thead><tr><th>h</th><th>NS(h)</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>1</td><td>Just one shape: single node</td></tr>
+        <tr><td>1</td><td>2</td><td>Left-heavy or right-heavy</td></tr>
+        <tr><td>2</td><td>2 × 2 × 1 = 4</td><td>LL, LR, RL, RR</td></tr>
+        <tr><td>3</td><td>2 × 4 × 2 = 16</td><td>Many combinations</td></tr>
+        <tr><td>4</td><td>2 × 16 × 4 = 128</td><td>Grows very fast!</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <div class="callout-title">⚠️ Why Product Rule (not sum)?</div>
+      <p>For each of the NS(h-1) shapes on the left, ALL NS(h-2) shapes can appear on the right. So the total combinations = NS(h-1) × NS(h-2). Not plus — because it's independent choices on each side!</p>
+    </div>
+  </section>
+</div>
+
+<!-- ────────── TAB 7: PRACTICE ────────── -->
+<div id="tab-practice" class="tab-panel">
+
+  <section>
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(255,166,87,0.15)">🎯</div>
+      <h2>Practice Problems</h2>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge green example-tag">Problem 1 — Basic</span> Insert: 14, 17, 11, 7, 53, 4, 13 — build the AVL tree step by step
+      </div>
+      <div class="example-body">
+        <p style="font-size:0.82rem; margin-bottom:0.8rem">Try this yourself first! Then check the answer below.</p>
+        <details>
+          <summary style="cursor:pointer; color:var(--accent2); font-family:var(--mono); font-size:0.82rem; padding:0.5rem 0">▶ Show Solution</summary>
+          <div style="margin-top:0.8rem">
+            <ol style="font-size:0.83rem; line-height:1.9; padding-left:1.2rem">
+              <li><strong>Insert 14</strong> → single node. BF=0 ✓</li>
+              <li><strong>Insert 17</strong> → right of 14. 14 BF=-1 ✓</li>
+              <li><strong>Insert 11</strong> → left of 14. 14 BF=0 ✓. Tree: 14(11,17)</li>
+              <li><strong>Insert 7</strong> → left of 11. 11 BF=1, 14 BF=1 ✓</li>
+              <li><strong>Insert 53</strong> → right of 17. 17 BF=-1, 14 BF=0 ✓. Tree: 14(11(7,∅),17(∅,53))</li>
+              <li><strong>Insert 4</strong> → left of 7. Walk up: 7 BF=1, 11 BF=2 ❌ at 11! Path: 11→7→4 = LL Stick → LL rotation! 7 becomes root of subtree, 4 left, 11 right. Tree: 14(7(4,11),17(∅,53))</li>
+              <li><strong>Insert 13</strong> → goes left of 14, right of 11. Walk up: 11 BF=-1 ✓, 7 BF=-1 ✓, 14 BF=1 ✓. No imbalance!</li>
+            </ol>
+            <pre style="font-size:0.75rem; margin-top:0.5rem">Final AVL tree:
+          14
+        /    \
+       7      17
+      / \       \
+     4  11       53
+        \
+        13</pre>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge orange example-tag">Problem 2 — Medium</span> (University of Washington) — AVL tree with {21,14,35,9,30,52,25,32,41,64}: Delete 14, then Delete 21
+      </div>
+      <div class="example-body">
+        <details>
+          <summary style="cursor:pointer; color:var(--accent2); font-family:var(--mono); font-size:0.82rem; padding:0.5rem 0">▶ Show Solution Outline</summary>
+          <div style="margin-top:0.8rem; font-size:0.82rem">
+            <p>First, build the tree by inserting all keys: 21,14,35,9,30,52,25,32,41,64. Multiple rotations happen during build.</p>
+            <p><strong>Delete 14:</strong> BST delete → 14's successor/predecessor replaces it. Walk up. Check if imbalance. At 21: left side lost a node. Right side heavier. Follow higher-height child. Apply rotation if needed.</p>
+            <p><strong>Delete 21:</strong> (now the modified tree's root if unchanged) → BST delete with successor. Check full path to root. May need up to O(log n) rotations.</p>
+            <p>Key: After each deletion, remember to <mark>continue checking all the way up to root</mark>!</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge purple example-tag">Problem 3 — Hard (GATE-style)</span> Min AVL tree height for exactly 100 nodes?
+      </div>
+      <div class="example-body">
+        <details>
+          <summary style="cursor:pointer; color:var(--accent2); font-family:var(--mono); font-size:0.82rem; padding:0.5rem 0">▶ Show Solution</summary>
+          <div style="margin-top:0.8rem; font-size:0.82rem">
+            <p>Use max nodes formula: N_max(h) = 2^(h+1) - 1. Find smallest h where this ≥ 100.</p>
+            <ul style="padding-left:1.2rem; line-height:1.9">
+              <li>N_max(5) = 63 &lt; 100</li>
+              <li>N_max(6) = 127 ≥ 100 ✓</li>
+            </ul>
+            <p>Minimum height = <strong>6</strong>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge red example-tag">Problem 4 — Tricky</span> How many minimal AVL trees of height 4 exist?
+      </div>
+      <div class="example-body">
+        <details>
+          <summary style="cursor:pointer; color:var(--accent2); font-family:var(--mono); font-size:0.82rem; padding:0.5rem 0">▶ Show Solution</summary>
+          <div style="margin-top:0.8rem; font-size:0.82rem">
+            <p>Use NS(h) = 2 × NS(h-1) × NS(h-2)</p>
+            <ul style="padding-left:1.2rem; line-height:1.9">
+              <li>NS(0) = 1</li>
+              <li>NS(1) = 2</li>
+              <li>NS(2) = 2 × 2 × 1 = 4</li>
+              <li>NS(3) = 2 × 4 × 2 = 16</li>
+              <li>NS(4) = 2 × 16 × 4 = <strong>128</strong></li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="example-header">
+        <span class="badge red example-tag">Problem 5 — Very Tricky</span> Is choosing elbow or stick always the same for insertion as deletion?
+      </div>
+      <div class="example-body">
+        <details>
+          <summary style="cursor:pointer; color:var(--accent2); font-family:var(--mono); font-size:0.82rem; padding:0.5rem 0">▶ Show Answer</summary>
+          <div style="margin-top:0.8rem; font-size:0.82rem">
+            <p><strong>No, they are fundamentally different:</strong></p>
+            <ul style="padding-left:1.2rem; line-height:1.9">
+              <li><strong>Insertion:</strong> You trace the path from the first imbalanced node down to the newly inserted node. The shape of this path (straight = stick, bent = elbow) determines the rotation.</li>
+              <li><strong>Deletion:</strong> There is no "newly inserted node" to trace to. Instead, at each step, you follow the child with the HIGHER height. If heights are equal, you MUST choose stick (same direction as the child). Choosing elbow in equal-height case will leave the tree STILL imbalanced.</li>
+            </ul>
+            <p>This is the single most important conceptual difference!</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+</div>
+
+</div><!-- end content-wrap -->
+
+<!-- ═══════════════════════ QUICK REVISION MODAL ═══════════════════════ -->
+<div id="quickrev" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚡ Quick Revision — AVL Trees</div>
+      <button class="modal-close" onclick="document.getElementById('quickrev').classList.remove('open')">✕</button>
+    </div>
+
+    <div class="rev-section">
+      <h4>🔑 Core Definition</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>AVL =</strong> BST + Balance Factor ∈ {-1, 0, +1} for EVERY node</div>
+        <div class="rev-item"><strong>BF =</strong> H(left subtree) − H(right subtree)</div>
+        <div class="rev-item"><strong>|BF| > 1</strong> = imbalanced → needs rotation</div>
+        <div class="rev-item"><strong>Extra field:</strong> Node stores its height (int)</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>🔄 Rotations</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>LL Stick</strong> → Single right rotation (Y to top)</div>
+        <div class="rev-item"><strong>RR Stick</strong> → Single left rotation (Y to top)</div>
+        <div class="rev-item"><strong>LR Elbow</strong> → RR on child, then LL on root (Z to top)</div>
+        <div class="rev-item"><strong>RL Elbow</strong> → LL on child, then RR on root (Z to top)</div>
+        <div class="rev-item"><strong>Stick:</strong> straight line (same direction)</div>
+        <div class="rev-item"><strong>Elbow:</strong> bent (changes direction)</div>
+        <div class="rev-item"><strong>Mountain:</strong> balanced result (Y/Z always at top)</div>
+        <div class="rev-item"><strong>In-order:</strong> A &lt; X &lt; B &lt; Y &lt; C &lt; Z &lt; D</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>➕ Insertion</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>Steps:</strong> BST insert → find first imbalanced → rotate</div>
+        <div class="rev-item"><strong>Rotations:</strong> At most 1 (stick or elbow)</div>
+        <div class="rev-item"><strong>Identify shape:</strong> trace path from Z to inserted node</div>
+        <div class="rev-item"><strong>Time:</strong> O(log n)</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>➖ Deletion</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>Steps:</strong> BST delete → walk up → fix each imbalance</div>
+        <div class="rev-item"><strong>Rotations:</strong> Up to O(log n) — keep going to root!</div>
+        <div class="rev-item"><strong>Identify shape:</strong> follow HIGHER-height child</div>
+        <div class="rev-item"><strong>Equal heights:</strong> ALWAYS choose stick (elbow is WRONG)</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>📊 Node Counts</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>Max nodes (h):</strong> 2^(h+1) − 1</div>
+        <div class="rev-item"><strong>Min nodes:</strong> N(h) = N(h-1) + N(h-2) + 1, N(0)=1, N(1)=2</div>
+        <div class="rev-item"><strong>Min height (n nodes):</strong> smallest h where 2^(h+1)-1 ≥ n</div>
+        <div class="rev-item"><strong>Height bound:</strong> always ≤ 1.44 × log₂(n)</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>🔢 Counting Shapes NS(h)</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>Formula:</strong> NS(h) = 2 × NS(h-1) × NS(h-2)</div>
+        <div class="rev-item"><strong>NS(0)=1, NS(1)=2, NS(2)=4, NS(3)=16, NS(4)=128</strong></div>
+        <div class="rev-item"><strong>Product rule:</strong> independent choices on each side</div>
+        <div class="rev-item"><strong>×2 for:</strong> mirror images (left-heavy ↔ right-heavy)</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>⏱ Complexity</h4>
+      <div class="rev-grid">
+        <div class="rev-item"><strong>Search:</strong> O(log n)</div>
+        <div class="rev-item"><strong>Insert:</strong> O(log n)</div>
+        <div class="rev-item"><strong>Delete:</strong> O(log n)</div>
+        <div class="rev-item"><strong>Height:</strong> always O(log n) = guaranteed!</div>
+      </div>
+    </div>
+
+    <div class="rev-section">
+      <h4>🚨 Common Mistakes</h4>
+      <div class="rev-grid">
+        <div class="rev-item">Using elbow when heights are equal in deletion</div>
+        <div class="rev-item">Stopping after first fix in deletion</div>
+        <div class="rev-item">Not updating height after rotation</div>
+        <div class="rev-item">Using H(null) = 0 instead of −1</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

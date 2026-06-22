@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>More DP — Subset Sum, Coin Change, Floyd-Warshall, TSP</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1f2d;--bg4:#222840;--surface:#1e2434;--surface2:#262d42;--accent:#6c8fff;--accent2:#a78bfa;--accent3:#34d399;--warn:#fbbf24;--danger:#f87171;--coral:#fb923c;--text:#e8eaf2;--text2:#9aa3c2;--text3:#5c6585;--border:rgba(108,143,255,.12);--border2:rgba(108,143,255,.22);--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;--radius:10px;--radius-lg:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;min-height:100vh}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:0;overflow-x:auto;height:52px}
+.topnav a{display:inline-flex;align-items:center;height:52px;padding:0 12px;color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.04em;white-space:nowrap;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.topnav a:hover,.topnav a.active{color:var(--accent);border-bottom-color:var(--accent)}
+.topnav .logo{color:var(--accent);font-weight:700;font-size:13px;margin-right:16px;border:none!important}
+.page{max-width:940px;margin:0 auto;padding:3rem 2rem 7rem}
+.hero{text-align:center;padding:4rem 0 3rem}
+.hero-tag{display:inline-block;background:rgba(108,143,255,.12);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:1.5rem;border:1px solid var(--border2)}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:700;line-height:1.15;color:var(--text);margin-bottom:1rem}
+.hero h1 span{color:var(--accent)}
+.hero-sub{color:var(--text2);font-size:1rem;max-width:580px;margin:0 auto 2rem}
+section{margin-bottom:4rem;scroll-margin-top:60px}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+h2{font-size:1.65rem;font-weight:700;color:var(--text);margin-bottom:1.2rem;line-height:1.3}
+h3{font-size:1.1rem;font-weight:600;color:var(--accent2);margin:2rem 0 .7rem}
+h4{font-size:.88rem;font-weight:600;color:var(--warn);margin:1.4rem 0 .5rem;text-transform:uppercase;letter-spacing:.07em}
+p{color:var(--text2);margin-bottom:.9rem}
+p strong{color:var(--text);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem;margin-bottom:1.2rem}
+.card.ab{border-left:3px solid var(--accent)}.card.gb{border-left:3px solid var(--accent3)}.card.wb{border-left:3px solid var(--warn)}.card.db{border-left:3px solid var(--danger)}.card.pb{border-left:3px solid var(--accent2)}
+.insight{background:rgba(108,143,255,.07);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.insight-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;margin-bottom:.3rem}
+.magic-box{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.magic-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent3);text-transform:uppercase;margin-bottom:.3rem}
+.warn-box{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.warn-label{font-size:10px;font-weight:700;color:var(--warn);text-transform:uppercase;margin-bottom:.3rem}
+.danger-box{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.danger-label{font-size:10px;font-weight:700;color:var(--danger);text-transform:uppercase;margin-bottom:.3rem}
+.code-block{background:#080b10;border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.5rem;margin:1rem 0;overflow-x:auto}
+.code-block pre{font-family:var(--mono);font-size:13px;line-height:1.8;color:#cdd6f4}
+.kw{color:#89b4fa}.fn{color:#a6e3a1}.cm{color:#585b70;font-style:italic}.nb{color:#fab387}.st{color:#a6e3a1}.op{color:#cba6f7}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:.7rem 0}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
+.badge.time{background:rgba(108,143,255,.15);color:var(--accent);border:1px solid var(--border2)}.badge.good{background:rgba(52,211,153,.12);color:var(--accent3);border:1px solid rgba(52,211,153,.2)}.badge.bad{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.2)}.badge.warn{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px;margin:1rem 0}
+.cmp-table th{background:var(--bg4);color:var(--accent);font-weight:700;padding:.6rem 1rem;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border2)}
+.cmp-table td{padding:.6rem 1rem;color:var(--text2);border-bottom:1px solid var(--border)}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table tr:hover td{background:rgba(108,143,255,.04);color:var(--text)}
+.formula-box{background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:var(--radius);padding:1.2rem 1.5rem;margin:1rem 0;text-align:center}
+.formula-box .formula{font-family:var(--mono);font-size:14px;color:var(--accent2);line-height:2.2}
+.formula-box .formula-note{font-size:12px;color:var(--text3);margin-top:.5rem}
+.step-block{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin:.6rem 0;padding:.9rem 1.1rem;display:flex;gap:1rem;align-items:flex-start}
+.step-num{min-width:26px;height:26px;border-radius:50%;background:var(--accent);color:#0a0c12;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-content{color:var(--text2);font-size:14px;line-height:1.65}
+.step-content strong{color:var(--text)}
+.dp-table-container{overflow-x:auto;margin:1rem 0}
+.dp-table{border-collapse:collapse;font-family:var(--mono);font-size:13px;min-width:460px}
+.dp-table th{background:var(--bg4);color:var(--accent);padding:.5rem .9rem;border:1px solid var(--border2);font-weight:600;font-size:12px}
+.dp-table td{padding:.45rem .9rem;border:1px solid var(--border);color:var(--text2);text-align:center}
+.dp-table td.cur{background:rgba(108,143,255,.18);color:var(--accent);font-weight:700}
+.dp-table td.dep{background:rgba(167,139,250,.12);color:var(--accent2)}
+.dp-table td.T{color:var(--accent3);font-weight:700}.dp-table td.F{color:var(--danger)}
+.dp-table td.header-col{background:var(--bg4);color:var(--warn);font-weight:600;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin:1rem 0}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+.big-formula{font-family:var(--mono);font-size:15px;color:var(--accent2);background:var(--bg3);border-left:3px solid var(--accent2);padding:.8rem 1.2rem;border-radius:0 var(--radius) var(--radius) 0;margin:.8rem 0;white-space:pre-wrap}
+.quick-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.1rem;margin:.5rem 0}
+.quick-card .qc-head{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.4rem}
+.quick-card .qc-body{color:var(--text2);font-size:13.5px}
+.revise-panel{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--bg);border-top:2px solid var(--accent);padding:0;max-height:55vh;overflow-y:auto;transition:transform .3s}
+.revise-panel.open{display:block}
+.revise-inner{max-width:940px;margin:0 auto;padding:1.5rem 2rem 2rem}
+.revise-close{position:sticky;top:0;background:var(--bg);padding:.75rem 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.revise-close h3{font-size:1rem;font-weight:700;color:var(--accent)}
+.revise-close button{background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius);padding:4px 12px;cursor:pointer;font-size:12px}
+.fab{position:fixed;bottom:2rem;right:2rem;z-index:150;background:var(--accent);color:#0a0c12;border:none;border-radius:24px;padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 4px 20px rgba(108,143,255,.35);transition:transform .15s}
+.fab:hover{transform:translateY(-2px)}
+.algo-compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin:1rem 0}
+@media(max-width:640px){.algo-compare{grid-template-columns:1fr}}
+.algo-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center}
+.algo-card .ac-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.4rem}
+.algo-card .ac-tc{font-family:var(--mono);font-size:16px;color:var(--warn);font-weight:600}
+.algo-card .ac-note{font-size:11px;color:var(--text3);margin-top:.3rem}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px}
+.pill.dp{background:rgba(108,143,255,.18);color:var(--accent)}.pill.greedy{background:rgba(251,191,36,.15);color:var(--warn)}.pill.dc{background:rgba(52,211,153,.12);color:var(--accent3)}.pill.np{background:rgba(248,113,113,.12);color:var(--danger)}
+.tree-vis{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;margin:1rem 0;overflow-x:auto}
+.tree-vis pre{font-family:var(--mono);font-size:12.5px;color:var(--text2);line-height:1.8;white-space:pre}
+.interactive-demo{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1.4rem;margin:1.2rem 0}
+.interactive-demo label{font-size:12px;color:var(--text3);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.interactive-demo input[type=number]{background:var(--bg4);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);padding:5px 10px;font-family:var(--mono);font-size:13px;width:80px;margin:0 4px}
+.interactive-demo button{background:var(--accent);color:#0a0c12;border:none;border-radius:var(--radius);padding:6px 16px;font-weight:700;font-size:12px;cursor:pointer;margin:4px}
+.interactive-demo .demo-output{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-top:.8rem;font-family:var(--mono);font-size:12.5px;color:var(--accent3);min-height:60px;overflow-x:auto}
+.vs-split{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+@media(max-width:600px){.vs-split{grid-template-columns:1fr}}
+.vs-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem}
+.vs-card.good-card{border-left:3px solid var(--accent3)}.vs-card.bad-card{border-left:3px solid var(--danger)}
+.vs-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.vs-title.g{color:var(--accent3)}.vs-title.r{color:var(--danger)}
+.ovv-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem;margin:1.2rem 0}
+.ovv-box h4{color:var(--accent);margin-top:0}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="logo">DP Lecture 4</span>
+  <a href="#overview">Overview</a>
+  <a href="#mss">Max Subset Sum</a>
+  <a href="#ss">Subset Sum</a>
+  <a href="#cc">Coin Change</a>
+  <a href="#dpvsgvdc">DP vs Greedy vs D&C</a>
+  <a href="#fw">Floyd-Warshall</a>
+  <a href="#tsp">TSP</a>
+  <a href="#summary">Quick Revision</a>
+</nav>
+
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Dynamic Programming · Lecture 4</div>
+  <h1>More DP: <span>Subset Sum</span> to <span>Travelling Salesman</span></h1>
+  <p class="hero-sub">Deep study notes with working examples, visualizations, comparisons, and quick revision cards. Covering: Maximum Subset Sum · Subset Sum Decision Problem · Coin Change · DP vs Greedy vs D&C · Floyd-Warshall · TSP</p>
+</div>
+
+<!-- =================== 10K OVERVIEW =================== -->
+<section id="overview">
+  <div class="section-label">Big Picture</div>
+  <h2>10,000-Foot Overview</h2>
+
+  <p>This lecture extends the DP toolbox. We already know LCS, Matrix Chain Multiplication, and 0/1 Knapsack. Now we learn <strong>three more DP problems</strong>, understand <strong>where DP, Greedy, and Divide & Conquer differ</strong>, and end with two famous graph problems.</p>
+
+  <div class="ovv-box">
+    <h4>How the topics connect</h4>
+    <p style="margin:0;color:var(--text2)">
+      <strong style="color:var(--warn)">Max Subset Sum</strong> → very similar to 0/1 Knapsack (profit = weight, just one value). 
+      Teaches the "take or don't take" recursion pattern. <br><br>
+      <strong style="color:var(--warn)">Subset Sum (decision)</strong> → variation of Max Subset Sum. Instead of maximizing, just ask: can we hit exactly target T? Same table, different answer type (True/False instead of integer). <br><br>
+      <strong style="color:var(--warn)">Coin Change</strong> → similar to Subset Sum but items are <em>unlimited</em> (can pick same coin many times). Shows how "unbounded" vs "0/1" changes one line of the recurrence. <br><br>
+      <strong style="color:var(--warn)">DP vs Greedy vs D&C</strong> → now that we know multiple techniques, we understand when each applies: D&C splits but doesn't reuse sub-answers; DP reuses overlapping sub-answers; Greedy makes one "best local choice" and never looks back. <br><br>
+      <strong style="color:var(--warn)">Floyd-Warshall</strong> → DP applied to graphs. Earlier Dijkstra/Bellman-Ford solved single-source shortest path. Floyd-Warshall solves <em>all-pairs</em> shortest path in O(V³). <br><br>
+      <strong style="color:var(--warn)">TSP</strong> → the "boss level" where no polynomial-time algorithm is known. Shows limits of DP and why some problems are fundamentally hard (NP-Hard).
+    </p>
+  </div>
+
+  <div class="algo-compare">
+    <div class="algo-card">
+      <div class="ac-name">Max Subset Sum</div>
+      <div class="ac-tc">O(n·W)</div>
+      <div class="ac-note">DP table · Returns integer</div>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name">Subset Sum (decision)</div>
+      <div class="ac-tc">O(n·W)</div>
+      <div class="ac-note">DP table · Returns True/False</div>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name">Coin Change</div>
+      <div class="ac-tc">O(n·S)</div>
+      <div class="ac-note">Unbounded items · Returns count</div>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name">Floyd-Warshall</div>
+      <div class="ac-tc">O(V³)</div>
+      <div class="ac-note">All-pairs shortest path · DP</div>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name">TSP (exact)</div>
+      <div class="ac-tc">O((n-1)!)</div>
+      <div class="ac-note">NP-Hard · No poly-time known</div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== MAX SUBSET SUM =================== -->
+<section id="mss">
+  <div class="section-label">Topic 1</div>
+  <h2>Maximum Subset Sum (MSS)</h2>
+
+  <h3>What is the problem?</h3>
+  <div class="card ab">
+    <p><strong>Input:</strong> A set of integers, e.g. {6, 8, 9, 11, 13, 16, 18, 24}, and an integer K (budget).</p>
+    <p><strong>Output:</strong> Find a subset whose sum is as large as possible <em>without exceeding K</em>.</p>
+    <p style="margin:0;color:var(--accent3)"><strong>Example:</strong> K = 21 → best possible = 20 (take 9+11). Cannot get 21, so 20 is the answer.</p>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">💡 How is this different from 0/1 Knapsack?</div>
+    <p style="margin:0">In 0/1 Knapsack: each item has <em>both</em> a profit and a weight. You maximize profit within weight budget.<br>
+    In MSS: each item has only <em>one value</em>. That same value is both "weight" and "profit". You maximize sum ≤ K. It's the same algorithm — just simpler.</p>
+  </div>
+
+  <h3>Recurrence relation</h3>
+  <p>Define <code>mss(i, W)</code> = maximum subset sum, not exceeding W, using items 1..i.</p>
+
+  <div class="formula-box">
+    <div class="formula">
+mss(i, W) = 0                                         if i=0 OR W=0
+           = mss(i−1, W)                              if w_i > W   [can't take item i]
+           = max{ mss(i−1, W),  mss(i−1, W−w_i)+w_i } otherwise   [take or skip]
+    </div>
+    <div class="formula-note">Why add w_i after mss(i−1, W−w_i)? Because we took item i, its value (w_i) must be added to the subproblem's result.</div>
+  </div>
+
+  <div class="magic-box">
+    <div class="magic-label">✨ Key Insight — why NOT option (a) from the lecture?</div>
+    <p style="margin:0">Option (a) was: <code>max{ mss(i−1,W), mss(i−1, W−w_i) }</code> — this is WRONG because if you <em>take</em> item i, you must add w_i to the answer. Without it, you reduce W but forget to count what you picked. Option (b) <code>mss(i−1, W−w_i) + w_i</code> correctly says: "I committed to item i (+w_i), now solve remaining budget."</p>
+  </div>
+
+  <h3>Step-by-step tree example</h3>
+  <p>Items = {6, 8, 9}, K = 15. Let's trace mss(3, 15):</p>
+  <div class="tree-vis">
+    <pre>
+mss(3, 15)   ← consider item 9 (w_3=9 ≤ 15, so 2 choices)
+├── TAKE 9:   mss(2, 6) + 9     ← remaining budget = 15-9=6
+│   ├── TAKE 8? 8 > 6 → SKIP: mss(1, 6) = max{skip 6: mss(0,6)=0, take 6: mss(0,0)+6=6} = 6
+│   └── mss(2, 6) = max{skip 8: mss(1,6)=6, take 8? 8>6 skip} = 6
+│       → mss(2,6) + 9 = 6 + 9 = 15  ✓
+│
+└── SKIP 9:  mss(2, 15)
+    ├── TAKE 8: mss(1, 7) + 8 = max{skip 6: 0, take 6: 6} + 8 = 14
+    └── SKIP 8: mss(1, 15) = max{0, 6} = 6
+    → mss(2,15) = max(14, 6) = 14
+
+mss(3,15) = max(15, 14) = 15  ← answer: pick items 6 and 9
+    </pre>
+  </div>
+
+  <h3>Interactive Explorer</h3>
+  <div class="interactive-demo" id="mss-demo">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:.8rem">
+      <div>
+        <label>Items (comma-separated)</label><br>
+        <input type="text" id="mss-items" value="6,8,9,11" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);padding:5px 10px;font-family:var(--mono);font-size:13px;width:180px;margin-top:4px">
+      </div>
+      <div>
+        <label>K (budget)</label><br>
+        <input type="number" id="mss-k" value="20" min="1">
+      </div>
+      <button onclick="runMSS()">Compute MSS</button>
+    </div>
+    <div class="demo-output" id="mss-out">Press "Compute MSS" to see the DP table and answer.</div>
+  </div>
+</section>
+
+<!-- =================== SUBSET SUM =================== -->
+<section id="ss">
+  <div class="section-label">Topic 2</div>
+  <h2>Subset Sum (Decision Problem)</h2>
+
+  <h3>What is the problem?</h3>
+  <div class="card ab">
+    <p><strong>Input:</strong> List of positive integers a[1..n], and a target integer T.</p>
+    <p><strong>Output:</strong> Return <strong>True</strong> if any subset sums to <em>exactly</em> T. Otherwise False.</p>
+    <p style="margin:0;color:var(--text3)">Example: a = [12, 1, 3, 8, 20, 50], T=44 → True (12+1+3+8+20=44). T=42 → False.</p>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">💡 How is this different from MSS?</div>
+    <p style="margin:0">MSS returns an <em>integer</em> (the best sum ≤ K). Subset Sum returns <em>True/False</em> (can we hit exactly T?). The recursion is almost identical — but instead of <code>max{...}</code>, we use <code>OR (∨)</code>. And we can't add w_i anymore because the unit of return is boolean, not a number.</p>
+  </div>
+
+  <h3>Recurrence relation</h3>
+  <div class="formula-box">
+    <div class="formula">
+ss(i, S) = True                           if S = 0        [empty subset always works]
+          = False                          if i=0, S≠0    [no items left, target not met]
+          = ss(i−1, S)                    if a_i > S     [item too big, must skip]
+          = ss(i−1, S−a_i) ∨ ss(i−1, S) if S ≥ a_i    [take OR skip]
+    </div>
+    <div class="formula-note">The OR (∨) here is the key difference from Knapsack/MSS which use max/min.</div>
+  </div>
+
+  <div class="magic-box">
+    <div class="magic-label">✨ Why OR, not max?</div>
+    <p style="margin:0">Both subproblems return <em>True or False</em>. We can't take max of True/False. Instead: if <em>either</em> choice leads to success, the answer is True. So it's logical OR: "Does taking a_i work OR does skipping a_i work?" If yes to either → True.</p>
+  </div>
+
+  <h3>Working example with full DP table</h3>
+  <p>Items = {10, 5, 15}, Target S = 20. Can we get exactly 20?</p>
+  <p>Items indexed 1=10, 2=5, 3=15. S from 0..20 (showing 0..5 and key values).</p>
+
+  <div class="dp-table-container">
+    <table class="dp-table">
+      <thead>
+        <tr>
+          <th>i\S</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>...</th><th>10</th><th>15</th><th>20</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="header-col">i=0 (no items)</td>
+          <td class="T">T</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td>F...</td><td class="F">F</td><td class="F">F</td><td class="F">F</td>
+        </tr>
+        <tr>
+          <td class="header-col">i=1 (item:10)</td>
+          <td class="T">T</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td>F...</td><td class="T">T</td><td class="F">F</td><td class="F">F</td>
+        </tr>
+        <tr>
+          <td class="header-col">i=2 (item:5)</td>
+          <td class="T">T</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="T">T</td><td>F...</td><td class="T">T</td><td class="T">T</td><td class="F">F</td>
+        </tr>
+        <tr>
+          <td class="header-col">i=3 (item:15)</td>
+          <td class="T">T</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="T">T</td><td>T...</td><td class="T">T</td><td class="T">T</td><td class="cur">T ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">How to read the table</div>
+    <p style="margin:0">
+      <strong>Row i=0:</strong> No items. Only S=0 is True (empty subset).<br>
+      <strong>Row i=1 (item=10):</strong> S=10 becomes True because we can take item 10. S=0 still True (skip everything).<br>
+      <strong>Row i=2 (item=5):</strong> S=5 now True (take item 5). S=15 True (5+10). S=10 stays True.<br>
+      <strong>Row i=3 (item=15):</strong> S=20 → check ss(2, 5) ∨ ss(2, 20). ss(2,5)=True → answer is True! ✓<br>
+      Final answer: ss(3, 20) = <strong style="color:var(--accent3)">True</strong>. We can make 20 with {5, 15}.
+    </p>
+  </div>
+
+  <h3>Three interesting cases</h3>
+  <div class="card ab">
+    <p><strong>Easy:</strong> Target is sum of all elements → always True</p>
+    <p><strong>Moderate:</strong> Target = 43 in {12,1,3,8,20,50} → True (12+1+3+8+20-1 = skip 1? Let's check: 12+3+8+20=43 ✓)</p>
+    <p style="margin:0"><strong>Tricky:</strong> Target = 42 in same list → False (no combination gives exactly 42)</p>
+  </div>
+
+  <h3>Top-Down vs Bottom-Up advantage</h3>
+  <div class="vs-split">
+    <div class="vs-card bad-card">
+      <div class="vs-title r">Bottom-Up (fills entire table)</div>
+      <p style="color:var(--text2);font-size:13.5px;margin:0">For {10,5,15} with S=20: fills ALL entries in a (3+1)×(20+1) = 84-cell table, even entries never needed for the answer.</p>
+    </div>
+    <div class="vs-card good-card">
+      <div class="vs-title g">Top-Down (fills only needed)</div>
+      <p style="color:var(--text2);font-size:13.5px;margin:0">Only computes: ss(3,20), ss(2,5), ss(1,0)→T, ss(2,20), ss(1,15)→F, ss(1,20)→F. Just 7 entries! Much faster for sparse targets.</p>
+    </div>
+  </div>
+
+  <h3>Interactive Subset Sum Checker</h3>
+  <div class="interactive-demo">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:.8rem">
+      <div>
+        <label>Items (comma-separated)</label><br>
+        <input type="text" id="ss-items" value="12,1,3,8,20,50" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);padding:5px 10px;font-family:var(--mono);font-size:13px;width:200px;margin-top:4px">
+      </div>
+      <div>
+        <label>Target T</label><br>
+        <input type="number" id="ss-t" value="44" min="0">
+      </div>
+      <button onclick="runSS()">Check Subset Sum</button>
+    </div>
+    <div class="demo-output" id="ss-out">Press "Check Subset Sum" to see T/F table.</div>
+  </div>
+</section>
+
+<!-- =================== COIN CHANGE =================== -->
+<section id="cc">
+  <div class="section-label">Topic 3</div>
+  <h2>Coin Change Problem (Minimum Coins)</h2>
+
+  <h3>What is the problem?</h3>
+  <div class="card ab">
+    <p><strong>Story:</strong> You are a shopkeeper needing to return Rs.31 to a customer. You have unlimited coins of denominations [25, 10, 5, 1]. What is the minimum number of coins to use?</p>
+    <p><strong>Answer:</strong> 25+5+1 = 3 coins. (Not 25+1+1+1+1+1 = 6 coins!)</p>
+    <p style="margin:0;color:var(--accent)"><strong>Key difference from 0/1 Knapsack:</strong> Coins are <em>unlimited</em>. You can use the same coin multiple times!</p>
+  </div>
+
+  <div class="warn-box">
+    <div class="warn-label">⚠️ Why greedy fails here</div>
+    <p style="margin:0">Coins = [25, 10, 20, 1], S = 30. Greedy picks 25 first (largest). Remaining = 5. But 5 can't be made with {10,20,1} without 5 coins of 1. Greedy gives 6 coins (25,1,1,1,1,1). Optimal is 2 coins (20+10)! Greedy can't "take back" the bad choice of 25.</p>
+  </div>
+
+  <h3>Recurrence relation</h3>
+  <p>Define <code>CC(i, S)</code> = minimum coins to make change S, using coin types 1..i (each unlimited).</p>
+  <div class="formula-box">
+    <div class="formula">
+CC(i, S) = 0                                     if n=0 OR S=0   [no change needed]
+          = CC(i−1, S)                           if v_i > S      [coin too big]
+          = min{ 1 + CC(i, S−v_i), CC(i−1, S) } otherwise       [take OR skip]
+    </div>
+    <div class="formula-note">Why CC(i, S−v_i) and NOT CC(i−1, S−v_i)? Because coins are UNLIMITED — after taking coin i, we can take it AGAIN (keep i, not i−1).</div>
+  </div>
+
+  <div class="magic-box">
+    <div class="magic-label">✨ The Magic Difference: i vs i−1</div>
+    <div class="two-col">
+      <div class="quick-card">
+        <div class="qc-head">0/1 Knapsack (one use per item)</div>
+        <div class="qc-body" style="font-family:var(--mono)">After taking item i:<br>→ mss(i<strong style="color:var(--accent)">−1</strong>, W−w_i) + w_i<br><span style="color:var(--text3)">// Move to i-1, item used up</span></div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">Coin Change (unlimited use)</div>
+        <div class="qc-body" style="font-family:var(--mono)">After taking coin i:<br>→ 1 + CC(<strong style="color:var(--accent3)">i</strong>, S−v_i)<br><span style="color:var(--text3)">// Stay at i, can take again!</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Step-by-step tree example</h3>
+  <p>Coins = [1, 6, 10], S = 12. Minimum coins to make 12.</p>
+  <div class="tree-vis">
+    <pre>
+CC([1,6,10], 12)
+├── TAKE 10:  1 + CC([1,6,10], 2)    ← can take 10 again!
+│   └── CC([1,6,10], 2)
+│       ├── 10>2 → skip: CC([1,6], 2)
+│       │   └── 6>2 → skip: CC([1], 2) = 1+CC([1],1) = 2   (two 1s)
+│       └── TAKE 10? 10>2 → skip
+│       → CC([1,6,10],2) = 2   → Total: 1 + 2 = 3 coins  (10+1+1)
+│
+└── DON'T TAKE 10:  CC([1,6], 12)
+    ├── TAKE 6:  1 + CC([1,6], 6)
+    │   └── 1 + CC([1,6],6):  1 + (1+CC([1,6],0)) = 1+1 = 2  → Total: 1+2=3 (6+6)
+    └── SKIP 6: CC([1], 12) = 12 coins  (all 1s)
+    → CC([1,6],12) = min(3, 12) = 3 coins  (6+6 or 10+1+1)
+
+Answer: min(3, 3) = 3 coins  → e.g., take 10 + 1 + 1, or take 6 + 6
+    </pre>
+  </div>
+
+  <h3>Interactive Coin Change Explorer</h3>
+  <div class="interactive-demo">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:.8rem">
+      <div>
+        <label>Coin denominations (comma-separated)</label><br>
+        <input type="text" id="cc-coins" value="1,5,10,25" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);padding:5px 10px;font-family:var(--mono);font-size:13px;width:200px;margin-top:4px">
+      </div>
+      <div>
+        <label>Amount S</label><br>
+        <input type="number" id="cc-s" value="31" min="1">
+      </div>
+      <button onclick="runCC()">Find Min Coins</button>
+    </div>
+    <div class="demo-output" id="cc-out">Press "Find Min Coins" to compute.</div>
+  </div>
+</section>
+
+<!-- =================== DP vs GREEDY vs DC =================== -->
+<section id="dpvsgvdc">
+  <div class="section-label">Topic 4</div>
+  <h2>DP vs Greedy vs Divide & Conquer</h2>
+
+  <p>All three techniques break a big problem into smaller pieces. The difference is in <em>how many subproblems you solve</em> and <em>whether subproblems repeat</em>.</p>
+
+  <div class="card wb">
+    <h4 style="margin-top:0;color:var(--warn)">The 2 Properties of Dynamic Programming</h4>
+    <p><strong>1. Optimal Substructure</strong> — Can you divide the problem into subproblems? The optimal answer to the big problem is built from optimal answers to subproblems.</p>
+    <p style="margin:0"><strong>2. Overlapping Subproblems</strong> — Do different branches of recursion compute the same subproblem repeatedly? If yes, memoize (or tabulate) to avoid re-computation.</p>
+  </div>
+
+  <div class="algo-compare">
+    <div class="algo-card">
+      <div class="ac-name"><span class="pill dc">Divide & Conquer</span></div>
+      <p style="font-size:13px;color:var(--text2);margin-top:.5rem;text-align:left">Has optimal substructure ✓<br>
+      No overlapping subproblems ✗<br>
+      Each subproblem is unique.<br><br>
+      <em>Example: MergeSort splits into two halves — they never overlap.</em></p>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name"><span class="pill dp">Dynamic Programming</span></div>
+      <p style="font-size:13px;color:var(--text2);margin-top:.5rem;text-align:left">Has optimal substructure ✓<br>
+      Has overlapping subproblems ✓<br>
+      Multiple subproblems exist, reused!<br><br>
+      <em>Example: Fibonacci, LCS, Knapsack — same sub-call appears from different branches.</em></p>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name"><span class="pill greedy">Greedy</span></div>
+      <p style="font-size:13px;color:var(--text2);margin-top:.5rem;text-align:left">Has optimal substructure ✓<br>
+      Only ONE subproblem after each choice!<br>
+      No branching — commit and reduce.<br><br>
+      <em>Example: Fractional Knapsack, Dijkstra, Kruskal — make best local choice, never revisit.</em></p>
+    </div>
+  </div>
+
+  <h3>The Greedy Choice Property</h3>
+  <div class="card pb">
+    <p>Greedy works only when you can prove: <strong>"Making this greedy choice does NOT rule out the optimal solution."</strong></p>
+    <p>In other words: there exists at least one optimal solution that includes your greedy choice. You must prove this for each greedy algorithm.</p>
+    <p style="margin:0;color:var(--text3)"><em>Note from lecture:</em> In practice, people usually first discover the greedy works (by experimentation), then prove it works after. The proof is more for academic justification than design.</p>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">Why DP never needs a "greedy proof"</div>
+    <p style="margin:0">DP considers ALL possibilities and picks the best. There's nothing to prove — you always get the optimal answer. Greedy takes a shortcut (only one subproblem instead of many) which saves time but requires a correctness proof.</p>
+  </div>
+
+  <h3>Visualizing the difference</h3>
+
+  <div style="overflow-x:auto;margin:1rem 0">
+    <table class="cmp-table">
+      <thead>
+        <tr><th>Property</th><th>Divide & Conquer</th><th>Dynamic Programming</th><th>Greedy</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Splits into subproblems?</td><td>Yes (unique)</td><td>Yes (overlap)</td><td>One subproblem only</td></tr>
+        <tr><td>Subproblems overlap?</td><td>No</td><td>Yes → memoize</td><td>N/A (always one path)</td></tr>
+        <tr><td>Choice type</td><td>Fixed split (halves)</td><td>Explores all choices</td><td>One "best local" choice</td></tr>
+        <tr><td>Can go back/undo?</td><td>N/A</td><td>Yes (considers all)</td><td>No — commit forever</td></tr>
+        <tr><td>Needs correctness proof?</td><td>No (always correct)</td><td>No (exhaustive)</td><td>Yes! Must prove greedy choice property</td></tr>
+        <tr><td>Example algorithms</td><td>MergeSort, QuickSort</td><td>LCS, Knapsack, Subset Sum</td><td>Dijkstra, Kruskal, Fractional Knapsack</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Why Greedy fails for Coin Change (general case)</h3>
+  <div class="vs-split">
+    <div class="vs-card bad-card">
+      <div class="vs-title r">Greedy: always pick biggest coin</div>
+      <p style="color:var(--text2);font-size:13px">Coins=[25,20,10,1], S=30<br>
+      Pick 25. Remaining=5. Can't make 5 with {20,10} except using five 1s.<br>
+      Result: 25+1+1+1+1+1 = <strong style="color:var(--danger)">6 coins</strong></p>
+    </div>
+    <div class="vs-card good-card">
+      <div class="vs-title g">DP: considers all options</div>
+      <p style="color:var(--text2);font-size:13px">Coins=[25,20,10,1], S=30<br>
+      DP tries 20+10 path → 2 coins.<br>
+      Also tries 25+... path → 6 coins.<br>
+      Takes min: <strong style="color:var(--accent3)">2 coins</strong> (20+10) ✓</p>
+    </div>
+  </div>
+
+  <div class="magic-box">
+    <div class="magic-label">✨ Famous Analogy from the lecture</div>
+    <p style="margin:0;font-style:italic;color:var(--text2)">"Those who cannot remember the past are condemned to repeat it." — Dynamic Programming remembers all past computed subproblems. That's exactly the point of memoization.</p>
+  </div>
+</section>
+
+<!-- =================== FLOYD WARSHALL =================== -->
+<section id="fw">
+  <div class="section-label">Topic 5</div>
+  <h2>Floyd-Warshall Algorithm</h2>
+
+  <h3>What is the problem?</h3>
+  <div class="card ab">
+    <p><strong>Input:</strong> A graph G(V, E) with any edge weights (including negative, but no negative cycles for valid shortest paths).</p>
+    <p><strong>Output:</strong> Shortest path distance between <em>every pair</em> of vertices (all-pairs shortest path).</p>
+    <p style="margin:0"><strong>vs. earlier algorithms:</strong> Dijkstra and Bellman-Ford solve <em>single-source</em> shortest path (source fixed). Floyd-Warshall solves it for ALL sources at once.</p>
+  </div>
+
+  <h3>Key properties (what you must know)</h3>
+  <div class="card pb">
+    <div class="badge-row">
+      <span class="badge time">DP Algorithm</span>
+      <span class="badge good">Works with negative edges</span>
+      <span class="badge warn">No negative cycles required</span>
+      <span class="badge time">Time: O(V³)</span>
+    </div>
+    <p style="margin-top:.8rem">1. <strong>It is a DP algorithm</strong> — considers all intermediate vertices step by step.</p>
+    <p>2. <strong>Works with negative edge weights</strong> — unlike Dijkstra (greedy, needs non-negative). Because DP considers all paths, negative edges don't mislead it.</p>
+    <p style="margin:0">3. <strong>Negative cycle detection:</strong> If there IS a negative cycle (e.g. a loop with total weight -10), then the diagonal entries of the output matrix become negative. Why? Because going around the cycle from vertex v back to v costs less than 0 → d[v][v] < 0.</p>
+  </div>
+
+  <h3>The output: a 2D matrix</h3>
+  <p>The algorithm fills a V×V matrix where entry [i][j] = shortest path cost from vertex i to vertex j.</p>
+  <div class="dp-table-container">
+    <table class="dp-table">
+      <thead>
+        <tr><th>From\To</th><th>V1</th><th>V2</th><th>V3</th><th>V4</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="header-col">V1</td>
+          <td class="cur">0</td><td>d(1→2)</td><td>d(1→3)</td><td>d(1→4)</td>
+        </tr>
+        <tr>
+          <td class="header-col">V2</td>
+          <td>d(2→1)</td><td class="cur">0</td><td>d(2→3)</td><td class="dep">d(2→4)</td>
+        </tr>
+        <tr>
+          <td class="header-col">V3</td>
+          <td>d(3→1)</td><td>d(3→2)</td><td class="cur">0</td><td>d(3→4)</td>
+        </tr>
+        <tr>
+          <td class="header-col">V4</td>
+          <td>d(4→1)</td><td>d(4→2)</td><td>d(4→3)</td><td class="cur">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Diagonal entries are normally 0 (cost to go from V to V = 0). If any diagonal entry becomes <span style="color:var(--danger)">negative</span> → negative cycle exists!</p>
+
+  <h3>Why O(V³)? Algorithm idea</h3>
+  <div class="insight">
+    <div class="insight-label">Core DP idea (even if GATE rarely asks internals)</div>
+    <p style="margin:0">The key idea: for each possible "intermediate" vertex k (from 1 to V), update: <br><code style="color:var(--accent)">dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])</code><br>
+    Three nested loops: k, i, j → O(V³). We ask: "Is going through vertex k a shorter path from i to j?"</p>
+  </div>
+
+  <h3>Complexity comparison: Single-source vs All-pairs</h3>
+  <div class="dp-table-container">
+    <table class="dp-table">
+      <thead>
+        <tr><th>Algorithm</th><th>Type</th><th>Single Run</th><th>For All-Pairs (run V times)</th><th>Neg. Edges?</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dijkstra</td><td><span class="pill greedy">Greedy</span></td><td style="font-family:var(--mono)">(V+E)logV</td><td style="font-family:var(--mono)">V³logV (worst)</td><td class="F">✗</td>
+        </tr>
+        <tr>
+          <td>Bellman-Ford</td><td><span class="pill dp">DP</span></td><td style="font-family:var(--mono)">VE = V³ (worst)</td><td style="font-family:var(--mono)">V⁴ (worst!)</td><td class="T">✓</td>
+        </tr>
+        <tr>
+          <td class="cur">Floyd-Warshall</td><td><span class="pill dp">DP</span></td><td class="cur" style="font-family:var(--mono)">V³</td><td class="cur" style="font-family:var(--mono)">V³ (same!)</td><td class="T">✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="magic-box">
+    <div class="magic-label">✨ Why Floyd-Warshall is the winner for all-pairs</div>
+    <p style="margin:0">Running Dijkstra V times = V × (V+E)logV. In dense graphs (E≈V²), this is V³logV. Floyd-Warshall is always exactly V³ — better! Running Bellman-Ford V times can be V⁴ — much worse.</p>
+  </div>
+</section>
+
+<!-- =================== TSP =================== -->
+<section id="tsp">
+  <div class="section-label">Topic 6</div>
+  <h2>Travelling Salesman Problem (TSP)</h2>
+
+  <h3>What is the problem?</h3>
+  <div class="card ab">
+    <p><strong>Story:</strong> A salesman starts at city A. He must visit every other city exactly once and return to A. Find the route with minimum total distance.</p>
+    <p><strong>Input:</strong> A complete graph of n cities with distances between every pair.</p>
+    <p style="margin:0"><strong>Output:</strong> The shortest Hamiltonian cycle (visits all cities exactly once and returns to start).</p>
+  </div>
+
+  <h3>How many possible routes?</h3>
+  <div class="formula-box">
+    <div class="formula">
+Starting from city A:
+Remaining cities to arrange = n−1
+Possible orderings = (n−1)!
+For n=4: (4−1)! = 6 routes
+For n=10: 9! = 362,880 routes
+For n=20: 19! ≈ 1.2 × 10¹⁷ routes  ← impossible to check all!
+    </div>
+    <div class="formula-note">(n−1)! grows faster than 2ⁿ — super-exponential!</div>
+  </div>
+
+  <div class="tree-vis">
+    <pre>
+For n=4 cities {A, B, C, D}, all 6 routes starting from A:
+  A → B → C → D → A
+  A → B → D → C → A
+  A → C → B → D → A   ← pick the one with smallest total distance
+  A → C → D → B → A
+  A → D → B → C → A
+  A → D → C → B → A
+    </pre>
+  </div>
+
+  <h3>NP-Hard: The important classification</h3>
+  <div class="danger-box">
+    <div class="danger-label">🔴 NP-Hard Problem</div>
+    <p>TSP is <strong>NP-Hard</strong>. This means:</p>
+    <p>• No polynomial-time algorithm has been <em>found</em> (nobody has P = NP proof yet)</p>
+    <p>• Nobody has <em>proved</em> a polynomial-time algorithm is impossible either</p>
+    <p>• The best exact algorithm requires exponential time: O((n−1)!) or with DP optimization, O(n² × 2ⁿ)</p>
+    <p style="margin:0">• This question — whether polynomial-time TSP exists — remains <strong>open</strong> (one of the most famous unsolved problems in computer science: the P vs NP problem).</p>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">What does "NP-Hard" mean simply?</div>
+    <p style="margin:0">It means: even the smartest known algorithm takes time that grows too fast to be practical for large inputs. For n=30 cities, (n−1)! = 29! ≈ 8.8×10³⁰ — checking all routes would take longer than the age of the universe. That's why real GPS systems use approximation algorithms instead of exact solutions.</p>
+  </div>
+
+  <h3>Comparison with other algorithm types</h3>
+  <div class="algo-compare">
+    <div class="algo-card">
+      <div class="ac-name"><span class="pill dp">DP Problems (seen)</span></div>
+      <p style="font-size:12px;color:var(--text2);text-align:left;margin-top:.5rem">LCS → O(mn)<br>Knapsack → O(nW)<br>Subset Sum → O(nT)<br>Floyd-Warshall → O(V³)<br><br>✅ Polynomial time</p>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name"><span class="pill greedy">Greedy (graph)</span></div>
+      <p style="font-size:12px;color:var(--text2);text-align:left;margin-top:.5rem">Dijkstra → O((V+E)logV)<br>Kruskal → O(E logE)<br>Prim → O((V+E)logV)<br><br>✅ Polynomial time</p>
+    </div>
+    <div class="algo-card">
+      <div class="ac-name"><span class="pill np">TSP (NP-Hard)</span></div>
+      <p style="font-size:12px;color:var(--text2);text-align:left;margin-top:.5rem">Brute force → O((n-1)!)<br>DP (Held-Karp) → O(n²2ⁿ)<br><br>❌ No polynomial time known<br>Use approximation for large n</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== QUICK REVISION =================== -->
+<section id="summary">
+  <div class="section-label">Quick Revision</div>
+  <h2>Cheat Sheet — All Concepts</h2>
+  <div id="revise-content">
+
+  <h3>Recurrence Relations Summary</h3>
+  <div class="dp-table-container">
+    <table class="dp-table" style="min-width:700px">
+      <thead>
+        <tr><th>Problem</th><th>State Definition</th><th>Base Case</th><th>Recurrence (key case)</th><th>Combinator</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Max Subset Sum</td>
+          <td style="font-family:var(--mono);font-size:11px">mss(i,W) = max sum ≤ W</td>
+          <td style="font-family:var(--mono);font-size:11px">i=0 or W=0 → 0</td>
+          <td style="font-family:var(--mono);font-size:11px">max{mss(i-1,W), mss(i-1,W-w)+w}</td>
+          <td style="color:var(--accent3)">max</td>
+        </tr>
+        <tr>
+          <td>Subset Sum</td>
+          <td style="font-family:var(--mono);font-size:11px">ss(i,S) = True/False</td>
+          <td style="font-family:var(--mono);font-size:11px">S=0→T; i=0,S≠0→F</td>
+          <td style="font-family:var(--mono);font-size:11px">ss(i-1, S-a) ∨ ss(i-1, S)</td>
+          <td style="color:var(--accent3)">OR (∨)</td>
+        </tr>
+        <tr>
+          <td>Coin Change</td>
+          <td style="font-family:var(--mono);font-size:11px">CC(i,S) = min coins</td>
+          <td style="font-family:var(--mono);font-size:11px">S=0→0; no coin fits→∞</td>
+          <td style="font-family:var(--mono);font-size:11px">min{1+CC(i, S-v), CC(i-1,S)}</td>
+          <td style="color:var(--warn)">min</td>
+        </tr>
+        <tr>
+          <td>LCS (review)</td>
+          <td style="font-family:var(--mono);font-size:11px">L(i,j) = LCS length</td>
+          <td style="font-family:var(--mono);font-size:11px">i=0 or j=0 → 0</td>
+          <td style="font-family:var(--mono);font-size:11px">if match: 1+L(i-1,j-1) else max{L(i-1,j),L(i,j-1)}</td>
+          <td style="color:var(--accent3)">max</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Technique Selector</h3>
+  <div class="dp-table-container">
+    <table class="dp-table">
+      <thead>
+        <tr><th>Question</th><th>Answer</th><th>Use this</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Subproblems? Overlapping? All options?</td><td>Yes, Yes, Yes</td><td><span class="pill dp">DP</span></td></tr>
+        <tr><td>Subproblems? No overlap?</td><td>Yes, No</td><td><span class="pill dc">Divide & Conquer</span></td></tr>
+        <tr><td>One greedy choice provably works?</td><td>Yes</td><td><span class="pill greedy">Greedy</span></td></tr>
+        <tr><td>No polynomial algorithm known?</td><td>Yes</td><td><span class="pill np">NP-Hard (approximation)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Key Distinctions (Tricky Points)</h3>
+  <div class="two-col">
+    <div class="quick-card">
+      <div class="qc-head">MSS vs Subset Sum</div>
+      <div class="qc-body">Both same structure. MSS returns integer, uses <strong>max</strong>. Subset Sum returns bool, uses <strong>OR</strong>. Adding w_i only in MSS (not possible in SS since return type is bool).</div>
+    </div>
+    <div class="quick-card">
+      <div class="qc-head">0/1 Knapsack vs Coin Change</div>
+      <div class="qc-body">0/1 Knapsack: after taking item i, recurse on <strong>i−1</strong> (item used up). Coin Change: after taking coin i, recurse on <strong>i</strong> (unlimited supply). One index change → huge behavioral difference!</div>
+    </div>
+    <div class="quick-card">
+      <div class="qc-head">Dijkstra vs Floyd-Warshall</div>
+      <div class="qc-body">Dijkstra: single source, greedy, no negative edges. F-W: all pairs, DP, handles negative edges. Running Dijkstra V times = O(V³logV) worst. F-W = O(V³) always better for all-pairs.</div>
+    </div>
+    <div class="quick-card">
+      <div class="qc-head">Negative Cycle Detection (F-W)</div>
+      <div class="qc-body">After F-W, check diagonal. Normally dist[v][v]=0. If dist[v][v]<0 for any v → negative cycle exists. The v in the cycle will have negative self-distance.</div>
+    </div>
+    <div class="quick-card">
+      <div class="qc-head">TSP complexity</div>
+      <div class="qc-body">Brute force: (n−1)!. This is worse than exponential 2ⁿ. DP (Held-Karp algorithm): O(n²×2ⁿ) — still exponential but better. No polynomial solution known. NP-Hard.</div>
+    </div>
+    <div class="quick-card">
+      <div class="qc-head">Top-Down vs Bottom-Up</div>
+      <div class="qc-body">Both fill same table, same space complexity. Top-down fills entries ON DEMAND (lazy), can be faster if many entries not needed. Bottom-up fills ALL entries (sometimes unnecessary). For sparse targets, top-down wins.</div>
+    </div>
+  </div>
+
+  </div><!-- end revise-content -->
+</section>
+
+</div><!-- end page -->
+
+<!-- Floating Revision Button -->
+<button class="fab" onclick="document.getElementById('revise-panel').classList.toggle('open')">
+  ⚡ Quick Revise
+</button>
+
+<!-- Revision Panel -->
+<div class="revise-panel" id="revise-panel">
+  <div class="revise-inner">
+    <div class="revise-close">
+      <h3>⚡ Quick Revision Cards</h3>
+      <button onclick="document.getElementById('revise-panel').classList.remove('open')">✕ Close</button>
+    </div>
+
+    <div class="two-col">
+      <div class="quick-card">
+        <div class="qc-head">MSS recurrence</div>
+        <div class="qc-body" style="font-family:var(--mono);font-size:12px">
+          mss(i,W) = 0 if i=0 or W=0<br>
+          = mss(i-1,W) if w_i>W<br>
+          = max{mss(i-1,W), mss(i-1,W-w)+w}
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">Subset Sum recurrence</div>
+        <div class="qc-body" style="font-family:var(--mono);font-size:12px">
+          ss(i,S) = T if S=0<br>
+          = F if i=0, S≠0<br>
+          = ss(i-1,S) if a_i>S<br>
+          = ss(i-1,S-a) ∨ ss(i-1,S)
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">Coin Change recurrence</div>
+        <div class="qc-body" style="font-family:var(--mono);font-size:12px">
+          CC(i,S) = 0 if S=0<br>
+          = CC(i-1,S) if v_i>S<br>
+          = min{1+CC(i,S-v), CC(i-1,S)}<br>
+          <span style="color:var(--accent)">↑ Note: stays at i (unbounded!)</span>
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">Floyd-Warshall facts</div>
+        <div class="qc-body">
+          • DP algorithm → works on negative edges<br>
+          • O(V³) time<br>
+          • Output: V×V matrix<br>
+          • Neg. cycle → diagonal entry < 0
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">D&C vs DP vs Greedy</div>
+        <div class="qc-body">
+          D&C: optimal substructure, NO overlap<br>
+          DP: optimal substructure + overlap<br>
+          Greedy: optimal substructure, 1 subproblem, proof needed
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">TSP key facts</div>
+        <div class="qc-body">
+          • NP-Hard problem<br>
+          • (n-1)! possible routes<br>
+          • Exponential time algorithm exists<br>
+          • No polynomial time known<br>
+          • Open problem (related to P vs NP)
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">All-pairs shortest path comparison</div>
+        <div class="qc-body" style="font-family:var(--mono);font-size:12px">
+          Floyd-Warshall: O(V³) ← best<br>
+          V × Dijkstra: O(V³logV) worst<br>
+          V × Bellman-Ford: O(V⁴) worst
+        </div>
+      </div>
+      <div class="quick-card">
+        <div class="qc-head">Why greedy fails for Coin Change</div>
+        <div class="qc-body">
+          Coins [25,20,10,1], S=30.<br>
+          Greedy picks 25 first → stuck.<br>
+          DP finds 20+10 → 2 coins ✓<br>
+          Greedy can't undo its choice!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ MSS Demo ============
+function runMSS() {
+  const items = document.getElementById('mss-items').value.split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x));
+  const K = parseInt(document.getElementById('mss-k').value);
+  if (!items.length || isNaN(K)) { document.getElementById('mss-out').textContent='Invalid input.'; return; }
+  const n = items.length;
+  const dp = Array.from({length:n+1}, ()=>new Array(K+1).fill(0));
+  for (let i=1;i<=n;i++) {
+    for (let w=0;w<=K;w++) {
+      dp[i][w] = dp[i-1][w];
+      if (items[i-1] <= w) dp[i][w] = Math.max(dp[i][w], dp[i-1][w-items[i-1]] + items[i-1]);
+    }
+  }
+  const ans = dp[n][K];
+  // trace back which items
+  let chosen = [], wi=K, used=[];
+  for (let i=n;i>=1;i--) {
+    if (dp[i][wi] !== dp[i-1][wi]) { chosen.push(items[i-1]); wi -= items[i-1]; }
+  }
+  let out = `Items: [${items.join(', ')}]  Budget K=${K}\n\n`;
+  out += `Maximum subset sum ≤ ${K}: ${ans}\n`;
+  if (chosen.length) out += `Chosen items: {${chosen.join(' + ')}} = ${chosen.reduce((a,b)=>a+b,0)}\n\n`;
+  out += `DP table (last row = dp[n][0..K]):\n`;
+  const row = dp[n];
+  out += row.map((v,i)=>`W=${i}:${v}`).join('  ');
+  document.getElementById('mss-out').textContent = out;
+}
+
+// ============ Subset Sum Demo ============
+function runSS() {
+  const items = document.getElementById('ss-items').value.split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x));
+  const T = parseInt(document.getElementById('ss-t').value);
+  if (!items.length || isNaN(T)) { document.getElementById('ss-out').textContent='Invalid.'; return; }
+  const n=items.length;
+  // dp[i][s] = true/false
+  const dp = Array.from({length:n+1},()=>new Array(T+1).fill(false));
+  for (let i=0;i<=n;i++) dp[i][0]=true;
+  for (let i=1;i<=n;i++) {
+    for (let s=1;s<=T;s++) {
+      dp[i][s] = dp[i-1][s];
+      if (items[i-1]<=s) dp[i][s] = dp[i][s] || dp[i-1][s-items[i-1]];
+    }
+  }
+  const ans = dp[n][T];
+  let out = `Items: [${items.join(', ')}]   Target T=${T}\n\n`;
+  out += `Result: ss(${n}, ${T}) = ${ans ? '✅ TRUE' : '❌ FALSE'}\n\n`;
+  // Show last few rows
+  out += `DP Table (rows = items added, cols = target sums 0..${Math.min(T,20)}):\n`;
+  out += `Col S:  ` + Array.from({length:Math.min(T,20)+1},(_,j)=>String(j).padStart(3)).join('') + '\n';
+  for (let i=0;i<=n;i++) {
+    const label = i===0?'i=0 (empty)  ':`i=${i} (+${items[i-1]}) `.padEnd(14);
+    out += label + dp[i].slice(0,Math.min(T,20)+1).map(v=>(v?'T':'F').padStart(3)).join('') + '\n';
+  }
+  if (ans) {
+    let ss2=T, chosen=[];
+    for (let i=n;i>=1&&ss2>0;i--) {
+      if (!dp[i-1][ss2] && dp[i][ss2]) { chosen.push(items[i-1]); ss2-=items[i-1]; }
+    }
+    if (chosen.length) out += `\nOne valid subset: {${chosen.join(' + ')}} = ${chosen.reduce((a,b)=>a+b,0)}`;
+  }
+  document.getElementById('ss-out').textContent = out;
+}
+
+// ============ Coin Change Demo ============
+function runCC() {
+  const coins = document.getElementById('cc-coins').value.split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x));
+  const S = parseInt(document.getElementById('cc-s').value);
+  if (!coins.length || isNaN(S)) { document.getElementById('cc-out').textContent='Invalid.'; return; }
+  const INF = 1e9;
+  const n=coins.length;
+  const dp = Array.from({length:n+1},()=>new Array(S+1).fill(INF));
+  for (let i=0;i<=n;i++) dp[i][0]=0;
+  for (let i=1;i<=n;i++) {
+    for (let s=1;s<=S;s++) {
+      dp[i][s] = dp[i-1][s]; // skip coin i
+      if (coins[i-1]<=s && dp[i][s-coins[i-1]] < INF)
+        dp[i][s] = Math.min(dp[i][s], 1 + dp[i][s-coins[i-1]]); // take coin i (can reuse!)
+    }
+  }
+  const ans = dp[n][S];
+  let out = `Coins: [${coins.join(', ')}]   Amount S=${S}\n\n`;
+  if (ans === INF) {
+    out += `Result: ❌ Impossible to make S=${S} with these coins.\n`;
+  } else {
+    out += `Minimum coins needed: ${ans}\n`;
+    // trace back which coins
+    let rem=S, ci=n, chosen=[];
+    while (rem>0 && ci>0) {
+      if (coins[ci-1]<=rem && dp[ci][rem-coins[ci-1]]+1===dp[ci][rem]) { chosen.push(coins[ci-1]); rem-=coins[ci-1]; }
+      else ci--;
+    }
+    if (chosen.length) out += `Coins used: [${chosen.join(', ')}]\n`;
+  }
+  out += `\nDP table last row (min coins for each amount 0..${Math.min(S,30)}):\n`;
+  dp[n].slice(0,Math.min(S,30)+1).forEach((v,i)=>{ out += `S=${i}:${v===INF?'∞':v}  `; if((i+1)%8===0)out+='\n'; });
+  document.getElementById('cc-out').textContent = out;
+}
+
+// Topnav active link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.topnav a[href^="#"]');
+window.addEventListener('scroll', ()=>{
+  let cur='';
+  sections.forEach(s=>{ if(window.scrollY >= s.offsetTop-80) cur=s.id; });
+  navLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+});
+</script>
+</body>
+</html>

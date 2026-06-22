@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Programming — Deep Study Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1f2d;--bg4:#222840;--surface:#1e2434;--surface2:#262d42;--accent:#6c8fff;--accent2:#a78bfa;--accent3:#34d399;--warn:#fbbf24;--danger:#f87171;--coral:#fb923c;--text:#e8eaf2;--text2:#9aa3c2;--text3:#5c6585;--border:rgba(108,143,255,.12);--border2:rgba(108,143,255,.22);--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;--radius:10px;--radius-lg:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;min-height:100vh}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:0;overflow-x:auto;height:52px}
+.topnav a{display:inline-flex;align-items:center;height:52px;padding:0 14px;color:var(--text2);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.04em;white-space:nowrap;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.topnav a:hover,.topnav a.active{color:var(--accent);border-bottom-color:var(--accent)}
+.topnav .logo{color:var(--accent);font-weight:700;font-size:13px;margin-right:20px;border:none!important}
+.page{max-width:900px;margin:0 auto;padding:3rem 2rem 6rem}
+.hero{text-align:center;padding:4rem 0 3rem}
+.hero-tag{display:inline-block;background:rgba(108,143,255,.12);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:1.5rem;border:1px solid var(--border2)}
+.hero h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:700;line-height:1.15;color:var(--text);margin-bottom:1rem}
+.hero h1 span{color:var(--accent)}
+.hero-sub{color:var(--text2);font-size:1.05rem;max-width:560px;margin:0 auto 2rem}
+.hero-formula{display:inline-block;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:.8rem 2rem;font-family:var(--mono);font-size:.95rem;color:var(--accent3);margin-bottom:2rem}
+section{margin-bottom:4rem;scroll-margin-top:60px}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem}
+h2{font-size:1.7rem;font-weight:700;color:var(--text);margin-bottom:1.2rem;line-height:1.3}
+h3{font-size:1.15rem;font-weight:600;color:var(--accent2);margin:2rem 0 .7rem}
+h4{font-size:.95rem;font-weight:600;color:var(--warn);margin:1.5rem 0 .5rem;text-transform:uppercase;letter-spacing:.06em}
+p{color:var(--text2);margin-bottom:.9rem}
+p strong{color:var(--text);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.2rem}
+.card.ab{border-left:3px solid var(--accent)}.card.gb{border-left:3px solid var(--accent3)}.card.wb{border-left:3px solid var(--warn)}.card.db{border-left:3px solid var(--danger)}.card.cb{border-left:3px solid var(--coral)}.card.pb{border-left:3px solid var(--accent2)}
+.insight{background:rgba(108,143,255,.07);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.insight-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;margin-bottom:.3rem}
+.magic-box{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.magic-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent3);text-transform:uppercase;margin-bottom:.3rem}
+.warn-box{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0}
+.warn-label{font-size:10px;font-weight:700;color:var(--warn);text-transform:uppercase;margin-bottom:.3rem}
+.code-block{background:#0a0c10;border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;margin:1rem 0;overflow-x:auto}
+.code-block pre{font-family:var(--mono);font-size:13px;line-height:1.7;color:#cdd6f4}
+.kw{color:#89b4fa}.fn{color:#a6e3a1}.cm{color:#585b70;font-style:italic}.nb{color:#fab387}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:.7rem 0}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
+.badge.time{background:rgba(108,143,255,.15);color:var(--accent);border:1px solid var(--border2)}.badge.good{background:rgba(52,211,153,.12);color:var(--accent3);border:1px solid rgba(52,211,153,.2)}.badge.bad{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.2)}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px;margin:1rem 0}
+.cmp-table th{background:var(--bg4);color:var(--accent);font-weight:700;padding:.6rem 1rem;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border2)}
+.cmp-table td{padding:.6rem 1rem;color:var(--text2);border-bottom:1px solid var(--border)}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table tr:hover td{background:rgba(108,143,255,.04);color:var(--text)}
+.step-list{list-style:none;counter-reset:step}
+.step-list li{counter-increment:step;display:flex;gap:1rem;align-items:flex-start;margin-bottom:1rem}
+.step-list li::before{content:counter(step);min-width:28px;height:28px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-list li .sb{color:var(--text2)}
+.step-list li .sb strong{color:var(--text)}
+.viz{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem;margin:1.2rem 0;overflow:hidden}
+.ctrl-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:.8rem 0}
+.ctrl-row label{font-size:12px;color:var(--text2);font-weight:600}
+.ctrl-row input[type=range]{flex:1;min-width:80px;accent-color:var(--accent)}
+.ctrl-row select,.ctrl-row input[type=number],.ctrl-row input[type=text]{background:var(--bg4);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-family:var(--sans);font-size:12px}
+.run-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 18px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.run-btn:hover{opacity:.85}
+.grid-cell{width:42px;height:36px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border-radius:6px;border:1px solid var(--border);color:var(--text2);font-family:var(--mono);transition:background .3s,color .3s;cursor:default}
+.grid-cell.hdr{background:var(--bg4);color:var(--accent);border-color:var(--border2)}
+.grid-cell.fld{background:rgba(108,143,255,.22);color:var(--accent);border-color:var(--border2)}
+.grid-cell.cmp{background:rgba(251,191,36,.18);color:var(--warn);border-color:rgba(251,191,36,.3);animation:pulse .6s infinite alternate}
+@keyframes pulse{from{opacity:.7}to{opacity:1}}
+hr.div{border:none;border-top:1px solid var(--border);margin:2.5rem 0}
+#quick-revision{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;overflow-y:auto;backdrop-filter:blur(6px)}
+#quick-revision .qr-inner{max-width:820px;margin:2rem auto;padding:2rem;background:var(--bg2);border-radius:20px;border:1px solid var(--border2)}
+#quick-revision h2{font-size:1.5rem;color:var(--accent);margin-bottom:1.5rem}
+#quick-revision h3{color:var(--warn);margin:1.2rem 0 .4rem;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+#quick-revision ul{padding-left:1.2rem}
+#quick-revision li{color:var(--text2);margin-bottom:.4rem;font-size:.9rem}
+#quick-revision li strong{color:var(--text)}
+.qr-close{position:absolute;top:1rem;right:1.5rem;background:none;border:none;color:var(--text2);font-size:1.5rem;cursor:pointer}
+#qr-open-btn{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:12px 22px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(108,143,255,.4);z-index:99;transition:transform .15s,box-shadow .15s}
+#qr-open-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(108,143,255,.5)}
+code{font-family:var(--mono);color:var(--accent);font-size:.9em}
+ol.ri{padding-left:1.3rem}
+ol.ri li{color:var(--text2);margin-bottom:.4rem}
+ol.ri li strong{color:var(--text)}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="logo topnav a">DP Study</span>
+  <a href="#overview">Overview</a>
+  <a href="#problem">Problem</a>
+  <a href="#memoization">Memoization</a>
+  <a href="#bottomup">Bottom-Up</a>
+  <a href="#examples">Examples</a>
+  <a href="#fillorder">Fill Order</a>
+  <a href="#elements">Elements</a>
+  <a href="#vsdc">DP vs D&amp;C</a>
+</nav>
+
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Algorithm Design · GO Classes · Introduction to DP</div>
+  <h1>Dynamic<br><span>Programming</span></h1>
+  <p class="hero-sub">Careful brute force — solve every sub-problem exactly once, remember the answer, build up from small to big.</p>
+  <div class="hero-formula">DP = Careful Recursion = Optimal Substructure + Overlapping Subproblems</div>
+</div>
+
+<!-- ── SECTION 0: OVERVIEW ── -->
+<section id="overview">
+  <div class="section-label">10,000 ft view</div>
+  <h2>How everything connects</h2>
+
+  <div class="viz">
+    <svg width="100%" viewBox="0 0 860 200" style="display:block" role="img"><title>DP progression from naive recursion to both DP approaches</title><desc>Shows naive recursion O(2n) leads to memoization O(n) and bottom-up O(n), both built on key elements</desc>
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <rect x="10" y="70" width="130" height="62" rx="10" fill="#1e2434" stroke="rgba(248,113,113,.5)" stroke-width="1.2"/>
+      <text x="75" y="95" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" font-weight="700" fill="#f87171">Naive</text>
+      <text x="75" y="111" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#9aa3c2">Recursion</text>
+      <text x="75" y="127" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5c6585">O(2ⁿ) time</text>
+      <line x1="142" y1="101" x2="192" y2="101" stroke="#5c6585" stroke-width="1.2" marker-end="url(#arr)"/>
+      <text x="167" y="92" text-anchor="middle" font-family="Sora,sans-serif" font-size="9" fill="#5c6585">+ memo</text>
+      <rect x="194" y="70" width="148" height="62" rx="10" fill="#1e2434" stroke="rgba(108,143,255,.5)" stroke-width="1.2"/>
+      <text x="268" y="95" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" font-weight="700" fill="#6c8fff">Memoization</text>
+      <text x="268" y="111" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#9aa3c2">Top-Down DP</text>
+      <text x="268" y="127" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5c6585">O(n) time</text>
+      <line x1="344" y1="101" x2="394" y2="101" stroke="#5c6585" stroke-width="1.2" marker-end="url(#arr)"/>
+      <text x="369" y="92" text-anchor="middle" font-family="Sora,sans-serif" font-size="9" fill="#5c6585">iterative</text>
+      <rect x="396" y="70" width="148" height="62" rx="10" fill="#1e2434" stroke="rgba(52,211,153,.4)" stroke-width="1.2"/>
+      <text x="470" y="95" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" font-weight="700" fill="#34d399">Bottom-Up DP</text>
+      <text x="470" y="111" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#9aa3c2">Tabulation</text>
+      <text x="470" y="127" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5c6585">O(n) time</text>
+      <line x1="546" y1="101" x2="596" y2="101" stroke="#5c6585" stroke-width="1.2" marker-end="url(#arr)"/>
+      <text x="571" y="92" text-anchor="middle" font-family="Sora,sans-serif" font-size="9" fill="#5c6585">needs</text>
+      <rect x="598" y="50" width="252" height="102" rx="12" fill="#1a1f2d" stroke="rgba(167,139,250,.4)" stroke-width="1.2"/>
+      <text x="724" y="75" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" font-weight="700" fill="#a78bfa">Elements of DP</text>
+      <text x="616" y="97" font-family="Sora,sans-serif" font-size="11" fill="#34d399">① Optimal substructure</text>
+      <text x="616" y="115" font-family="Sora,sans-serif" font-size="11" fill="#6c8fff">② Overlapping subproblems</text>
+      <text x="616" y="133" font-family="Sora,sans-serif" font-size="11" fill="#fbbf24">③ Recurrence + base cases</text>
+    </svg>
+  </div>
+
+  <p>The entire story of DP: <strong>notice that plain recursion repeats work exponentially</strong> → add memoization (same code, just cache results) → or flip to tabulation (fill from base cases up). Both achieve O(n). The magic: <strong>total recursive calls = O(2ⁿ) but unique sub-problems = only O(n).</strong></p>
+</section>
+
+<!-- ── SECTION 1: THE PROBLEM ── -->
+<section id="problem">
+  <div class="section-label">Section 1</div>
+  <h2>Why plain recursion is painfully slow</h2>
+  <p>Take <code>fib(n)</code>. Each call spawns 2 more calls. The tree doubles at every level. For n=40, this means over a <em>billion</em> function calls.</p>
+
+  <div class="card ab">
+    <div class="code-block"><pre><span class="kw">int</span> <span class="fn">Fibonacci</span>(<span class="kw">int</span> n) {
+  <span class="kw">if</span> (n == <span class="nb">0</span> || n == <span class="nb">1</span>) <span class="kw">return</span> <span class="nb">1</span>;
+  <span class="kw">return</span> <span class="fn">Fibonacci</span>(n-<span class="nb">1</span>) + <span class="fn">Fibonacci</span>(n-<span class="nb">2</span>);
+}
+<span class="cm">// T(n) = T(n-1) + T(n-2) + 1  ≈  O(2ⁿ)
+// fib(40) → ~2 billion calls</span></pre></div>
+    <div class="badge-row"><span class="badge bad">Time: O(2ⁿ)</span><span class="badge bad">Space: O(n) call stack</span></div>
+  </div>
+
+  <h3>Interactive recursion tree — spot the repeated work</h3>
+  <div class="viz">
+    <div class="ctrl-row">
+      <label>fib(n) for n =</label>
+      <input type="number" id="fib-n-input" value="7" min="3" max="11" style="width:60px">
+      <button class="run-btn" onclick="drawFibTree()">Draw</button>
+      <span id="fib-stats" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+    <canvas id="fib-tree-canvas" style="display:block;width:100%;height:300px"></canvas>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">Key Observation (slide 9)</div>
+    <p style="margin:0">Total calls = <strong style="color:var(--danger)">O(2ⁿ)</strong>. Unique calls = only <strong style="color:var(--accent3)">O(n)</strong>. The ratio between these is the waste DP eliminates. For fib(7): fib(5) computed twice, fib(4) three times, fib(3) five times.</p>
+  </div>
+</section>
+
+<!-- ── SECTION 2: MEMOIZATION ── -->
+<section id="memoization">
+  <div class="section-label">Section 2 — Top-Down</div>
+  <h2>Memoization — "Check before computing"</h2>
+  <p>Add a single check (the <em>guard</em>) at the top of the recursive function. Before doing any work, ask: "Did I already compute this?" If yes, return the stored answer instantly.</p>
+
+  <div class="card gb">
+    <div class="code-block"><pre><span class="cm">// dp[] initialized to -1 ("not yet computed")</span>
+
+<span class="kw">int</span> <span class="fn">Fibonacci</span>(<span class="kw">int</span> n) {
+  <span class="cm">// GUARD — hit this on any repeated call</span>
+  <span class="kw">if</span> (dp[n] != -<span class="nb">1</span>) <span class="kw">return</span> dp[n];
+
+  <span class="kw">if</span> (n == <span class="nb">0</span> || n == <span class="nb">1</span>) { dp[n] = <span class="nb">1</span>; }
+  <span class="kw">else</span> {
+    dp[n] = <span class="fn">Fibonacci</span>(n-<span class="nb">1</span>) + <span class="fn">Fibonacci</span>(n-<span class="nb">2</span>); <span class="cm">// store then return</span>
+  }
+  <span class="kw">return</span> dp[n];
+}</pre></div>
+    <div class="badge-row"><span class="badge good">Time: O(n)</span><span class="badge good">Space: O(n)</span></div>
+  </div>
+
+  <div class="magic-box">
+    <div class="magic-label">✦ The magic moment</div>
+    <p style="margin:0">When fib(5) is called for the 2nd time, instead of spawning an entire subtree of ~8 more calls, the guard fires and returns the answer in O(1). This single check collapses O(2ⁿ) total calls to O(n) unique calls.</p>
+  </div>
+
+  <h3>Animated trace: fib(5) with memoization</h3>
+  <div class="viz">
+    <div class="ctrl-row">
+      <label>Step:</label>
+      <input type="range" id="memo-step" min="0" max="9" value="0" oninput="renderMemoStep(+this.value)">
+      <span id="memo-step-lbl" style="font-family:var(--mono);font-size:12px;color:var(--accent);min-width:30px">0/9</span>
+      <button class="run-btn" onclick="autoPlayMemo()">Auto-play</button>
+    </div>
+    <canvas id="memo-canvas" style="display:block;width:100%;height:180px"></canvas>
+    <div id="memo-desc" style="font-size:13px;color:var(--text2);margin-top:.8rem;padding:.6rem 1rem;background:var(--bg4);border-radius:8px;min-height:44px"></div>
+  </div>
+
+  <ul class="step-list">
+    <li><div class="sb"><strong>Same structure as naive recursion</strong> — you don't change how you think. Just add caching.</div></li>
+    <li><div class="sb"><strong>Guard at top:</strong> <code>if (dp[n] != -1) return dp[n]</code> — this is the entire DP change.</div></li>
+    <li><div class="sb"><strong>Store before return:</strong> <code>dp[n] = result; return dp[n];</code></div></li>
+    <li><div class="sb"><strong>Each unique sub-problem solved exactly once</strong> — subsequent calls are O(1).</div></li>
+  </ul>
+
+  <div class="warn-box">
+    <div class="warn-label">Top-down fills the table lazily</div>
+    <p style="margin:0">The table is only filled for sub-problems that are <em>actually needed</em>. For recurrences like fun(i/2, j/2), only O(log²n) cells out of n² are needed — top-down is much faster here than bottom-up which fills all n² cells.</p>
+  </div>
+</section>
+
+<!-- ── SECTION 3: BOTTOM-UP ── -->
+<section id="bottomup">
+  <div class="section-label">Section 3 — Bottom-Up</div>
+  <h2>Tabulation — "Build from base cases upward"</h2>
+  <p>No recursion at all. Start with the smallest known answers (base cases) and fill the table iteratively until you reach the answer you want.</p>
+
+  <div class="card cb">
+    <div class="code-block"><pre><span class="kw">int</span> <span class="fn">Fibonacci</span>(<span class="kw">int</span> n) {
+  dp[<span class="nb">0</span>] = dp[<span class="nb">1</span>] = <span class="nb">1</span>;          <span class="cm">// base cases</span>
+
+  <span class="kw">for</span> (<span class="kw">int</span> i = <span class="nb">2</span>; i <= n; i++)
+    dp[i] = dp[i-<span class="nb">1</span>] + dp[i-<span class="nb">2</span>]; <span class="cm">// use already-filled values</span>
+
+  <span class="kw">return</span> dp[n];
+}</pre></div>
+    <div class="badge-row"><span class="badge good">Time: O(n)</span><span class="badge good">Space: O(n)</span><span class="badge good">No recursion overhead</span></div>
+  </div>
+
+  <div class="viz">
+    <div class="ctrl-row">
+      <label>fib(</label>
+      <input type="number" id="bu-n" value="8" min="2" max="15" style="width:55px">
+      <label>)</label>
+      <button class="run-btn" onclick="animateBottomUp()">Animate</button>
+    </div>
+    <div id="bu-table-display" style="display:flex;gap:3px;flex-wrap:wrap;margin:.8rem 0;min-height:52px"></div>
+    <div id="bu-desc" style="font-size:13px;color:var(--text2);padding:.6rem 1rem;background:var(--bg4);border-radius:8px;min-height:36px"></div>
+  </div>
+
+  <h3>Top-Down vs Bottom-Up — head to head</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Property</th><th>Top-Down (Memo)</th><th>Bottom-Up (Tabulation)</th></tr></thead>
+    <tbody>
+      <tr><td>Code style</td><td>Recursive + guard</td><td>Iterative loops</td></tr>
+      <tr><td>Fills table</td><td>Lazily (only needed cells)</td><td>Eagerly (all cells in order)</td></tr>
+      <tr><td>Fill order</td><td>Handled by recursion automatically</td><td>You must decide correct order</td></tr>
+      <tr><td>Stack overflow?</td><td>Possible (deep recursion)</td><td>No</td></tr>
+      <tr><td>When faster</td><td>When only O(log n) cells needed</td><td>Most problems (all cells needed)</td></tr>
+      <tr><td>For writing algorithms</td><td>✓ Easier to derive</td><td>Need to think about fill order</td></tr>
+      <tr><td>For solving questions</td><td>Works</td><td>✓ Preferred</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── SECTION 4: EXAMPLES ── -->
+<section id="examples">
+  <div class="section-label">Section 4 — Worked Examples</div>
+  <h2>Building DP instinct through examples</h2>
+
+  <!-- EXAMPLE 1 -->
+  <h3>Example 1: Climbing Stairs (count ways)</h3>
+  <div class="card ab">
+    <p><strong>Problem:</strong> n-step staircase. Each move: climb 1 or 2 steps. Count distinct ways to reach the top.</p>
+    <p style="margin:0"><strong>Samples:</strong> n=2 → 2 ways. n=3 → 3 ways (1+1+1, 1+2, 2+1).</p>
+  </div>
+
+  <h4>DP derivation</h4>
+  <ul class="step-list">
+    <li><div class="sb"><strong>Define subproblem:</strong> cs[n] = number of distinct ways to climb n steps.</div></li>
+    <li><div class="sb"><strong>Find recurrence:</strong> To reach step n, I came from n-1 (1 step) or n-2 (2 steps). So cs[n] = cs[n-1] + cs[n-2]. This is exactly Fibonacci!</div></li>
+    <li><div class="sb"><strong>Base cases:</strong> cs[0]=1 (one way to stand at bottom), cs[1]=1.</div></li>
+    <li><div class="sb"><strong>Fill table:</strong> left to right, 0 to n.</div></li>
+  </ul>
+
+  <div class="viz">
+    <div class="ctrl-row">
+      <label>n =</label>
+      <input type="range" id="cs-n" min="1" max="12" value="5" oninput="document.getElementById('cs-nv').textContent=this.value;computeStairs()">
+      <span id="cs-nv" style="font-family:var(--mono);color:var(--accent);min-width:20px">5</span>
+    </div>
+    <div id="stairs-table" style="display:flex;gap:4px;flex-wrap:wrap;margin:.8rem 0"></div>
+    <div id="stairs-answer" style="font-size:14px;color:var(--accent3);margin-top:.5rem;font-weight:700"></div>
+  </div>
+
+  <hr class="div">
+
+  <!-- EXAMPLE 2 -->
+  <h3>Example 2: Row of Coins (max non-adjacent sum)</h3>
+  <div class="card wb">
+    <p><strong>Problem:</strong> Row of coins c₁…cₙ. Pick coins for max total value. Constraint: cannot pick two adjacent coins.</p>
+    <p style="margin:0"><strong>Example:</strong> [5,1,2,10,6,2] → pick c₁=5, c₄=10, c₆=2 → total=17.</p>
+  </div>
+
+  <h4>Key decision at each coin</h4>
+  <ul class="step-list">
+    <li><div class="sb"><strong>Take coin n:</strong> gain cₙ, but cannot take n-1. Best = cₙ + f(n-2).</div></li>
+    <li><div class="sb"><strong>Skip coin n:</strong> Best = f(n-1).</div></li>
+    <li><div class="sb"><strong>Recurrence:</strong> f(n) = max(cₙ + f(n-2), f(n-1)). Base: f(0)=0, f(1)=c₁.</div></li>
+  </ul>
+
+  <div class="viz">
+    <div class="ctrl-row">
+      <label style="font-size:12px">Coins:</label>
+      <input type="text" id="coins-input" value="5,1,2,10,6,2" style="flex:1;font-family:var(--mono);font-size:13px">
+      <button class="run-btn" onclick="computeCoins()">Solve</button>
+    </div>
+    <div id="coins-table-display" style="margin:.8rem 0;overflow-x:auto"></div>
+    <div id="coins-answer" style="font-size:14px;font-weight:700;color:var(--accent3)"></div>
+    <div id="coins-picked" style="font-size:13px;color:var(--text2);margin-top:.3rem"></div>
+  </div>
+
+  <hr class="div">
+
+  <!-- EXAMPLE 3 -->
+  <h3>Example 3: Min Cost Climbing Stairs</h3>
+  <div class="card gb">
+    <p><strong>Problem:</strong> cost[i] = cost of stepping on stair i. Pay cost, then move 1 or 2 steps. Start from 0 or 1. Find min total cost to reach past the last stair.</p>
+    <p><strong>n=3:</strong> cost=[10,15,20] → 15 (start at index 1, pay 15, jump 2 steps to top).</p>
+    <p style="margin:0"><strong>Tricky:</strong> cost=[1,100,1,1,1,100,1,1,100,1] → 6 (jump over all 100s).</p>
+  </div>
+
+  <h4>Define answer[n] = min cost to <em>reach</em> step n (not stand on it)</h4>
+  <ul class="step-list">
+    <li><div class="sb">answer[0] = 0 (free to start here).</div></li>
+    <li><div class="sb">answer[1] = cost[0] (reach step 1 by paying cost[0] and jumping 1).</div></li>
+    <li><div class="sb">answer[n] = min(answer[n-1]+cost[n-1], answer[n-2]+cost[n-2]).</div></li>
+    <li><div class="sb">Final answer = answer[len(cost)] — one step past the array.</div></li>
+  </ul>
+
+  <div class="viz">
+    <div class="ctrl-row">
+      <label style="font-size:12px">cost[]:</label>
+      <input type="text" id="stair-cost-input" value="1,100,1,1,1,100,1,1,100,1" style="flex:1;font-family:var(--mono);font-size:11px">
+      <button class="run-btn" onclick="computeStairCost()">Solve</button>
+    </div>
+    <div id="stair-cost-table" style="margin:.8rem 0;overflow-x:auto"></div>
+    <div id="stair-cost-answer" style="font-size:14px;font-weight:700;color:var(--accent3)"></div>
+  </div>
+
+  <hr class="div">
+
+  <!-- EXAMPLE 4 -->
+  <h3>Example 4: Ants vs Bees — 2D DP + Probability</h3>
+  <div class="card cb">
+    <p><strong>Problem:</strong> Ants and Bees play games. Ants win each game with prob p, Bees with q=1-p. First to n wins takes the series. Let P(i,j) = prob Ants win when Ants need i more wins, Bees need j more wins.</p>
+  </div>
+
+  <ul class="step-list">
+    <li><div class="sb"><strong>Next game:</strong> Ants win (prob p) → state (i-1, j). Bees win (prob q) → state (i, j-1).</div></li>
+    <li><div class="sb"><strong>Total probability:</strong> P(i,j) = p·P(i-1,j) + q·P(i,j-1).</div></li>
+    <li><div class="sb"><strong>Base cases:</strong> P(0,j)=1 (Ants done). P(i,0)=0 (Bees done).</div></li>
+    <li><div class="sb"><strong>2D table:</strong> Fill row-by-row — P(i,j) depends on (i-1,j) and (i,j-1), both already filled.</div></li>
+  </ul>
+
+  <div class="card">
+    <div class="code-block"><pre><span class="cm">// Top-down with 2D dp table</span>
+<span class="kw">double</span> <span class="fn">fun</span>(<span class="kw">int</span> i, <span class="kw">int</span> j) {
+  <span class="kw">if</span> (dp[i][j] != NULL) <span class="kw">return</span> dp[i][j];  <span class="cm">// guard</span>
+  <span class="kw">if</span> (i == <span class="nb">0</span>) <span class="kw">return</span> dp[i][j] = <span class="nb">1</span>;         <span class="cm">// Ants won</span>
+  <span class="kw">if</span> (j == <span class="nb">0</span>) <span class="kw">return</span> dp[i][j] = <span class="nb">0</span>;         <span class="cm">// Bees won</span>
+  dp[i][j] = p * <span class="fn">fun</span>(i-<span class="nb">1</span>,j) + (<span class="nb">1</span>-p) * <span class="fn">fun</span>(i,j-<span class="nb">1</span>);
+  <span class="kw">return</span> dp[i][j];
+}</pre></div>
+  </div>
+
+  <!-- Ants vs Bees interactive -->
+  <div class="viz">
+    <div class="ctrl-row">
+      <label>n =</label>
+      <input type="number" id="ab-n" value="5" min="2" max="8" style="width:55px">
+      <label>p =</label>
+      <input type="range" id="ab-p" min="0.1" max="0.9" step="0.05" value="0.6" oninput="document.getElementById('ab-pv').textContent=parseFloat(this.value).toFixed(2);renderAntsTable()">
+      <span id="ab-pv" style="font-family:var(--mono);font-size:12px;color:var(--accent);min-width:32px">0.60</span>
+      <button class="run-btn" onclick="renderAntsTable()">Compute</button>
+    </div>
+    <div id="ants-table" style="overflow-x:auto;margin:.8rem 0"></div>
+  </div>
+</section>
+
+<!-- ── SECTION 5: FILL ORDER ── -->
+<section id="fillorder">
+  <div class="section-label">Section 5</div>
+  <h2>Bottom-Up Fill Order — the tricky part</h2>
+  <p>In bottom-up DP you must fill cells in an order where every dependency is already computed. This is automatic in top-down but requires careful thought in bottom-up.</p>
+
+  <div class="ctrl-row">
+    <label>Pick recurrence:</label>
+    <select id="fill-select" onchange="renderFillOrder()" style="flex:1">
+      <option value="i">i. A(i,j) = min(A(i,j-1), A(i-1,j-1), A(i-1,j+1))  → row-wise works ✓</option>
+      <option value="ii">ii. A(i,j) uses min{i,j}-1 and max{i,j}-1  → diagonal-first works ✓</option>
+      <option value="iii">iii. A(i,j) = max(A(i-2,j-2), A(i+2,j+2))  → IMPOSSIBLE (cyclic) ✗</option>
+    </select>
+  </div>
+  <div class="viz" id="fill-order-viz">
+    <div id="fill-order-grid" style="display:inline-grid;gap:3px"></div>
+    <div id="fill-order-verdict" style="margin-top:.8rem;font-size:13px;color:var(--text2)"></div>
+  </div>
+
+  <table class="cmp-table" style="margin-top:1.5rem">
+    <thead><tr><th>Recurrence</th><th>Fill Order</th><th>Possible?</th></tr></thead>
+    <tbody>
+      <tr><td><code>A(i,j-1), A(i-1,j-1), A(i-1,j+1)</code></td><td>Row by row (i=0→n, j=0→n)</td><td style="color:var(--accent3)">✓ Yes</td></tr>
+      <tr><td><code>A(min{i,j}-1,…) and A(max{i,j}-1,…)</code></td><td>Fill diagonal A(k,k) first, then any order</td><td style="color:var(--accent3)">✓ Yes</td></tr>
+      <tr><td><code>A(i-2,j-2) and A(i+2,j+2)</code></td><td>—</td><td style="color:var(--danger)">✗ Cyclic — impossible</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn-box">
+    <div class="warn-label">⚠ Cyclic = no valid fill order exists</div>
+    <p style="margin:0">If dp(i,j) needs dp(i+2,j+2) which itself might need dp(i,j) again → infinite loop. Even top-down fails here as the recursion loops. This is a <em>broken recurrence</em>, not a DP problem at all.</p>
+  </div>
+
+  <h3>When top-down may be faster than bottom-up</h3>
+  <div class="insight">
+    <div class="insight-label">Slide 50-51: Special case</div>
+    <p style="margin:0">Consider fun(i,j) = max(fun(i/2,j), fun(i,j/2)) starting from (n,n). This keeps halving — only O(log n × log n) cells get touched. Bottom-up fills the full n×n table. Top-down only fills the needed cells → space O(log²n) vs O(n²). Big win!</p>
+  </div>
+</section>
+
+<!-- ── SECTION 6: ELEMENTS ── -->
+<section id="elements">
+  <div class="section-label">Section 6</div>
+  <h2>The 5 Elements of Dynamic Programming</h2>
+
+  <div class="card ab" style="margin-bottom:1rem">
+    <h4 style="margin-top:0">① Optimal Substructure</h4>
+    <p><strong>What:</strong> Optimal solution to big problem is built from optimal solutions to smaller sub-problems of the same kind.</p>
+    <p style="margin:0"><strong>Test:</strong> Can you write a recurrence? Does the big answer depend on smaller answers?</p>
+  </div>
+  <div class="card gb" style="margin-bottom:1rem">
+    <h4 style="margin-top:0">② Overlapping Subproblems</h4>
+    <p><strong>What:</strong> The same subproblem is solved more than once in the recursion tree.</p>
+    <p style="margin:0"><strong>Why it matters:</strong> This is what makes DP worthwhile. Merge sort has NO overlapping subproblems — memoization gives zero benefit there.</p>
+  </div>
+  <div class="card wb" style="margin-bottom:1rem">
+    <h4 style="margin-top:0">③ Recurrence Relation</h4>
+    <p><strong>How to find it:</strong> Think about the <em>last decision</em> or <em>last step</em>. What choices were made? What follows each choice?</p>
+    <p style="margin:0"><strong>Example — coins:</strong> At coin n, either take it (cₙ + f(n-2)) or skip it (f(n-1)). Recurrence = max of both.</p>
+  </div>
+  <div class="card pb" style="margin-bottom:1rem">
+    <h4 style="margin-top:0;color:var(--accent2)">④ Base Cases</h4>
+    <p style="margin:0"><strong>Smallest sub-problems with directly known answers.</strong> Without them, recursion never terminates. Common: dp[0], dp[1], P(0,j)=1, P(i,0)=0.</p>
+  </div>
+  <div class="card cb">
+    <h4 style="margin-top:0">⑤ DP Table</h4>
+    <p style="margin:0">Array (1D or 2D) to store computed results. One entry per unique subproblem. 1D for single-parameter problems, 2D for two-parameter problems like Ants/Bees.</p>
+  </div>
+
+  <div class="magic-box" style="margin-top:1.5rem">
+    <div class="magic-label">✦ Recipe to solve any DP problem</div>
+    <ol class="ri">
+      <li><strong>Define subproblem</strong> clearly in words — what does dp[i] mean?</li>
+      <li><strong>Write recurrence</strong> — think about last decision</li>
+      <li><strong>Write base cases</strong> — smallest known answers</li>
+      <li><strong>Choose approach</strong> — top-down or bottom-up</li>
+      <li>If bottom-up: <strong>determine fill order</strong></li>
+      <li>Return dp[target]</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ── SECTION 7: DP vs D&C ── -->
+<section id="vsdc">
+  <div class="section-label">Section 7</div>
+  <h2>DP vs Divide and Conquer</h2>
+  <p>Both break a big problem into smaller sub-problems. The crucial difference: do sub-problems <em>overlap</em>?</p>
+
+  <table class="cmp-table">
+    <thead><tr><th>Aspect</th><th>Divide and Conquer</th><th>Dynamic Programming</th></tr></thead>
+    <tbody>
+      <tr><td>Sub-problems overlap?</td><td>No (independent)</td><td>Yes (same ones repeat)</td></tr>
+      <tr><td>Use memoization?</td><td>No benefit</td><td>Essential</td></tr>
+      <tr><td>Classic examples</td><td>Merge sort, Binary search</td><td>Fibonacci, Shortest path, Knapsack</td></tr>
+      <tr><td>Naive time complexity</td><td>Already optimal</td><td>Exponential (DP fixes it)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="insight">
+    <div class="insight-label">Intuition (slide 58-59)</div>
+    <p style="margin:0">Merge sort: mergeSort(1..n/2) and mergeSort(n/2+1..n) work on completely different data — no overlap. Fibonacci: fib(n-1) and fib(n-2) both internally call fib(n-2) — overlap! DP saves time only because of this overlap.</p>
+  </div>
+
+  <h3>Why is it called "Dynamic" Programming?</h3>
+  <div class="card pb">
+    <p>Named by <strong>Richard Bellman</strong> in the early 1950s at Rand Corporation. The US Secretary of Defense Charles Wilson was "against research, especially mathematical research." Bellman chose "dynamic" because <em>no one could oppose such a positive-sounding word</em>.</p>
+    <p style="margin:0;color:var(--text3);font-style:italic;font-size:13px">"I used it as an umbrella for my activities." — Richard E. Bellman</p>
+  </div>
+</section>
+
+</div><!-- /page -->
+
+<!-- ── QUICK REVISION BUTTON ── -->
+<button id="qr-open-btn" onclick="document.getElementById('quick-revision').style.display='block'">⚡ Quick Revision</button>
+
+<!-- ── QUICK REVISION PANEL ── -->
+<div id="quick-revision">
+  <div class="qr-inner" style="position:relative">
+    <button class="qr-close" onclick="document.getElementById('quick-revision').style.display='none'">×</button>
+    <h2>⚡ Quick Revision — Dynamic Programming</h2>
+
+    <h3>What is DP?</h3>
+    <ul>
+      <li><strong>DP = Careful Recursion = Careful Brute Force</strong></li>
+      <li>Break problem into overlapping sub-problems, solve each once, store results</li>
+      <li>Two conditions: <strong>Optimal Substructure + Overlapping Subproblems</strong></li>
+      <li>Named by Richard Bellman (1950s) — word "dynamic" was chosen to confuse anti-math officials</li>
+    </ul>
+
+    <h3>Why plain recursion fails</h3>
+    <ul>
+      <li>fib(n) naive → <strong>O(2ⁿ) total calls</strong> (exponential)</li>
+      <li>Only O(n) unique calls exist — everything else is repeated waste</li>
+      <li>Key insight: total calls ≫ unique calls → DP exploits this gap</li>
+    </ul>
+
+    <h3>Memoization (Top-Down)</h3>
+    <ul>
+      <li>Add <strong>guard:</strong> if dp[n] ≠ -1 → return dp[n]</li>
+      <li>After computing: dp[n] = result, then return dp[n]</li>
+      <li>O(n) time, O(n) space</li>
+      <li>Fills table lazily — only needed cells</li>
+      <li>Automatic fill order (recursion handles it)</li>
+      <li>Preferred when writing algorithms</li>
+    </ul>
+
+    <h3>Tabulation (Bottom-Up)</h3>
+    <ul>
+      <li>Start from base cases, fill iteratively forward</li>
+      <li>No recursion, no stack overflow risk</li>
+      <li>Must explicitly decide correct fill order</li>
+      <li>O(n) time, O(n) space</li>
+      <li>Preferred for solving exam questions</li>
+    </ul>
+
+    <h3>Key recurrences</h3>
+    <ul>
+      <li><strong>Fibonacci:</strong> fib[i] = fib[i-1] + fib[i-2]</li>
+      <li><strong>Climb stairs:</strong> cs[n] = cs[n-1] + cs[n-2] (same as fib!)</li>
+      <li><strong>Row of coins (max non-adj):</strong> f[n] = max(cₙ + f[n-2], f[n-1])</li>
+      <li><strong>Min cost stairs:</strong> ans[n] = min(ans[n-1]+cost[n-1], ans[n-2]+cost[n-2])</li>
+      <li><strong>Ants vs Bees:</strong> P(i,j) = p·P(i-1,j) + (1-p)·P(i,j-1); P(0,j)=1; P(i,0)=0</li>
+    </ul>
+
+    <h3>Fill order for 2D DP</h3>
+    <ul>
+      <li>Check what dp[i][j] depends on — all must be filled first</li>
+      <li>Row-wise works when deps are at (i-1,*) or (i,j-1)</li>
+      <li><strong>Cyclic dependency</strong> → no valid order → bottom-up impossible</li>
+      <li>Top-down saves time when only O(log²n) of n² cells are ever needed</li>
+    </ul>
+
+    <h3>DP vs Divide and Conquer</h3>
+    <ul>
+      <li><strong>D&C:</strong> disjoint sub-problems (merge sort — different halves)</li>
+      <li><strong>DP:</strong> overlapping sub-problems (fib — fib(n-2) called from both branches)</li>
+      <li>Memoization only helps when sub-problems overlap</li>
+    </ul>
+
+    <h3>5 Elements of DP</h3>
+    <ul>
+      <li><strong>① Optimal substructure</strong> — can write recurrence</li>
+      <li><strong>② Overlapping subproblems</strong> — same call appears multiple times</li>
+      <li><strong>③ Recurrence relation</strong> — dp[n] in terms of smaller dp values</li>
+      <li><strong>④ Base cases</strong> — smallest directly known answers</li>
+      <li><strong>⑤ DP table</strong> — store computed results</li>
+    </ul>
+
+    <h3>Complexity summary</h3>
+    <ul>
+      <li>Naive recursion: O(2ⁿ) time</li>
+      <li>Both DP approaches: O(n) time, O(n) space for 1D problems</li>
+      <li>2D DP (Ants/Bees): O(n²) time, O(n²) space</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// ── FIB TREE ──
+function drawFibTree(){
+  const n=parseInt(document.getElementById('fib-n-input').value)||7;
+  const canvas=document.getElementById('fib-tree-canvas');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.clientWidth||800;
+  canvas.width=W*dpr; canvas.height=300*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,300);
+  const cnt={};
+  function countCalls(k){ cnt[k]=(cnt[k]||0)+1; if(k>1){countCalls(k-1);countCalls(k-2);} }
+  countCalls(n);
+  let total=0;
+  function draw(k,x,y,sp){
+    total++;
+    if(k>1&&sp>18){
+      const lx=x-sp/2,ly=y+52,rx=x+sp/2,ry=y+52;
+      ctx.strokeStyle='#2d3450';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x,y+13);ctx.lineTo(lx,ly-13);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x,y+13);ctx.lineTo(rx,ry-13);ctx.stroke();
+      draw(k-1,lx,ly,sp/2); draw(k-2,rx,ry,sp/2);
+    }
+    const r=13;
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=k<=1?'#1d3a28':cnt[k]>1?'#2d2040':'#1e2434'; ctx.fill();
+    ctx.strokeStyle=k<=1?'#34d399':cnt[k]>1?'#a78bfa':'#6c8fff';
+    ctx.lineWidth=cnt[k]>1?1.8:1; ctx.stroke();
+    ctx.fillStyle=k<=1?'#34d399':cnt[k]>1?'#a78bfa':'#9aa3c2';
+    ctx.font=`bold 10px JetBrains Mono`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(k>1?`f${k}`:k, x, y);
+  }
+  draw(n,W/2,22,W*0.84);
+  document.getElementById('fib-stats').textContent=`Total calls: ${total} | Unique: ${Object.keys(cnt).length} | Wasted: ${total-Object.keys(cnt).length}`;
+}
+window.addEventListener('load',()=>setTimeout(drawFibTree,100));
+window.addEventListener('resize',drawFibTree);
+
+// ── MEMO TRACE ──
+const MS=[
+  {call:'fib(5)',action:'Start: check dp[5] = -1. Not computed yet. Recurse.',dp:[-1,-1,-1,-1,-1,-1],active:5,hit:false},
+  {call:'fib(4)',action:'Need fib(4). dp[4]=-1. Recurse.',dp:[-1,-1,-1,-1,-1,-1],active:4,hit:false},
+  {call:'fib(3)',action:'Need fib(3). dp[3]=-1. Recurse.',dp:[-1,-1,-1,-1,-1,-1],active:3,hit:false},
+  {call:'fib(1) — base',action:'fib(1): base case. Set dp[1]=1.',dp:[-1,1,-1,-1,-1,-1],active:1,hit:false},
+  {call:'fib(2)',action:'fib(2) needs fib(1). dp[1]=1 → GUARD FIRES! Use stored value. dp[2]=1+1=2.',dp:[-1,1,2,-1,-1,-1],active:2,hit:false},
+  {call:'fib(3) returns',action:'dp[3] = fib(2)+fib(1) = 2+1 = 3. Stored!',dp:[-1,1,2,3,-1,-1],active:3,hit:false},
+  {call:'fib(2) — CACHE HIT ⚡',action:'fib(4) needs fib(2). dp[2]=2 ≠ -1 → GUARD FIRES INSTANTLY! Skip entire subtree. Return 2.',dp:[-1,1,2,3,-1,-1],active:2,hit:true},
+  {call:'fib(4) returns',action:'dp[4] = fib(3)+fib(2) = 3+2 = 5. Stored!',dp:[-1,1,2,3,5,-1],active:4,hit:false},
+  {call:'fib(3) — CACHE HIT ⚡',action:'fib(5) needs fib(3). dp[3]=3 ≠ -1 → GUARD FIRES INSTANTLY! Return 3.',dp:[-1,1,2,3,5,-1],active:3,hit:true},
+  {call:'fib(5) returns',action:'dp[5] = fib(4)+fib(3) = 5+3 = 8. Final answer = 8.',dp:[-1,1,2,3,5,8],active:5,hit:false},
+];
+let memoTimer=null;
+function renderMemoStep(s){
+  document.getElementById('memo-step-lbl').textContent=`${s}/9`;
+  const step=MS[s];
+  const canvas=document.getElementById('memo-canvas');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.clientWidth||800;
+  canvas.width=W*dpr; canvas.height=180*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,180);
+  const cw=50,ch=42,sx=(W-6*(cw+6))/2;
+  for(let i=0;i<=5;i++){
+    const x=sx+i*(cw+6),y=20;
+    const isA=i===step.active,isH=step.hit&&i===step.active;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x,y,cw,ch,6); else ctx.rect(x,y,cw,ch);
+    ctx.fillStyle=isH?'#2d1f40':isA?'#1a2540':'#13161e'; ctx.fill();
+    ctx.strokeStyle=isH?'#a78bfa':isA?'#6c8fff':'#2d3450'; ctx.lineWidth=isA?1.8:1; ctx.stroke();
+    ctx.font='10px JetBrains Mono'; ctx.textAlign='center'; ctx.fillStyle='#5c6585'; ctx.textBaseline='top';
+    ctx.fillText(`dp[${i}]`,x+cw/2,y+ch+5);
+    ctx.font='bold 14px JetBrains Mono'; ctx.textBaseline='middle';
+    ctx.fillStyle=step.dp[i]===-1?'#3d445a':isH?'#a78bfa':'#34d399';
+    ctx.fillText(step.dp[i]===-1?'—':step.dp[i],x+cw/2,y+ch/2);
+  }
+  ctx.font='12px Sora'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillStyle=step.hit?'#a78bfa':'#9aa3c2';
+  ctx.fillText((step.hit?'⚡ ':'→ ')+step.call,20,130);
+  document.getElementById('memo-desc').textContent=step.action;
+}
+function autoPlayMemo(){
+  clearInterval(memoTimer);
+  let s=0; document.getElementById('memo-step').value=0; renderMemoStep(0);
+  memoTimer=setInterval(()=>{
+    s++; if(s>9){clearInterval(memoTimer);return;}
+    document.getElementById('memo-step').value=s; renderMemoStep(s);
+  },900);
+}
+window.addEventListener('load',()=>setTimeout(()=>renderMemoStep(0),200));
+window.addEventListener('resize',()=>renderMemoStep(+document.getElementById('memo-step').value));
+
+// ── BOTTOM-UP ──
+let buTimer=null;
+function animateBottomUp(){
+  const n=parseInt(document.getElementById('bu-n').value)||8;
+  const dp=new Array(n+1).fill(null); dp[0]=1; dp[1]=1;
+  clearInterval(buTimer); let i=2;
+  renderBU(dp,n,1,'Base cases set: dp[0]=1, dp[1]=1. Click Animate or watch it fill...');
+  buTimer=setInterval(()=>{
+    if(i>n){clearInterval(buTimer);document.getElementById('bu-desc').textContent=`✓ Complete! fib(${n}) = ${dp[n]}`;return;}
+    dp[i]=dp[i-1]+dp[i-2];
+    renderBU(dp,n,i,`dp[${i}] = dp[${i-1}]+dp[${i-2}] = ${dp[i-1]}+${dp[i-2]} = ${dp[i]}`);
+    i++;
+  },500);
+}
+function renderBU(dp,n,cur,msg){
+  const c=document.getElementById('bu-table-display'); c.innerHTML='';
+  for(let i=0;i<=n;i++){
+    const el=document.createElement('div');
+    const isA=i===cur,isF=dp[i]!==null;
+    el.style.cssText=`min-width:48px;padding:4px 8px;border-radius:8px;border:1px solid;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;transition:all .3s`;
+    el.style.background=isA?'rgba(251,191,36,.18)':isF?'rgba(108,143,255,.12)':'#13161e';
+    el.style.borderColor=isA?'rgba(251,191,36,.4)':isF?'rgba(108,143,255,.3)':'#2d3450';
+    el.style.color=isA?'#fbbf24':isF?'#6c8fff':'#3d445a';
+    el.innerHTML=`<div style="font-size:9px;color:#5c6585">dp[${i}]</div>${dp[i]!==null?dp[i]:'—'}`;
+    c.appendChild(el);
+  }
+  document.getElementById('bu-desc').textContent=msg;
+}
+window.addEventListener('load',()=>{
+  setTimeout(()=>{const dp=new Array(9).fill(null);dp[0]=1;dp[1]=1;renderBU(dp,8,1,'Click "Animate" to watch bottom-up fill step by step.');},300);
+});
+
+// ── FILL ORDER ──
+function renderFillOrder(){
+  const t=document.getElementById('fill-select').value;
+  const sz=5,COLS=sz+1;
+  const cont=document.getElementById('fill-order-grid');
+  cont.style.gridTemplateColumns=`repeat(${COLS},42px)`;
+  cont.innerHTML='';
+  for(let j=-1;j<sz;j++){
+    const c=document.createElement('div');c.className='grid-cell hdr';c.textContent=j===-1?'↓i\\j→':j;cont.appendChild(c);
+  }
+  for(let i=0;i<sz;i++){
+    for(let j=-1;j<sz;j++){
+      if(j===-1){const c=document.createElement('div');c.className='grid-cell hdr';c.textContent=i;cont.appendChild(c);continue;}
+      const c=document.createElement('div');c.className='grid-cell';c.id=`gc-${i}-${j}`;c.textContent='?';cont.appendChild(c);
+    }
+  }
+  const delays=[];
+  if(t==='i'){
+    for(let i=0;i<sz;i++) for(let j=0;j<sz;j++) delays.push([i,j,i*sz+j]);
+    document.getElementById('fill-order-verdict').innerHTML='<span style="color:#34d399">✓ Row-wise fill works. A(i,j) needs A(i,j-1) [same row, just filled] and A(i-1,*) [previous row, already done].</span>';
+  } else if(t==='ii'){
+    let t2=0;
+    for(let k=0;k<sz;k++) delays.push([k,k,t2++]);
+    for(let i=0;i<sz;i++) for(let j=0;j<sz;j++) if(i!==j) delays.push([i,j,t2++]);
+    document.getElementById('fill-order-verdict').innerHTML='<span style="color:#6c8fff">✓ Fill the diagonal A(k,k) for k=0..n first (green → orange shows order). Then all other cells can be filled in any order since they depend on the diagonal.</span>';
+  } else {
+    delays.push([2,2,0]);
+    document.getElementById('fill-order-verdict').innerHTML='<span style="color:#f87171">✗ IMPOSSIBLE. A(i,j) needs A(i+2,j+2) which is always ahead. No matter what order you try, you cannot compute A(i,j) before A(i+2,j+2) and vice versa. This is a cyclic dependency.</span>';
+  }
+  delays.sort((a,b)=>a[2]-b[2]);
+  delays.forEach(([ri,ci,ti])=>{
+    setTimeout(()=>{
+      const c=document.getElementById(`gc-${ri}-${ci}`);
+      if(!c) return;
+      c.className='grid-cell cmp'; c.textContent=`${ri},${ci}`;
+      setTimeout(()=>{c.className='grid-cell fld';},350);
+    },ti*170);
+  });
+}
+window.addEventListener('load',()=>setTimeout(renderFillOrder,500));
+
+// ── STAIRS ──
+function computeStairs(){
+  const n=parseInt(document.getElementById('cs-n').value)||5;
+  const dp=new Array(n+1).fill(0);
+  dp[0]=1; if(n>=1) dp[1]=1;
+  for(let i=2;i<=n;i++) dp[i]=dp[i-1]+dp[i-2];
+  const cont=document.getElementById('stairs-table'); cont.innerHTML='';
+  for(let i=0;i<=n;i++){
+    const el=document.createElement('div');
+    el.style.cssText=`padding:6px 12px;border-radius:8px;border:1px solid rgba(108,143,255,.25);background:${i===n?'rgba(52,211,153,.15)':'rgba(108,143,255,.08)'};font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center`;
+    el.innerHTML=`<div style="font-size:9px;color:#5c6585">cs[${i}]</div><div style="color:${i===n?'#34d399':'#6c8fff'};font-weight:700">${dp[i]}</div>`;
+    cont.appendChild(el);
+  }
+  document.getElementById('stairs-answer').textContent=`Ways to climb ${n} stairs = ${dp[n]}`;
+}
+window.addEventListener('load',()=>setTimeout(computeStairs,200));
+
+// ── COINS ──
+function computeCoins(){
+  const coins=document.getElementById('coins-input').value.split(',').map(s=>parseInt(s.trim())).filter(x=>!isNaN(x));
+  if(!coins.length) return;
+  const n=coins.length; const f=new Array(n+1).fill(0);
+  f[0]=0; f[1]=coins[0];
+  for(let i=2;i<=n;i++) f[i]=Math.max(coins[i-1]+f[i-2],f[i-1]);
+  let html=`<table class="cmp-table" style="font-size:12px"><thead><tr><th>i</th><th>coin</th><th>take=cᵢ+f[i-2]</th><th>skip=f[i-1]</th><th>f[i]=max</th></tr></thead><tbody>`;
+  for(let i=1;i<=n;i++){
+    const take=coins[i-1]+(i>=2?f[i-2]:0),skip=f[i-1];
+    html+=`<tr><td>${i}</td><td style="color:var(--warn)">${coins[i-1]}</td><td style="color:${take>=skip?'#34d399':'#9aa3c2'}">${i>=2?take:'(base)'}</td><td style="color:${skip>take?'#34d399':'#9aa3c2'}">${skip}</td><td style="color:var(--accent);font-weight:700">${f[i]}</td></tr>`;
+  }
+  html+='</tbody></table>';
+  document.getElementById('coins-table-display').innerHTML=html;
+  const picked=[]; let i=n;
+  while(i>0){
+    if(i===1||(i>=2&&coins[i-1]+f[i-2]>=f[i-1])){picked.unshift(`c${i}=${coins[i-1]}`);i-=2;}else{i--;}
+  }
+  document.getElementById('coins-answer').textContent=`Maximum value = ${f[n]}`;
+  document.getElementById('coins-picked').textContent=`Coins picked: ${picked.join(', ')}`;
+}
+window.addEventListener('load',()=>setTimeout(computeCoins,300));
+
+// ── STAIR COST ──
+function computeStairCost(){
+  const cost=document.getElementById('stair-cost-input').value.split(',').map(s=>parseInt(s.trim())).filter(x=>!isNaN(x));
+  if(!cost.length) return;
+  const n=cost.length; const ans=new Array(n+1).fill(0);
+  ans[0]=0; ans[1]=cost[0];
+  for(let i=2;i<=n;i++) ans[i]=Math.min(ans[i-1]+cost[i-1],ans[i-2]+cost[i-2]);
+  let html=`<table class="cmp-table" style="font-size:12px"><thead><tr><th>n</th>`;
+  for(let i=0;i<=n;i++) html+=`<th>${i}</th>`;
+  html+=`</tr></thead><tbody><tr><td>ans[n]</td>`;
+  for(let i=0;i<=n;i++) html+=`<td style="color:${i===n?'#34d399':'#6c8fff'};font-weight:${i===n?700:400}">${ans[i]}</td>`;
+  html+=`</tr></tbody></table>`;
+  document.getElementById('stair-cost-table').innerHTML=html;
+  document.getElementById('stair-cost-answer').textContent=`Min cost to reach top = ${ans[n]}`;
+}
+window.addEventListener('load',()=>setTimeout(computeStairCost,300));
+
+// ── ANTS vs BEES ──
+function renderAntsTable(){
+  const n=parseInt(document.getElementById('ab-n').value)||5;
+  const p=parseFloat(document.getElementById('ab-p').value)||0.6;
+  const q=1-p;
+  const dp=Array.from({length:n+1},()=>new Array(n+1).fill(null));
+  for(let j=0;j<=n;j++) dp[0][j]=1;
+  for(let i=1;i<=n;i++) dp[i][0]=0;
+  for(let i=1;i<=n;i++) for(let j=1;j<=n;j++) dp[i][j]=p*dp[i-1][j]+q*dp[i][j-1];
+  let html=`<table class="cmp-table" style="font-size:12px"><thead><tr><th>i\\j</th>`;
+  for(let j=0;j<=n;j++) html+=`<th>${j}</th>`;
+  html+=`</tr></thead><tbody>`;
+  for(let i=0;i<=n;i++){
+    html+=`<tr><td style="color:var(--accent);font-weight:700">${i}</td>`;
+    for(let j=0;j<=n;j++){
+      const v=dp[i][j];
+      const col=v>0.66?'#34d399':v>0.33?'#fbbf24':'#f87171';
+      html+=`<td style="color:${col};font-family:'JetBrains Mono',monospace">${v.toFixed(2)}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table><div style="font-size:11px;color:#5c6585;margin-top:.5rem">Green=Ants likely win · Yellow=~50/50 · Red=Bees likely win | p(Ants win each game)='+p.toFixed(2)+'</div>';
+  document.getElementById('ants-table').innerHTML=html;
+}
+window.addEventListener('load',()=>setTimeout(renderAntsTable,400));
+
+// ── NAV ACTIVE ──
+const sects=document.querySelectorAll('section[id]');
+const nav=document.querySelectorAll('.topnav a[href^="#"]');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) nav.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));
+  });
+},{threshold:0.25,rootMargin:'-50px 0px -60% 0px'});
+sects.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
