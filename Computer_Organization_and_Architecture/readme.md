@@ -96,28 +96,36 @@ Register Format:
 ## Running the Factorial Program
 
 Recursive factorial implemented in SimpleRISC assembly
-(`factorial_simple_risc_assembly_recursive.txt`):
+(`factorial_simple_risc_assembly_recursive.txt`), annotated line-by-line:
 
 ```asm
-b .main
-.factorial: cmp r0,1
-beq .return
-bgt .continue
-b .return
-.continue: sub sp,sp,2
-st r0,[sp]
-st ra,1[sp]
-sub r0,r0,1
-call .factorial
-ld r0,[sp]
-ld ra,1[sp]
-mul r1,r0,r1
-add sp,sp,2
-ret
-.return: mov r1,1
-ret
-.main: mov r0,10
-call .factorial
+b .main                ; jump to program entry point
+
+.factorial:
+    cmp  r0, 1          ; compare n with 1
+    beq  .return         ; base case: n == 1 -> return 1
+    bgt  .continue       ; n > 1 -> recurse
+    b    .return         ; (n < 1 fallback) -> return 1
+
+.continue:
+    sub  sp, sp, 2       ; allocate 2 stack slots
+    st   r0, [sp]        ; save n
+    st   ra, 1[sp]       ; save return address
+    sub  r0, r0, 1       ; n = n - 1
+    call .factorial      ; recurse: r1 = factorial(n-1)
+    ld   r0, [sp]        ; restore n
+    ld   ra, 1[sp]       ; restore return address
+    mul  r1, r0, r1      ; r1 = n * factorial(n-1)
+    add  sp, sp, 2       ; deallocate stack frame
+    ret                  ; return to caller
+
+.return:
+    mov  r1, 1           ; base case result: factorial(1) = 1
+    ret
+
+.main:
+    mov  r0, 10          ; n = 10
+    call .factorial      ; r1 = factorial(10)
 ```
 
 Assembling factorial(10) to binary/hex:
