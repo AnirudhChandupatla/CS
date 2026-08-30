@@ -26,7 +26,7 @@ Prof. Smruti Sarangi's course on Computer Architecture.
 
 Recursive factorial(10) executing on the CPU in Logisim:
 
-![](simple_risc_cpu_factorial_execution.gif)
+![](simple_risc_cpu_factorial_execution_.gif)
 
 ### Circuit Diagrams
 
